@@ -6,12 +6,11 @@ GPL-3.0 - see LICENSE
 
 # Architecture (Fase 0)
 
-Faithful translation of this project's own private development plan
-(sections 0, 2-4). It describes the target design across all six phases -
-this repository, at Fase 0, only implements the risk-level policy, the
-tool matrix, the real contracts, secret redaction and the injection-
-defense boundary described in the README. Everything else here is a
-documented target, not a claim about what runs today.
+This document describes this project's purpose and target design across
+all six phases - this repository, at Fase 0, only implements the
+risk-level policy, the tool matrix, the real contracts, secret redaction
+and the injection-defense boundary described in the README. Everything
+else here is a documented target, not a claim about what runs today.
 
 ## Purpose
 

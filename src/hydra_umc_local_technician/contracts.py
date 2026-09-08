@@ -4,8 +4,8 @@
 # GPL-3.0 - see LICENSE
 # =============================================================================
 """Real, stdlib-only validation for this project's own five minimal
-contracts (the plan's own section 7, kept privately: ToolRequest,
-ToolResult, MaintenanceProposal, EvidenceBundle, PatchVerificationReport).
+contracts (ToolRequest, ToolResult, MaintenanceProposal, EvidenceBundle,
+PatchVerificationReport).
 
 The JSON Schema files under contracts/*.schema.json are normative - this
 module gives an early, portable validation path before a generated

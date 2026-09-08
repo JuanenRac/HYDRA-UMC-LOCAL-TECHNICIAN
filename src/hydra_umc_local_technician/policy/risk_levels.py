@@ -3,10 +3,10 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE
 # =============================================================================
-"""The six risk levels this technician's own plan defines (section 5.1,
-kept privately) - the single non-negotiable principle behind all of them:
-the AI never gets authority by generating a response. Policy, permissions,
-interlocks and human confirmation decide every action, never model text.
+"""The six risk levels this technician defines - the single
+non-negotiable principle behind all of them: the AI never gets authority
+by generating a response. Policy, permissions, interlocks and human
+confirmation decide every action, never model text.
 
 Levels 5 (PHYSICAL_ACTION) and 4 (PRIVILEGED_CHANGE) are declared here for
 completeness of the contract, but nothing in this codebase implements
@@ -58,8 +58,8 @@ _WIRE_NAMES: dict[RiskLevel, str] = {
 
 @dataclass(frozen=True)
 class RiskLevelPolicy:
-    """What a given level is allowed to do, matching the plan's own
-    section 5.1 word for word - not a Python-side reinterpretation."""
+    """What a given level is allowed to do - see docs/SECURITY_MODEL.md
+    for the full model this mirrors."""
     level: RiskLevel
     can_read_tools: bool
     can_mutate: bool

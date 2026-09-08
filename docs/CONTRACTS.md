@@ -6,9 +6,10 @@ GPL-3.0 - see LICENSE
 
 # Contracts (Fase 0)
 
-Five real minimal contracts, copied field-for-field from this project's
-own private development plan (section 7) - not invented or reinterpreted
-in either direction. Each one exists as:
+Five real minimal contracts, not invented or reinterpreted after the
+fact - the JSON Schema files below are the normative source, and
+everything else in this codebase is copied from them field-for-field.
+Each one exists as:
 
 - A normative JSON Schema file under `contracts/*.schema.json` (draft
   2020-12, `required` and `additionalProperties: false` on every one, so

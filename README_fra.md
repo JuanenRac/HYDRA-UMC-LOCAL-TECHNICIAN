@@ -64,9 +64,9 @@ manière indépendante :
    livraison.
 3. **Contrats réels** (`contracts/*.schema.json` + `contracts.py`) -
    `ToolRequest`, `ToolResult`, `MaintenanceProposal`, `EvidenceBundle`
-   et `PatchVerificationReport`, copiés champ par champ depuis le propre
-   plan de développement privé de ce projet, chacun avec un fichier JSON
-   Schema normatif et un validateur Python équivalent, stdlib uniquement.
+   et `PatchVerificationReport`, chacun avec un fichier JSON Schema
+   normatif et un validateur Python équivalent, stdlib uniquement, copié
+   depuis celui-ci champ par champ.
 4. **Frontière de défense contre l'injection** (`knowledge/trust.py` +
    `knowledge/redaction.py`) - le contenu non fiable (un README, une
    ligne de log, un message de commit) est toujours enveloppé comme
@@ -186,8 +186,8 @@ directement) pour la suite de tests locale complète.
 
 ## 🚀 FEUILLE DE ROUTE
 
-Cette version n'apporte que la Phase 0. Ce qui reste, dans l'ordre du
-propre plan de développement privé de ce projet :
+Cette version n'apporte que la Phase 0. Ce qui reste, dans l'ordre des
+phases :
 
 - **Phase 1 - Connaissance récupérable.** Un index local et versionné de
   documentation, manifestes, contrats et runbooks approuvés - jamais

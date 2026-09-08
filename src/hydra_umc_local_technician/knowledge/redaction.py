@@ -3,11 +3,9 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE
 # =============================================================================
-"""Real, pure log/text sanitization - the ecosystem-wide proposal's own
-non-negotiable security limit for this project: "no envía secretos, tokens,
-claves SSH, archivos .env ni logs sin saneamiento al control-plane o a
-proveedores IA" (never sends secrets, tokens, SSH keys, .env files or
-un-sanitized logs to the control-plane or an AI provider).
+"""Real, pure log/text sanitization - this project's own non-negotiable
+security limit: never sends secrets, tokens, SSH keys, .env files or
+un-sanitized logs to the control-plane or an AI provider.
 
 Deliberately a fixed, explicit list of REAL, well-known secret shapes, never
 a fuzzy "looks random enough" heuristic - a heuristic invites both false

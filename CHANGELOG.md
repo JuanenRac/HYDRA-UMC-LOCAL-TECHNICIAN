@@ -11,7 +11,7 @@ bumped manually only. See `bump_version.py`.
 
 ## [0.0.1] - Fase 0: inventario y base de seguridad
 
-First phase of six (this project's own private development plan).
+First phase of six (see the README's own Roadmap section for the full plan).
 This one only: the tool/risk-level matrix (`policy/risk_levels.py`, six
 levels INFORM through PHYSICAL_ACTION - the top two explicitly
 unimplemented; `policy/tool_matrix.py`, a real allowlist of OBSERVE-level

@@ -50,9 +50,8 @@ AI：它观察、解释、诊断并为生态系统自己的服务和节点提出
    而其中每一个名称在本次交付中仍然是 `implemented=False`。
 3. **真实合约**（`contracts/*.schema.json` + `contracts.py`）-
    `ToolRequest`、`ToolResult`、`MaintenanceProposal`、`EvidenceBundle`
-   和 `PatchVerificationReport`，逐字段从本项目自己的私有开发计划中复制而
-   来，每一份都有一份规范性的 JSON Schema 文件，以及一个与之对应的、仅使用
-   标准库的 Python 校验器。
+   和 `PatchVerificationReport`，每一份都有一份规范性的 JSON Schema 文件，
+   以及一个从中逐字段复制而来、仅使用标准库的 Python 校验器。
 4. **注入防御边界**（`knowledge/trust.py` + `knowledge/redaction.py`）-
    不可信内容（一份 README、一行日志、一条提交信息）总是被包装为
    `UntrustedText`，这是一种没有任何方法能产生工具调用的类型。在本代码库中
@@ -154,7 +153,7 @@ CHANGELOG - 它并**不**运行测试套件；要运行完整的本地测试套�
 
 ## 🚀 路线图
 
-本版本只交付第 0 阶段。剩余部分，按本项目自身私有开发计划的顺序：
+本版本只交付第 0 阶段。剩余部分，按阶段顺序：
 
 - **第 1 阶段 - 可检索知识。** 一个本地的、带版本管理的索引，涵盖已批准的
   文档、清单、合约和运维手册 - 绝不会盲目地在整块磁盘上训练。
