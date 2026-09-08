@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/JuanenRac/HYDRA-UMC-LOCAL-TECHNICIAN/contracts/maintenance_proposal.schema.json",
+  "title": "MaintenanceProposal",
+  "description": "A proposal is never executable on its own - it can never contain a raw command, only a description of steps a human must authorize. See risk_levels.py: a proposal is always PREPARE level or below.",
+  "type": "object",
+  "required": [
+    "diagnosis", "citedEvidence", "scope", "risk", "steps", "preChecks",
+    "expectedChanges", "rollback", "confirmationRequired", "explicitLimits"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "diagnosis": { "type": "string", "minLength": 1 },
+    "citedEvidence": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "scope": { "type": "string", "minLength": 1 },
+    "risk": {
+      "type": "string",
+      "enum": ["inform", "observe", "prepare", "reversible_operation", "privileged_change", "physical_action"]
+    },
+    "steps": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "preChecks": { "type": "array", "items": { "type": "string" } },
+    "expectedChanges": { "type": "array", "items": { "type": "string" } },
+    "rollback": { "type": "string", "minLength": 1 },
+    "confirmationRequired": { "type": "boolean" },
+    "explicitLimits": { "type": "array", "items": { "type": "string" } }
+  }
+}

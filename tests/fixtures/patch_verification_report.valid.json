@@ -1,0 +1,10 @@
+{
+  "testedTarget": {"package": "HYDRA-UMC-SERVER", "commit": "0dbe7d8", "version": "0.5.7"},
+  "preCheck": "Staging clone builds cleanly before the patch is applied",
+  "appliedSteps": ["git apply fix.diff", "npm run build"],
+  "healthChecks": ["GET /api/hydra-info returns 200"],
+  "contractTests": ["tools/verify_server_playback_contract.mjs"],
+  "result": "passed",
+  "rollbackExecuted": false,
+  "promotionRecommended": true
+}

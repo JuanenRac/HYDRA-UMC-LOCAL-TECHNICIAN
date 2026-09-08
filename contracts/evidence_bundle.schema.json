@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/JuanenRac/HYDRA-UMC-LOCAL-TECHNICIAN/contracts/evidence_bundle.schema.json",
+  "title": "EvidenceBundle",
+  "description": "What this technician hands to the future HYDRA-UMC-DEV-SERVER when an incident needs real code changes. Never includes a secret, key, token, or the full user conversation history - see knowledge/redaction.py, applied before this object is ever constructed.",
+  "type": "object",
+  "required": [
+    "componentVersions", "relevantManifests", "redactedLogExcerpts",
+    "reproductionSteps", "failedTests", "impact", "actionsAttempted",
+    "checksum", "date", "localValidationResult"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "componentVersions": { "type": "object" },
+    "relevantManifests": { "type": "array", "items": { "type": "string" } },
+    "redactedLogExcerpts": { "type": "array", "items": { "type": "string" } },
+    "reproductionSteps": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "failedTests": { "type": "array", "items": { "type": "string" } },
+    "impact": { "type": "string", "minLength": 1 },
+    "actionsAttempted": { "type": "array", "items": { "type": "string" } },
+    "checksum": { "type": "string", "minLength": 1 },
+    "date": { "type": "string", "format": "date-time" },
+    "localValidationResult": { "type": "string", "minLength": 1 }
+  }
+}

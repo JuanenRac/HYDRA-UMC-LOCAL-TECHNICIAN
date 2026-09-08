@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/JuanenRac/HYDRA-UMC-LOCAL-TECHNICIAN/contracts/patch_verification_report.schema.json",
+  "title": "PatchVerificationReport",
+  "description": "Reports back on a patch this technician did not apply itself - see README: applying a privileged change is out of scope for this phase.",
+  "type": "object",
+  "required": [
+    "testedTarget", "preCheck", "appliedSteps", "healthChecks",
+    "contractTests", "result", "rollbackExecuted", "promotionRecommended"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "testedTarget": {
+      "type": "object",
+      "required": ["package", "commit", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "package": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "preCheck": { "type": "string", "minLength": 1 },
+    "appliedSteps": { "type": "array", "items": { "type": "string" } },
+    "healthChecks": { "type": "array", "items": { "type": "string" } },
+    "contractTests": { "type": "array", "items": { "type": "string" } },
+    "result": { "type": "string", "enum": ["passed", "failed", "inconclusive"] },
+    "rollbackExecuted": { "type": "boolean" },
+    "promotionRecommended": { "type": "boolean" }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/JuanenRac/HYDRA-UMC-LOCAL-TECHNICIAN/contracts/tool_request.schema.json",
+  "title": "ToolRequest",
+  "description": "The ONLY object the orchestrator ever dispatches to a tool. Free text from an untrusted source (a retrieved document, a log line) is never parsed as a command - only a real, schema-valid ToolRequest, constructed by the orchestrator's own code from a model's structured function-call output, ever reaches a tool.",
+  "type": "object",
+  "required": ["schemaVersion", "requestId", "tool", "arguments", "riskLevel", "actor", "reason"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0" },
+    "requestId": { "type": "string", "minLength": 1 },
+    "tool": { "type": "string", "minLength": 1 },
+    "arguments": { "type": "object" },
+    "riskLevel": {
+      "type": "string",
+      "enum": ["inform", "observe", "prepare", "reversible_operation", "privileged_change", "physical_action"]
+    },
+    "actor": { "type": "string", "minLength": 1 },
+    "reason": { "type": "string", "minLength": 1 }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/JuanenRac/HYDRA-UMC-LOCAL-TECHNICIAN/contracts/tool_result.schema.json",
+  "title": "ToolResult",
+  "type": "object",
+  "required": ["requestId", "status", "output", "evidence", "timestamp", "durationMs", "toolVersion", "errorCode"],
+  "additionalProperties": false,
+  "properties": {
+    "requestId": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["ok", "error", "denied"] },
+    "output": { "type": "object" },
+    "evidence": {
+      "type": "string",
+      "description": "Already redacted (knowledge/redaction.py) before this object is ever constructed."
+    },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "durationMs": { "type": "number", "minimum": 0 },
+    "toolVersion": { "type": "string", "minLength": 1 },
+    "errorCode": {
+      "type": ["string", "null"],
+      "description": "A stable, named error code, or null when status is ok."
+    }
+  }
+}

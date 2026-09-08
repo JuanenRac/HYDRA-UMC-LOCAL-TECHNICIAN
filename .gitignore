@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+# HYDRA-UMC shared secret protection
+.env
+.env.*
+!.env.example
+# Fase 0 explicitly forbids secrets/tokens in any versioned config or
+# index - these directories are real per-machine state, never committed.
+knowledge-index/
+secrets/
