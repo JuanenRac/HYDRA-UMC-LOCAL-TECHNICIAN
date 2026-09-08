@@ -1,0 +1,12 @@
+{
+  "diagnosis": "hydra-umc-server.service failed to start",
+  "citedEvidence": [],
+  "scope": "HYDRA-UMC-SERVER",
+  "risk": "physical_action",
+  "steps": [],
+  "preChecks": [],
+  "expectedChanges": [],
+  "rollback": "",
+  "confirmationRequired": "yes",
+  "explicitLimits": []
+}

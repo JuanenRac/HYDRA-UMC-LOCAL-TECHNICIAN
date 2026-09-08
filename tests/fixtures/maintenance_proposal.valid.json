@@ -1,0 +1,12 @@
+{
+  "diagnosis": "hydra-umc-server.service failed to start after the last update",
+  "citedEvidence": ["service.status(hydra-umc-server) -> inactive (dead)"],
+  "scope": "HYDRA-UMC-SERVER on cm5-cell-1",
+  "risk": "reversible_operation",
+  "steps": ["Restart hydra-umc-server.service", "Confirm it reports active"],
+  "preChecks": ["Confirm no active job is mid-execution"],
+  "expectedChanges": ["hydra-umc-server.service becomes active"],
+  "rollback": "If it fails to start, leave it stopped and escalate to HYDRA-UMC-OPS-AGENT",
+  "confirmationRequired": true,
+  "explicitLimits": ["Never restarts more than one service per proposal"]
+}

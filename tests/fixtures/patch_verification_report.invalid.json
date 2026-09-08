@@ -1,0 +1,10 @@
+{
+  "testedTarget": {"package": "HYDRA-UMC-SERVER", "commit": "", "version": "0.5.7"},
+  "preCheck": "Staging clone builds cleanly",
+  "appliedSteps": [],
+  "healthChecks": [],
+  "contractTests": [],
+  "result": "maybe",
+  "rollbackExecuted": "no",
+  "promotionRecommended": true
+}

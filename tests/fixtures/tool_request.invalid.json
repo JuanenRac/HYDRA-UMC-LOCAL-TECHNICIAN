@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1.0",
+  "requestId": "b6f1b1d0-0000-4000-8000-000000000002",
+  "tool": "shell.exec",
+  "arguments": {"cmd": "rm -rf /"},
+  "riskLevel": "invented-level",
+  "actor": "",
+  "reason": "no real reason"
+}

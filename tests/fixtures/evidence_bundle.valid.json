@@ -1,0 +1,12 @@
+{
+  "componentVersions": {"HYDRA-UMC-SERVER": "0.5.7"},
+  "relevantManifests": ["HYDRA-UMC-SERVER/hydra-umc.project.json"],
+  "redactedLogExcerpts": ["2026-09-08 [ERROR] listen EADDRINUSE :3000"],
+  "reproductionSteps": ["Start hydra-umc-server.service", "Observe it exits with EADDRINUSE"],
+  "failedTests": ["tests/verify_server_playback_contract.mjs"],
+  "impact": "Studio and mobile clients cannot reach the server",
+  "actionsAttempted": ["Restarted the service once, same failure"],
+  "checksum": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd",
+  "date": "2026-09-08T00:00:00Z",
+  "localValidationResult": "Reproduced twice, consistent EADDRINUSE"
+}

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1.0",
+  "requestId": "b6f1b1d0-0000-4000-8000-000000000001",
+  "tool": "service.status",
+  "arguments": {"name": "hydra-umc-server"},
+  "riskLevel": "observe",
+  "actor": "authenticated-user",
+  "reason": "Investigate Studio unavailable"
+}

@@ -1,0 +1,12 @@
+{
+  "componentVersions": {"HYDRA-UMC-SERVER": "0.5.7"},
+  "relevantManifests": ["HYDRA-UMC-SERVER/hydra-umc.project.json"],
+  "redactedLogExcerpts": ["password=hunter2 unredacted, never allowed here"],
+  "reproductionSteps": [],
+  "failedTests": [],
+  "impact": "Studio unavailable",
+  "actionsAttempted": [],
+  "checksum": "",
+  "date": "2026-09-08T00:00:00Z",
+  "localValidationResult": "Reproduced"
+}

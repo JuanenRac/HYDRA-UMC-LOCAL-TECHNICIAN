@@ -1,0 +1,10 @@
+{
+  "requestId": "b6f1b1d0-0000-4000-8000-000000000001",
+  "status": "maybe",
+  "output": {"active": true},
+  "evidence": "password=hunter2 leaked unredacted",
+  "timestamp": "2026-09-08T00:00:00Z",
+  "durationMs": -5,
+  "toolVersion": "0.0.1",
+  "errorCode": null
+}

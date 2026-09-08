@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "ecosystem": "HYDRA-UMC",
+  "name": "HYDRA-UMC-LOCAL-TECHNICIAN",
+  "version": "0.0.1",
+  "role": "service",
+  "stack": "python",
+  "technologies": [
+    "Python 3.11+",
+    "JSON Schema",
+    "HailoRT GenAI (optional, later phase)",
+    "systemd (cm5 role, Linux only)"
+  ],
+  "deployment_target": "cm5",
+  "maturity": "scaffolding",
+  "family": "Cognitive AI Node",
+  "parent": "HYDRA-UMC-COGNITIVE-NODE",
+  "native_version": {
+    "file": "pyproject.toml",
+    "pattern": "^version\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""
+  },
+  "build": "Six-phase plan (this project's own private development plan): a local, policy-gated AI technician for the ecosystem itself - observes, explains, diagnoses and proposes maintenance, never acts by generating text. The LLM proposes; a deterministic orchestrator validates against real contracts and a real risk-level policy before anything executes, and the highest-risk levels (privileged change, physical action) are not implemented at all in this delivery. Real build: python -m build (see pyproject.toml).",
+  "notes": "Scaffolding v0.0.1 - Fase 0 only (\"Inventario y base de seguridad\") of six phases. This delivery defines the tool/risk-level matrix (src/hydra_umc_local_technician/policy/risk_levels.py, six levels INFORM through PHYSICAL_ACTION, the top two genuinely unimplemented), the real JSON Schema contracts every future tool call/proposal must validate against (contracts/*.schema.json: ToolRequest, ToolResult, MaintenanceProposal, EvidenceBundle, PatchVerificationReport - copied field-for-field from the plan's own section 7, not invented), a real secret-redaction module ported from HYDRA-UMC-OPS-AGENT's own already-tested log_redaction.py, and this delivery's own literal exit criterion: a real adversarial test proving a malicious retrieved document (a poisoned README/log/doc) can never produce a tool execution or leak a secret, because the orchestrator boundary only ever accepts a real, schema-validated ToolRequest object - free text from an untrusted source is never parsed as a command. No inference engine, no RAG index, no real tool execution, and no HYDRA-UMC-SERVER integration exist yet - those are later phases, see README ROADMAP."
+}
