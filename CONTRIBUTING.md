@@ -55,7 +55,6 @@ maintenance technician.
 7. **This delivery (Fase 0) only ever declares and validates - it does
    not yet act.** Do not add a real inference engine, RAG index, tool
    execution, or HYDRA-UMC-SERVER integration without first checking
-   which later phase (see this project's own private development plan's
-   phase list, summarized in the README's own Roadmap section) actually
-   owns that piece, and updating both the README and
-   `docs/ARCHITECTURE.md` to match.
+   which later phase (see the README's own Roadmap section for the full
+   phase list) actually owns that piece, and updating both the README
+   and `docs/ARCHITECTURE.md` to match.

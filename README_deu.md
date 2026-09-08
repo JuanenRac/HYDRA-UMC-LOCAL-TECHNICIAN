@@ -65,9 +65,9 @@ Bausteine:
    Lieferung immer noch `implemented=False`.
 3. **Reale Verträge** (`contracts/*.schema.json` + `contracts.py`) -
    `ToolRequest`, `ToolResult`, `MaintenanceProposal`, `EvidenceBundle`
-   und `PatchVerificationReport`, Feld für Feld aus dem eigenen privaten
-   Entwicklungsplan dieses Projekts kopiert, jeweils mit einer
-   normativen JSON-Schema-Datei und einem passenden, nur auf der Standard-
+   und `PatchVerificationReport`, jeweils mit einer normativen
+   JSON-Schema-Datei und einem passenden, Feld für Feld daraus
+   kopierten, nur auf der Standard-
    bibliothek basierenden Python-Validator.
 4. **Injection-Abwehrgrenze** (`knowledge/trust.py` +
    `knowledge/redaction.py`) - nicht vertrauenswürdiger Inhalt (ein
@@ -194,8 +194,8 @@ vollständige lokale Testsuite aus.
 
 ## 🚀 ROADMAP
 
-Diese Version bringt nur Phase 0. Was verbleibt, in der Reihenfolge des
-eigenen privaten Entwicklungsplans dieses Projekts:
+Diese Version bringt nur Phase 0. Was in der Reihenfolge der Phasen
+verbleibt:
 
 - **Phase 1 - Abrufbares Wissen.** Ein lokaler, versionierter Index
   genehmigter Dokumentation, Manifeste, Verträge und Runbooks - niemals

@@ -6,9 +6,9 @@
 """Fase 0's own literal exit criterion: a test proves a malicious
 retrieved source can never trigger a tool execution or reveal a secret.
 
-This is the real, adversarial test the plan's own section 8 names as
-this phase's exit gate - not a generic unit test, so it lives in its own
-tests/adversarial/ directory per the plan's own proposed tree.
+This is the real, adversarial test that names this phase's own exit gate
+- not a generic unit test, so it lives in its own tests/adversarial/
+directory rather than alongside tests/unit/.
 """
 import unittest
 

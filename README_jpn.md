@@ -57,10 +57,9 @@ HYDRA-UMC-LOCAL-TECHNICIAN は HYDRA-UMC エコシステム自身のための専
    すべての名前も、本リリースではまだ `implemented=False` です。
 3. **実際の契約**（`contracts/*.schema.json` + `contracts.py`）-
    `ToolRequest`、`ToolResult`、`MaintenanceProposal`、`EvidenceBundle`、
-   `PatchVerificationReport` は、本プロジェクト自身の非公開開発計画から
-   フィールド単位でそのままコピーされ、それぞれに規範的なJSON Schema
-   ファイルと、それに対応する標準ライブラリのみの Python バリデータが
-   あります。
+   `PatchVerificationReport` は、それぞれに規範的なJSON Schema
+   ファイルと、そこからフィールド単位でそのままコピーされた、標準
+   ライブラリのみの Python バリデータがあります。
 4. **インジェクション防御境界**（`knowledge/trust.py` +
    `knowledge/redaction.py`）- 信頼できないコンテンツ（README、ログ行、
    コミットメッセージ）は常に `UntrustedText` としてラップされ、これは
@@ -175,8 +174,7 @@ Windows の場合: `build.bat`、続いて `run.bat contracts validate ...` /
 
 ## 🚀 ロードマップ
 
-このバージョンはフェーズ0のみを提供します。残りは、本プロジェクト自身の
-非公開開発計画の順序で:
+このバージョンはフェーズ0のみを提供します。残りは、フェーズ順に:
 
 - **フェーズ1 - 検索可能な知識。** 承認済みのドキュメント、マニフェスト、
   契約、runbook のローカルでバージョン管理されたインデックス - ディスク

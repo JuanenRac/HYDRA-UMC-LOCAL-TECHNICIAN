@@ -6,10 +6,9 @@ GPL-3.0 - see LICENSE
 
 # Security Model (Fase 0)
 
-Faithful translation of this project's own private development plan
-(section 5). This is the one document every future phase must keep
-agreeing with - a later phase widening what this technician can do must
-update this file in the same commit, not leave it stale.
+This is the one document every future phase must keep agreeing with - a
+later phase widening what this technician can do must update this file
+in the same commit, not leave it stale.
 
 **Non-negotiable principle, repeated from `docs/ARCHITECTURE.md` because
 it is the root of everything below:** the AI never gets authority by

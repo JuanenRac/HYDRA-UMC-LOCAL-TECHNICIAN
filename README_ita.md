@@ -63,9 +63,9 @@ indipendente:
    `implemented=False` in questa consegna.
 3. **Contratti reali** (`contracts/*.schema.json` + `contracts.py`) -
    `ToolRequest`, `ToolResult`, `MaintenanceProposal`, `EvidenceBundle` e
-   `PatchVerificationReport`, copiati campo per campo dal proprio piano
-   di sviluppo privato di questo progetto, ciascuno con un file JSON
-   Schema normativo e un validatore Python equivalente, solo stdlib.
+   `PatchVerificationReport`, ciascuno con un file JSON Schema normativo
+   e un validatore Python equivalente, solo stdlib, copiato da esso
+   campo per campo.
 4. **Confine di difesa contro l'injection** (`knowledge/trust.py` +
    `knowledge/redaction.py`) - il contenuto non affidabile (un README,
    una riga di log, un messaggio di commit) è sempre avvolto come
@@ -185,8 +185,7 @@ esegue la suite di test; esegui `./build.sh`/`build.bat` (o
 
 ## 🚀 ROADMAP
 
-Questa versione porta solo la Fase 0. Ciò che resta, nell'ordine del
-proprio piano di sviluppo privato di questo progetto:
+Questa versione porta solo la Fase 0. Ciò che resta, in ordine di fase:
 
 - **Fase 1 - Conoscenza recuperabile.** Un indice locale e versionato di
   documentazione, manifesti, contratti e runbook approvati - mai

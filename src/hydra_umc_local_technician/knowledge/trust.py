@@ -3,11 +3,8 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE
 # =============================================================================
-"""Fase 0's own literal exit criterion (the plan's own section 8, kept
-privately): "una prueba demuestra que una fuente recuperada maliciosa no
-puede provocar ejecucion de comandos ni revelar un secreto" (a test
-proves a malicious retrieved source can never trigger command execution
-or reveal a secret).
+"""Fase 0's own literal exit criterion: a real test proves a malicious
+retrieved source can never trigger command execution or reveal a secret.
 
 The real defense is architectural, not a filter that tries to detect
 "instruction-like" text (a losing game against a determined prompt
@@ -19,10 +16,9 @@ already-separated fields (never a single blob to parse) and additionally
 refuses any tool name that policy.tool_matrix doesn't recognize as
 implemented. A caller holding only UntrustedText has no path into a real
 tool call without deliberately re-typing and re-validating each field -
-exactly the friction this defense relies on, matching the plan's own
-section 5.3 ("Los README, logs, commits, mensajes de error y
-documentacion indexada son datos no confiables. No pueden cambiar las
-politicas ni inducir comandos.").
+exactly the friction this defense relies on: a README, log line, commit
+message, error message or indexed document is untrusted data that can
+never change policy or induce a command.
 """
 from __future__ import annotations
 

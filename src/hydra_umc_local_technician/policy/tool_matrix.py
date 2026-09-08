@@ -3,21 +3,19 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE
 # =============================================================================
-"""Fase 0's own real deliverable: "matriz de herramientas y niveles de
-riesgo" (the plan's own section 8, kept privately). This is a declarative
-registry of every tool THIS TECHNICIAN WILL EVER BE ALLOWED TO CALL and
-its fixed risk level - not an implementation of any tool. A future
-orchestrator (a later phase) looks a tool name up here before ever
-considering a model's request to call it; a name that is not in this
-dict cannot be called, full stop - there is no "call anything and let
-the risk level be decided later" path.
+"""Fase 0's own real deliverable: the tool/risk-level matrix. This is a
+declarative registry of every tool THIS TECHNICIAN WILL EVER BE ALLOWED
+TO CALL and its fixed risk level - not an implementation of any tool. A
+future orchestrator (a later phase) looks a tool name up here before
+ever considering a model's request to call it; a name that is not in
+this dict cannot be called, full stop - there is no "call anything and
+let the risk level be decided later" path.
 
-Every entry listed here is OBSERVE level, matching the plan's own section
-1.1 list of what this technician may read in its first version (service
-health, processes, ports, storage, temperature, connectivity, pending
-updates, permitted logs). No tool at REVERSIBLE_OPERATION or above is
-registered yet - see risk_levels.py's own POLICIES for why (Fase 0 does
-not implement one).
+Every entry listed here is OBSERVE level - what this technician may read
+in its first version (service health, processes, ports, storage,
+temperature, connectivity, pending updates, permitted logs). No tool at
+REVERSIBLE_OPERATION or above is registered yet - see risk_levels.py's
+own POLICIES for why (Fase 0 does not implement one).
 """
 from __future__ import annotations
 
@@ -39,10 +37,10 @@ class ToolDescriptor:
     implemented: bool = False
 
 
-# Real, named per section 1.1 ("Diagnóstico de servicios, procesos,
-# puertos, almacenamiento, temperatura, conectividad, actualizaciones,
-# logs y salud de las aplicaciones"). Naming convention: "<area>.<verb>",
-# matching contracts/tool_request.schema.json's own `tool` field shape.
+# Diagnostics for services, processes, ports, storage, temperature,
+# connectivity, updates, logs and application health. Naming convention:
+# "<area>.<verb>", matching contracts/tool_request.schema.json's own
+# `tool` field shape.
 TOOL_MATRIX: dict[str, ToolDescriptor] = {
     "service.status": ToolDescriptor(
         name="service.status",

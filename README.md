@@ -59,9 +59,9 @@ This delivery (Fase 0) ships four real, independently useful pieces:
    it is still `implemented=False` in this delivery.
 3. **Real contracts** (`contracts/*.schema.json` + `contracts.py`) -
    `ToolRequest`, `ToolResult`, `MaintenanceProposal`, `EvidenceBundle`
-   and `PatchVerificationReport`, copied field-for-field from this
-   project's own private development plan, each with a normative JSON
-   Schema file and a matching stdlib-only Python validator.
+   and `PatchVerificationReport`, each with a normative JSON Schema file
+   and a matching stdlib-only Python validator copied from it
+   field-for-field.
 4. **Injection-defense boundary** (`knowledge/trust.py` +
    `knowledge/redaction.py`) - untrusted content (a README, a log line, a
    commit message) is always wrapped as `UntrustedText`, a type with no
@@ -174,8 +174,7 @@ NOT run the test suite itself; run `./build.sh`/`build.bat` (or
 
 ## 🚀 ROADMAP
 
-This version ships Fase 0 only. What remains, in this project's own
-private development plan's order:
+This version ships Fase 0 only. What remains, in phase order:
 
 - **Fase 1 - Retrievable knowledge.** A local, versioned index of
   approved documentation, manifests, contracts and runbooks - never

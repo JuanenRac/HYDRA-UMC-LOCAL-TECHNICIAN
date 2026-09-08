@@ -63,9 +63,9 @@ independiente:
    `implemented=False` en esta entrega.
 3. **Contratos reales** (`contracts/*.schema.json` + `contracts.py`) -
    `ToolRequest`, `ToolResult`, `MaintenanceProposal`, `EvidenceBundle` y
-   `PatchVerificationReport`, copiados campo a campo del propio plan
-   privado de desarrollo de este proyecto, cada uno con un archivo JSON
-   Schema normativo y un validador Python solo-stdlib equivalente.
+   `PatchVerificationReport`, cada uno con un archivo JSON Schema
+   normativo y un validador Python solo-stdlib copiado de él campo a
+   campo.
 4. **Límite de defensa contra inyección** (`knowledge/trust.py` +
    `knowledge/redaction.py`) - el contenido no confiable (un README, una
    línea de log, un mensaje de commit) siempre se envuelve como
@@ -183,8 +183,7 @@ directamente) para la suite de pruebas local completa.
 
 ## 🚀 HOJA DE RUTA
 
-Esta versión solo trae la Fase 0. Lo que queda, en el orden propio del
-plan privado de desarrollo de este proyecto:
+Esta versión solo trae la Fase 0. Lo que queda, en orden de fases:
 
 - **Fase 1 - Conocimiento recuperable.** Un índice local y versionado de
   documentación, manifiestos, contratos y runbooks aprobados - nunca

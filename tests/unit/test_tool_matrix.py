@@ -20,8 +20,8 @@ class ToolMatrixTests(unittest.TestCase):
         self.assertIsNone(lookup_tool(""))
 
     def test_every_registered_tool_is_observe_level_in_this_phase(self):
-        # Fase 0's own real scope (plan section 1.1) - nothing above
-        # OBSERVE is registered yet.
+        # Fase 0's own real scope - nothing above OBSERVE is registered
+        # yet.
         for name, descriptor in TOOL_MATRIX.items():
             with self.subTest(tool=name):
                 self.assertEqual(descriptor.risk_level, RiskLevel.OBSERVE)
