@@ -98,7 +98,7 @@ _PEM_BLOCK_RE = re.compile(
 
 _REDACTED = "[REDACTED]"
 
-# V07-010 (found in an independent revalidation audit, P1, residual
+# V07-010 (P1, residual
 # outside REV-013's own three original examples): a secret-named key
 # whose value is itself a nested JSON object or array
 # (`"password": {"value": "FAKE"}`, `"api_key": ["FAKE"]`) matches
