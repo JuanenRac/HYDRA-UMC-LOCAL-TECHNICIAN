@@ -12,11 +12,11 @@
   <img src="https://img.shields.io/badge/Lizenz-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Sprache-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Kern-nur%20stdlib-brightgreen.svg" alt="Nur-stdlib-Kern">
-  <img src="https://img.shields.io/badge/Phase-0%20von%206-367BF5.svg" alt="Phase 0 von 6">
+  <img src="https://img.shields.io/badge/Phase-3%20von%206-367BF5.svg" alt="Phase 3 von 6">
 </p>
 
-> **Status: v0.0.1, Scaffolding - Phase 0 von 6 (Inventar und
-> Sicherheitsgrundlage).** Diese Lieferung definiert die reale
+> **Status: v0.0.2, funktionsfähig - Phase 3 von 6, teilweise
+> (Werkzeug-Orchestrator).** Phase 0 definierte die reale
 > Risikostufen-Richtlinie (`policy/risk_levels.py`), eine feste
 > Werkzeug-Positivliste (`policy/tool_matrix.py`), die fünf realen
 > Minimalverträge, gegen die jeder künftige Werkzeugaufruf validieren
@@ -25,15 +25,21 @@
 > `log_redaction.py` von HYDRA-UMC-OPS-AGENT, sowie das wörtliche
 > Austrittskriterium dieser Phase 0 selbst: ein echter adversarialer
 > Test, der beweist, dass ein bösartiges abgerufenes Dokument niemals
-> einen Werkzeugaufruf auslösen oder ein Geheimnis preisgeben kann. Es
-> gibt noch keine Inferenz-Engine, keinen RAG-Index, keine echte
-> Werkzeugausführung und keine Integration mit HYDRA-UMC-SERVER - siehe
+> einen Werkzeugaufruf auslösen oder ein Geheimnis preisgeben kann. Phase
+> 3 verbindet 5 der 9 deklarierten OBSERVE-Werkzeuge mit einem echten
+> Handler (`orchestrator/dispatch.py`): `service.status`,
+> `storage.usage`, `network.port_status`, `system.temperature` und
+> `manifest.read` - jedes löst nur einen kurzen, auf der Positivliste
+> stehenden symbolischen Namen auf (`orchestrator/allowlist.py`),
+> niemals einen rohen Pfad/Host/Port, den ein abgerufenes Dokument
+> liefern könnte. Es gibt noch keine Inferenz-Engine, keinen RAG-Index
+> und keine Integration mit HYDRA-UMC-SERVER - siehe
 > [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) für die exakte
 > Befehlsoberfläche, die heute existiert.
 
 ---
 
-**Ehrlichkeitscheck - was heute wirklich läuft:** die Risikostufen-Richtlinie (`policy/risk_levels.py`), die feste Werkzeug-Zulassungsliste (`policy/tool_matrix.py`), die fünf Vertragsvalidatoren (`contracts.py` + `contracts/*.schema.json`) und die Injection-Abwehrgrenze (`knowledge/trust.py`, `knowledge/redaction.py`) sind alle real und getestet (50 bestandene Tests plus 28 Subtests über `tests/unit/` und `tests/adversarial/`). Jedes der neun Werkzeuge in `TOOL_MATRIX` ist `implemented=False` - die Zulassungsliste existiert, damit ein künftiger Handler dort einen sicheren Registrierungsort hat, nicht weil eines davon bereits aufgerufen werden könnte. Es gibt keine Inferenz-Engine, keinen RAG-Index, keine echte Werkzeugausführung und keine HYDRA-UMC-SERVER-Integration irgendwo in diesem Repository - die Fasen 1 bis 5 in der Roadmap weiter unten sind vollständig angestrebte Zukunftsarbeit ohne jeglichen Code dahinter. Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
+**Ehrlichkeitscheck - was heute wirklich läuft:** die Risikostufen-Richtlinie (`policy/risk_levels.py`), die feste Werkzeug-Zulassungsliste (`policy/tool_matrix.py`), die fünf Vertragsvalidatoren (`contracts.py` + `contracts/*.schema.json`), die Injection-Abwehrgrenze (`knowledge/trust.py`, `knowledge/redaction.py`), und nun die ersten 5 echten OBSERVE-Werkzeug-Handler (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `system.temperature`, `manifest.read`) sind alle real und getestet (85 bestandene Tests plus 28 Subtests über `tests/unit/` und `tests/adversarial/`). Die übrigen 4 Werkzeuge in `TOOL_MATRIX` (`process.list`, `network.connectivity`, `update.pending`, `logs.read`) bleiben absichtlich `implemented=False` - jedes benötigt ein eigenes, separates Design (Filterung, Schwärzung oder eine echte HYDRA-UMC-UPDATER-Integration), kein Versehen. Es gibt weiterhin keine Inferenz-Engine, keinen RAG-Index und keine HYDRA-UMC-SERVER-Integration irgendwo in diesem Repository - die Phasen 1, 2, 4 und 5 in der Roadmap weiter unten bleiben vollständig angestrebte Zukunftsarbeit ohne jeglichen Code dahinter, und Phase 3 selbst ist teilweise (5 von 9 Werkzeugen). Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
 
 ---
 
@@ -198,8 +204,8 @@ vollständige lokale Testsuite aus.
 
 ## 🚀 ROADMAP
 
-Diese Version bringt nur Phase 0. Was in der Reihenfolge der Phasen
-verbleibt:
+Diese Version bringt Phase 0 und einen Teil von Phase 3. Was in der
+Reihenfolge der Phasen verbleibt:
 
 - **Phase 1 - Abrufbares Wissen.** Ein lokaler, versionierter Index
   genehmigter Dokumentation, Manifeste, Verträge und Runbooks - niemals
@@ -209,9 +215,14 @@ verbleibt:
   Qwen2.5-Coder-1.5B, Qwen3-1.7B-Instruct), erst gewählt, nachdem die
   reale Hailo-Kompatibilität, Latenz, Sprachqualität, Leistungsaufnahme
   und Lizenz verifiziert sind.
-- **Phase 3 - Werkzeug-Orchestrator.** Deterministischer Code, der die
-  ersten realen `OBSERVE`-Stufen-Werkzeug-Handler mit `TOOL_MATRIX`
-  verbindet, mit Richtliniendurchsetzung bei jedem Aufruf.
+- **Phase 3 - Werkzeug-Orchestrator (teilweise: 5 von 9).**
+  Deterministischer Code, der die ersten realen `OBSERVE`-Stufen-
+  Werkzeug-Handler mit `TOOL_MATRIX` verbindet, mit
+  Richtliniendurchsetzung bei jedem Aufruf. `service.status`,
+  `storage.usage`, `network.port_status`, `system.temperature` und
+  `manifest.read` sind bereits real (`orchestrator/dispatch.py`);
+  `process.list`, `network.connectivity`, `update.pending` und
+  `logs.read` bleiben für eine spätere Lieferung.
 - **Phase 4 - Vorschläge und Nachweise.** Reale Erzeugung von
   `MaintenanceProposal` und `EvidenceBundle`, eskalierend hin zur
   künftigen Developer-Node-Rolle von HYDRA-UMC-DEV-SERVER.
@@ -220,7 +231,8 @@ verbleibt:
   von Phase 0 bereits etablierten Richtlinien- und Bestätigungsgrenzen
   zu umgehen.
 
-Nichts davon existiert bisher in diesem Repository - siehe
+Phase 1, 2, 4 und 5 existieren noch nicht in diesem Repository, und
+Phase 3 selbst ist nur teilweise fertig - siehe
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) dafür, was jede Phase
 einschließt und explizit ausschließt, und
 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) für die

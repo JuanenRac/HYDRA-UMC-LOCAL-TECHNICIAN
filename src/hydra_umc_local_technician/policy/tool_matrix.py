@@ -16,6 +16,13 @@ in its first version (service health, processes, ports, storage,
 temperature, connectivity, pending updates, permitted logs). No tool at
 REVERSIBLE_OPERATION or above is registered yet - see risk_levels.py's
 own POLICIES for why (Fase 0 does not implement one).
+
+Fase 3 wires the first 5 of these (`service.status`, `storage.usage`,
+`network.port_status`, `system.temperature`, `manifest.read`) to a real
+handler in `orchestrator/dispatch.py` - `implemented=True` below reflects
+that. The other 4 stay `implemented=False`: real, deliberate scope for a
+later slice, not an oversight - see dispatch.py's own module doc comment
+for exactly why each one needs its own separate design.
 """
 from __future__ import annotations
 
@@ -46,6 +53,7 @@ TOOL_MATRIX: dict[str, ToolDescriptor] = {
         name="service.status",
         risk_level=RiskLevel.OBSERVE,
         description="Reports whether a named systemd unit is active, matching HYDRA-UMC-OPS-AGENT's own honest systemd-unavailable degradation pattern.",
+        implemented=True,
     ),
     "process.list": ToolDescriptor(
         name="process.list",
@@ -56,16 +64,19 @@ TOOL_MATRIX: dict[str, ToolDescriptor] = {
         name="network.port_status",
         risk_level=RiskLevel.OBSERVE,
         description="Reports whether an expected local port is listening.",
+        implemented=True,
     ),
     "storage.usage": ToolDescriptor(
         name="storage.usage",
         risk_level=RiskLevel.OBSERVE,
         description="Reports disk usage for the paths this ecosystem's own services actually write to.",
+        implemented=True,
     ),
     "system.temperature": ToolDescriptor(
         name="system.temperature",
         risk_level=RiskLevel.OBSERVE,
         description="Reports the real CPU/board temperature, honestly degrading (never a guessed value) where the sensor isn't available - same convention as HYDRA-UMC-SERVER's own getSystemMetrics().",
+        implemented=True,
     ),
     "network.connectivity": ToolDescriptor(
         name="network.connectivity",
@@ -86,6 +97,7 @@ TOOL_MATRIX: dict[str, ToolDescriptor] = {
         name="manifest.read",
         risk_level=RiskLevel.OBSERVE,
         description="Reads a real hydra-umc.project.json (name/version/maturity/role) for a named project - same real, tested pattern as HYDRA-UMC-OPS-AGENT's and HYDRA-UMC-DEV-SERVER's own inventory.py.",
+        implemented=True,
     ),
 }
 

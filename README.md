@@ -12,11 +12,11 @@
   <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="stdlib-only core">
-  <img src="https://img.shields.io/badge/Phase-0%20of%206-367BF5.svg" alt="Fase 0 of 6">
+  <img src="https://img.shields.io/badge/Phase-3%20of%206-367BF5.svg" alt="Fase 3 of 6">
 </p>
 
-> **Status: v0.0.1, scaffolding - Fase 0 of 6 (inventory and security
-> baseline).** This delivery defines the real risk-level policy
+> **Status: v0.0.2, functional - Fase 3 of 6, partial (tool
+> orchestrator).** Fase 0 defined the real risk-level policy
 > (`policy/risk_levels.py`), a fixed tool allowlist
 > (`policy/tool_matrix.py`), the five real minimal contracts every future
 > tool call must validate against (`contracts/*.schema.json` +
@@ -24,14 +24,19 @@
 > HYDRA-UMC-OPS-AGENT's own already-tested `log_redaction.py`, and Fase
 > 0's own literal exit criterion: a real adversarial test proving a
 > malicious retrieved document can never trigger a tool call or leak a
-> secret. No inference engine, no RAG index, no real tool execution, and
+> secret. Fase 3 wires the first 5 of the 9 declared OBSERVE-level tools
+> to a real handler (`orchestrator/dispatch.py`): `service.status`,
+> `storage.usage`, `network.port_status`, `system.temperature` and
+> `manifest.read` - each resolving only a short, allow-listed symbolic
+> name (`orchestrator/allowlist.py`), never a raw path/host/port a
+> retrieved document could supply. No inference engine, no RAG index, and
 > no HYDRA-UMC-SERVER integration exist yet - see
 > [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) for the exact command
 > surface that exists today.
 
 ---
 
-**Honesty check - what actually runs today:** the risk-level policy (`policy/risk_levels.py`), the fixed tool allowlist (`policy/tool_matrix.py`), the five contract validators (`contracts.py` + `contracts/*.schema.json`), and the injection-defense boundary (`knowledge/trust.py`, `knowledge/redaction.py`) are all real and tested (50 tests plus 28 subtests passing across `tests/unit/` and `tests/adversarial/`). Every one of the nine tools in `TOOL_MATRIX` is `implemented=False` - the allowlist exists so a future handler has somewhere safe to register, not because any of them can be called yet. There is no inference engine, no RAG index, no real tool execution, and no HYDRA-UMC-SERVER integration anywhere in this repository - Fases 1 through 5 in the Roadmap below are entirely aspirational, with zero code behind them. See `CHANGELOG.md` for exactly what has shipped so far.
+**Honesty check - what actually runs today:** the risk-level policy (`policy/risk_levels.py`), the fixed tool allowlist (`policy/tool_matrix.py`), the five contract validators (`contracts.py` + `contracts/*.schema.json`), the injection-defense boundary (`knowledge/trust.py`, `knowledge/redaction.py`), and now the first 5 real OBSERVE-level tool handlers (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `system.temperature`, `manifest.read`) are all real and tested (85 tests plus 28 subtests passing across `tests/unit/` and `tests/adversarial/`). The other 4 tools in `TOOL_MATRIX` (`process.list`, `network.connectivity`, `update.pending`, `logs.read`) are still `implemented=False` on purpose - each needs its own separate design (filtering, redaction, or a real HYDRA-UMC-UPDATER integration boundary), not an oversight. There is still no inference engine, no RAG index, and no HYDRA-UMC-SERVER integration anywhere in this repository - Fases 1, 2, 4 and 5 in the Roadmap below remain entirely aspirational, with zero code behind them, and Fase 3 itself is partial (5 of 9 tools). See `CHANGELOG.md` for exactly what has shipped so far.
 
 ---
 
@@ -42,14 +47,15 @@ ecosystem itself: it observes, explains, diagnoses and proposes
 maintenance for the ecosystem's own services and nodes - it never trains
 a new foundation model, and it never acts by generating text. Its target
 platform is the CM5, using the Hailo-10H accelerator once installed, but
-Fase 0 needs neither: everything in this delivery is pure Python
-validating pure data.
+nothing in this delivery needs it yet: everything through Fase 3 is pure
+Python reading real host state and validating pure data - no model
+inference anywhere in this codebase yet.
 
 **Non-negotiable principle:** the AI never gets authority by generating
 a response. Policy, permissions and human confirmation decide every real
 action - never the model's own words.
 
-This delivery (Fase 0) ships four real, independently useful pieces:
+This delivery ships five real, independently useful pieces:
 
 1. **Risk-level policy** (`policy/risk_levels.py`) - six ordered levels,
    `INFORM` through `PHYSICAL_ACTION`, each with a real, tested policy
@@ -59,8 +65,9 @@ This delivery (Fase 0) ships four real, independently useful pieces:
    codebase.
 2. **Tool matrix** (`policy/tool_matrix.py`) - a fixed allowlist of nine
    real `OBSERVE`-level tool names. A tool name absent from this
-   dictionary can never be called, full stop - and every name present in
-   it is still `implemented=False` in this delivery.
+   dictionary can never be called, full stop - 5 of the 9 are now wired
+   to a real handler (see 5 below), the other 4 stay `implemented=False`
+   on purpose.
 3. **Real contracts** (`contracts/*.schema.json` + `contracts.py`) -
    `ToolRequest`, `ToolResult`, `MaintenanceProposal`, `EvidenceBundle`
    and `PatchVerificationReport`, each with a normative JSON Schema file
@@ -73,6 +80,17 @@ This delivery (Fase 0) ships four real, independently useful pieces:
    `ToolRequest` takes already-typed, already-separated fields and
    refuses any unregistered or unimplemented tool name before the object
    ever exists.
+5. **Tool orchestrator** (`orchestrator/dispatch.py` +
+   `orchestrator/allowlist.py`, Fase 3) - `dispatch_tool_request()` runs
+   an already-validated `ToolRequest` for real and returns a real
+   `ToolResult`: `service.status` (real `systemctl is-active`),
+   `storage.usage` (`shutil.disk_usage`), `network.port_status` (a real
+   socket probe), `system.temperature` (the real Linux thermal-zone
+   sysfs path), and `manifest.read` (a real `hydra-umc.project.json`
+   read). None of these accepts a raw path/host/port/unit name directly -
+   only a short symbolic name resolved through a fixed
+   `OrchestratorConfig`, so a poisoned document's own text can never name
+   an arbitrary real target, only ever a name already on the allow-list.
 
 ```
 $ hydra-umc-local-technician contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
@@ -130,12 +148,15 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   ├── knowledge/
 │   │   ├── redaction.py      # Real secret redaction, ported from HYDRA-UMC-OPS-AGENT
 │   │   └── trust.py          # UntrustedText + build_tool_request_from_model_output(): the injection-defense boundary
+│   ├── orchestrator/          # Fase 3 - the first 5 real OBSERVE-level tool handlers
+│   │   ├── allowlist.py      # OrchestratorConfig: symbolic-name allow-list a handler resolves against, never a raw path/host/port
+│   │   └── dispatch.py       # dispatch_tool_request(): runs a validated ToolRequest for real, returns a real ToolResult
 │   ├── contracts.py           # Real, stdlib-only validator for the five minimal contracts
 │   └── cli.py                 # contracts validate subcommand + --version
 ├── contracts/                 # Normative JSON Schema files (draft 2020-12) for the five contracts
 ├── tests/
 │   ├── unit/                  # Real tests for every module above
-│   ├── adversarial/           # test_injection_defense.py - Fase 0's own literal exit criterion
+│   ├── adversarial/           # test_injection_defense.py - Fase 0's own literal exit criterion, extended for Fase 3's own allow-list defense
 │   └── fixtures/              # valid/invalid JSON fixtures for each contract
 ├── docs/
 │   ├── ARCHITECTURE.md        # Purpose, five pieces (target design), target architecture, ecosystem relationships
@@ -178,7 +199,7 @@ NOT run the test suite itself; run `./build.sh`/`build.bat` (or
 
 ## 🚀 ROADMAP
 
-This version ships Fase 0 only. What remains, in phase order:
+This version ships Fase 0 and part of Fase 3. What remains, in phase order:
 
 - **Fase 1 - Retrievable knowledge.** A local, versioned index of
   approved documentation, manifests, contracts and runbooks - never
@@ -187,9 +208,13 @@ This version ships Fase 0 only. What remains, in phase order:
   Hailo-10H (candidates: Qwen2.5-1.5B-Instruct, Qwen2.5-Coder-1.5B,
   Qwen3-1.7B-Instruct), chosen only once real Hailo compatibility,
   latency, language quality, power draw and license are verified.
-- **Fase 3 - Tool orchestrator.** Deterministic code wiring the first
-  real `OBSERVE`-level tool handlers to `TOOL_MATRIX`, with policy
-  enforcement on every call.
+- **Fase 3 - Tool orchestrator (partial: 5 of 9 tools).** Deterministic
+  code wiring the first real `OBSERVE`-level tool handlers to
+  `TOOL_MATRIX`, with policy enforcement on every call. `service.status`,
+  `storage.usage`, `network.port_status`, `system.temperature` and
+  `manifest.read` are real now (`orchestrator/dispatch.py`);
+  `process.list`, `network.connectivity`, `update.pending` and
+  `logs.read` remain for a later slice.
 - **Fase 4 - Proposals and evidence.** Real `MaintenanceProposal` and
   `EvidenceBundle` generation, escalating toward HYDRA-UMC-DEV-SERVER's
   own future Developer Node role.
@@ -197,7 +222,8 @@ This version ships Fase 0 only. What remains, in phase order:
   HYDRA-UMC-SERVER/Studio, then a CLI, then voice - never bypassing the
   policy and confirmation boundaries Fase 0 already establishes.
 
-None of the above exists in this repository yet - see
+Fases 1, 2, 4 and 5 do not exist in this repository yet, and Fase 3
+itself is only partially done - see
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for what each phase is
 scoped to include and explicitly exclude, and
 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) for the security

@@ -12,27 +12,33 @@
   <img src="https://img.shields.io/badge/Licence-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Langage-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Noyau-stdlib%20uniquement-brightgreen.svg" alt="Noyau stdlib uniquement">
-  <img src="https://img.shields.io/badge/Phase-0%20sur%206-367BF5.svg" alt="Phase 0 sur 6">
+  <img src="https://img.shields.io/badge/Phase-3%20sur%206-367BF5.svg" alt="Phase 3 sur 6">
 </p>
 
-> **Statut : v0.0.1, scaffolding - Phase 0 sur 6 (inventaire et base de
-> sécurité).** Cette livraison définit la politique réelle de niveaux de
-> risque (`policy/risk_levels.py`), une liste blanche fixe d'outils
-> (`policy/tool_matrix.py`), les cinq contrats minimaux réels que tout
-> futur appel d'outil devra valider (`contracts/*.schema.json` +
-> `contracts.py`), une réelle occultation de secrets portée depuis le
-> `log_redaction.py` déjà testé de HYDRA-UMC-OPS-AGENT, et le critère de
-> sortie littéral de la Phase 0 elle-même : un vrai test contradictoire
-> prouvant qu'un document malveillant récupéré ne peut jamais déclencher
-> un appel d'outil ni divulguer un secret. Aucun moteur d'inférence,
-> aucun index RAG, aucune exécution réelle d'outil, et aucune intégration
+> **Statut : v0.0.2, fonctionnel - Phase 3 sur 6, partielle
+> (orchestrateur d'outils).** La Phase 0 a défini la politique réelle de
+> niveaux de risque (`policy/risk_levels.py`), une liste blanche fixe
+> d'outils (`policy/tool_matrix.py`), les cinq contrats minimaux réels
+> que tout futur appel d'outil devra valider
+> (`contracts/*.schema.json` + `contracts.py`), une réelle occultation de
+> secrets portée depuis le `log_redaction.py` déjà testé de
+> HYDRA-UMC-OPS-AGENT, et le critère de sortie littéral de la Phase 0
+> elle-même : un vrai test contradictoire prouvant qu'un document
+> malveillant récupéré ne peut jamais déclencher un appel d'outil ni
+> divulguer un secret. La Phase 3 connecte 5 des 9 outils OBSERVE
+> déclarés à un gestionnaire réel (`orchestrator/dispatch.py`) :
+> `service.status`, `storage.usage`, `network.port_status`,
+> `system.temperature` et `manifest.read` - chacun ne résolvant qu'un
+> nom symbolique sur liste blanche (`orchestrator/allowlist.py`), jamais
+> un chemin/hôte/port brut qu'un document récupéré pourrait fournir.
+> Aucun moteur d'inférence, aucun index RAG, et aucune intégration
 > avec HYDRA-UMC-SERVER n'existent encore - voir
 > [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) pour la surface de
 > commandes exacte qui existe aujourd'hui.
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** la politique de niveaux de risque (`policy/risk_levels.py`), la liste fixe d'outils autorisés (`policy/tool_matrix.py`), les cinq validateurs de contrat (`contracts.py` + `contracts/*.schema.json`), et la frontière de défense contre l'injection (`knowledge/trust.py`, `knowledge/redaction.py`) sont tous réels et testés (50 tests plus 28 sous-tests passants entre `tests/unit/` et `tests/adversarial/`). Chacun des neuf outils de `TOOL_MATRIX` est `implemented=False` - la liste existe pour qu'un futur gestionnaire ait un endroit sûr où s'enregistrer, pas parce que l'un d'eux peut déjà être appelé. Il n'y a aucun moteur d'inférence, aucun index RAG, aucune exécution réelle d'outil, et aucune intégration avec HYDRA-UMC-SERVER nulle part dans ce dépôt - les Fases 1 à 5 de la feuille de route ci-dessous sont entièrement aspirationnelles, sans aucun code derrière. Voir `CHANGELOG.md` pour ce qui a été livré exactement jusqu'à présent.
+**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** la politique de niveaux de risque (`policy/risk_levels.py`), la liste fixe d'outils autorisés (`policy/tool_matrix.py`), les cinq validateurs de contrat (`contracts.py` + `contracts/*.schema.json`), la frontière de défense contre l'injection (`knowledge/trust.py`, `knowledge/redaction.py`), et désormais les 5 premiers gestionnaires réels d'outils OBSERVE (`orchestrator/dispatch.py` + `orchestrator/allowlist.py` : `service.status`, `storage.usage`, `network.port_status`, `system.temperature`, `manifest.read`) sont tous réels et testés (85 tests plus 28 sous-tests passants entre `tests/unit/` et `tests/adversarial/`). Les 4 autres outils de `TOOL_MATRIX` (`process.list`, `network.connectivity`, `update.pending`, `logs.read`) restent `implemented=False` volontairement - chacun nécessite sa propre conception séparée (filtrage, occultation, ou une réelle intégration avec HYDRA-UMC-UPDATER), pas un oubli. Il n'y a toujours aucun moteur d'inférence, aucun index RAG, et aucune intégration avec HYDRA-UMC-SERVER nulle part dans ce dépôt - les Phases 1, 2, 4 et 5 de la feuille de route ci-dessous restent entièrement aspirationnelles, sans aucun code derrière, et la Phase 3 elle-même est partielle (5 outils sur 9). Voir `CHANGELOG.md` pour ce qui a été livré exactement jusqu'à présent.
 
 ---
 
@@ -190,7 +196,7 @@ directement) pour la suite de tests locale complète.
 
 ## 🚀 FEUILLE DE ROUTE
 
-Cette version n'apporte que la Phase 0. Ce qui reste, dans l'ordre des
+Cette version apporte la Phase 0 et une partie de la Phase 3. Ce qui reste, dans l'ordre des
 phases :
 
 - **Phase 1 - Connaissance récupérable.** Un index local et versionné de
@@ -201,9 +207,13 @@ phases :
   Qwen3-1.7B-Instruct), choisi seulement une fois vérifiées la
   compatibilité Hailo réelle, la latence, la qualité linguistique, la
   consommation et la licence.
-- **Phase 3 - Orchestrateur d'outils.** Code déterministe connectant les
-  premiers gestionnaires réels d'outils de niveau `OBSERVE` à
-  `TOOL_MATRIX`, avec la politique appliquée à chaque appel.
+- **Phase 3 - Orchestrateur d'outils (partielle : 5 sur 9).** Code
+  déterministe connectant les premiers gestionnaires réels d'outils de
+  niveau `OBSERVE` à `TOOL_MATRIX`, avec la politique appliquée à chaque
+  appel. `service.status`, `storage.usage`, `network.port_status`,
+  `system.temperature` et `manifest.read` sont déjà réels
+  (`orchestrator/dispatch.py`) ; `process.list`, `network.connectivity`,
+  `update.pending` et `logs.read` restent pour une livraison ultérieure.
 - **Phase 4 - Propositions et preuves.** Génération réelle de
   `MaintenanceProposal` et `EvidenceBundle`, escaladant vers le futur
   rôle de Developer Node de HYDRA-UMC-DEV-SERVER.
@@ -212,7 +222,8 @@ phases :
   contourner les limites de politique et de confirmation déjà établies
   par la Phase 0.
 
-Rien de tout cela n'existe encore dans ce dépôt - voir
+Les Phases 1, 2, 4 et 5 n'existent pas encore dans ce dépôt, et la Phase
+3 elle-même n'est que partiellement faite - voir
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) pour ce que chaque phase
 inclut et exclut explicitement, et
 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) pour les invariants de
