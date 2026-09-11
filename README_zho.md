@@ -28,6 +28,10 @@
 
 ---
 
+**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)，以及注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)都是真实的并经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 50 个测试外加 28 个子测试全部通过)。`TOOL_MATRIX` 中的九个工具每一个都是 `implemented=False`——这份白名单的存在是为了让未来的处理程序有一个安全的注册位置，而不是因为其中任何一个工具现在就可以被调用。本仓库中任何地方都不存在推理引擎、RAG 索引、真实的工具执行，也没有与 HYDRA-UMC-SERVER 的集成——下方路线图中的第 1 到第 5 阶段完全是愿景，背后没有任何代码。具体已交付的内容请见 `CHANGELOG.md`。
+
+---
+
 ## 1. 🛠️ 技术概览
 
 HYDRA-UMC-LOCAL-TECHNICIAN 是为 HYDRA-UMC 生态系统自身量身打造的专用本地

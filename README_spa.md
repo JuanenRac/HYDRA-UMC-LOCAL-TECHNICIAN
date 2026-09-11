@@ -32,6 +32,10 @@
 
 ---
 
+**Comprobación de honestidad - qué funciona realmente hoy:** la política de niveles de riesgo (`policy/risk_levels.py`), la lista fija de herramientas permitidas (`policy/tool_matrix.py`), los cinco validadores de contrato (`contracts.py` + `contracts/*.schema.json`), y el límite de defensa contra inyecciones (`knowledge/trust.py`, `knowledge/redaction.py`) son todos reales y están testeados (50 tests más 28 subtests pasando entre `tests/unit/` y `tests/adversarial/`). Cada una de las nueve herramientas en `TOOL_MATRIX` es `implemented=False` - la lista existe para que un futuro manejador tenga dónde registrarse de forma segura, no porque ninguna de ellas se pueda llamar todavía. No hay motor de inferencia, ni índice RAG, ni ejecución real de herramientas, ni integración con HYDRA-UMC-SERVER en ningún lugar de este repositorio - las Fases 1 a 5 del Roadmap más abajo son totalmente aspiracionales, sin ningún código detrás. Ver `CHANGELOG.md` para lo que se ha entregado exactamente hasta ahora.
+
+---
+
 ## 1. 🛠️ VISIÓN TÉCNICA
 
 HYDRA-UMC-LOCAL-TECHNICIAN es una IA local especializada para el propio
