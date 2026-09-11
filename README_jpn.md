@@ -30,6 +30,10 @@
 
 ---
 
+**正直な現状確認 - 今日実際に動くもの:** リスクレベルポリシー(`policy/risk_levels.py`)、固定のツール許可リスト(`policy/tool_matrix.py`)、5 つの契約バリデーター(`contracts.py` + `contracts/*.schema.json`)、そしてインジェクション防御境界(`knowledge/trust.py`、`knowledge/redaction.py`)はすべて本物であり、テスト済みである(`tests/unit/` と `tests/adversarial/` 全体で 50 件のテストと 28 件のサブテストが成功)。`TOOL_MATRIX` に含まれる 9 個のツールはすべて `implemented=False` である——この許可リストは、将来のハンドラーが安全に登録できる場所を用意するために存在しているのであって、そのいずれかが既に呼び出せるからではない。このリポジトリのどこにも推論エンジン、RAG インデックス、実際のツール実行、そして HYDRA-UMC-SERVER との統合は存在しない——下記ロードマップのフェーズ 1 から 5 は完全に願望であり、裏付けとなるコードは一切ない。これまでに何が実際に出荷されたかは `CHANGELOG.md` を参照。
+
+---
+
 ## 1. 🛠️ 技術概要
 
 HYDRA-UMC-LOCAL-TECHNICIAN は HYDRA-UMC エコシステム自身のための専用ロー
