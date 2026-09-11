@@ -12,23 +12,28 @@
   <img src="https://img.shields.io/badge/许可证-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/语言-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/核心-仅标准库-brightgreen.svg" alt="仅标准库核心">
-  <img src="https://img.shields.io/badge/阶段-0%2F6-367BF5.svg" alt="第 0 阶段（共 6 阶段）">
+  <img src="https://img.shields.io/badge/阶段-3%2F6-367BF5.svg" alt="第 3 阶段（共 6 阶段）">
 </p>
 
-> **状态：v0.0.1，脚手架阶段 - 六阶段计划中的第 0 阶段（清单与安全基线）。**
-> 本次交付定义了真实的风险等级策略（`policy/risk_levels.py`）、一份固定的
+> **状态：v0.0.2，功能可用 - 六阶段计划中的第 3 阶段，部分完成（工具编排器）。**
+> 第 0 阶段定义了真实的风险等级策略（`policy/risk_levels.py`）、一份固定的
 > 工具白名单（`policy/tool_matrix.py`）、未来每一次工具调用都必须校验通过的
 > 五份真实最小合约（`contracts/*.schema.json` + `contracts.py`）、从
 > HYDRA-UMC-OPS-AGENT 自身已测试的 `log_redaction.py` 移植而来的真实密钥/
-> 敏感信息脱敏功能，以及本次第 0 阶段自身字面意义上的退出标准：一个真实的
-> 对抗性测试，证明恶意的被检索文档永远无法触发工具调用或泄露密钥。目前尚不
-> 存在推理引擎、RAG 索引、真实的工具执行，也没有与 HYDRA-UMC-SERVER 的集成 -
-> 参见 [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) 了解今天真实存在的命令
+> 敏感信息脱敏功能，以及第 0 阶段自身字面意义上的退出标准：一个真实的
+> 对抗性测试，证明恶意的被检索文档永远无法触发工具调用或泄露密钥。第 3 阶段
+> 将 9 个已声明的 OBSERVE 级工具中的 5 个连接到了真实的处理程序
+> （`orchestrator/dispatch.py`）：`service.status`、`storage.usage`、
+> `network.port_status`、`system.temperature` 和 `manifest.read` - 每一个
+> 都只解析一个白名单中的符号化名称（`orchestrator/allowlist.py`），绝不
+> 直接使用被检索文档可能提供的原始路径/主机/端口。目前尚不存在推理引擎、
+> RAG 索引，也没有与 HYDRA-UMC-SERVER 的集成 - 参见
+> [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) 了解今天真实存在的命令
 > 界面范围。
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)，以及注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)都是真实的并经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 50 个测试外加 28 个子测试全部通过)。`TOOL_MATRIX` 中的九个工具每一个都是 `implemented=False`——这份白名单的存在是为了让未来的处理程序有一个安全的注册位置，而不是因为其中任何一个工具现在就可以被调用。本仓库中任何地方都不存在推理引擎、RAG 索引、真实的工具执行，也没有与 HYDRA-UMC-SERVER 的集成——下方路线图中的第 1 到第 5 阶段完全是愿景，背后没有任何代码。具体已交付的内容请见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)，以及现在的前 5 个真实 OBSERVE 工具处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`system.temperature`、`manifest.read`)都是真实的并经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 85 个测试外加 28 个子测试全部通过)。`TOOL_MATRIX` 中其余的 4 个工具(`process.list`、`network.connectivity`、`update.pending`、`logs.read`)仍有意保持 `implemented=False`——每一个都需要自己独立的设计(过滤、脱敏，或与 HYDRA-UMC-UPDATER 的真实集成)，并非疏漏。本仓库中任何地方仍不存在推理引擎、RAG 索引，也没有与 HYDRA-UMC-SERVER 的集成——下方路线图中的第 1、2、4、5 阶段仍完全是愿景，背后没有任何代码，第 3 阶段本身也只是部分完成(9 个工具中的 5 个)。具体已交付的内容请见 `CHANGELOG.md`。
 
 ---
 
@@ -157,7 +162,7 @@ CHANGELOG - 它并**不**运行测试套件；要运行完整的本地测试套�
 
 ## 🚀 路线图
 
-本版本只交付第 0 阶段。剩余部分，按阶段顺序：
+本版本交付了第 0 阶段和第 3 阶段的一部分。剩余部分，按阶段顺序：
 
 - **第 1 阶段 - 可检索知识。** 一个本地的、带版本管理的索引，涵盖已批准的
   文档、清单、合约和运维手册 - 绝不会盲目地在整块磁盘上训练。
@@ -165,15 +170,20 @@ CHANGELOG - 它并**不**运行测试套件；要运行完整的本地测试套�
   Qwen2.5-1.5B-Instruct、Qwen2.5-Coder-1.5B、Qwen3-1.7B-Instruct），只有
   在验证了真实的 Hailo 兼容性、延迟、语言质量、功耗和许可证之后才会真正
   选定。
-- **第 3 阶段 - 工具编排器。** 确定性代码，将首批真实的 `OBSERVE` 级工具
-  处理程序接入 `TOOL_MATRIX`，并在每次调用时强制执行策略。
+- **第 3 阶段 - 工具编排器（部分完成：9 个中的 5 个）。** 确定性代码，将
+  首批真实的 `OBSERVE` 级工具处理程序接入 `TOOL_MATRIX`，并在每次调用时
+  强制执行策略。`service.status`、`storage.usage`、`network.port_status`、
+  `system.temperature` 和 `manifest.read` 现已真实实现
+  (`orchestrator/dispatch.py`)；`process.list`、`network.connectivity`、
+  `update.pending` 和 `logs.read` 留待后续交付。
 - **第 4 阶段 - 提案与证据。** 真实生成 `MaintenanceProposal` 和
   `EvidenceBundle`，向 HYDRA-UMC-DEV-SERVER 未来的 Developer Node 角色升级。
 - **第 5 阶段 - 用户界面。** 一个集成到 HYDRA-UMC-SERVER/Studio 中的本地
   API，然后是一个 CLI，再然后是语音 - 绝不会绕过第 0 阶段已经建立的策略与
   确认边界。
 
-以上内容目前均尚未存在于本仓库中 - 各阶段明确包含与排除的内容参见
+第 1、2、4、5 阶段目前均尚未存在于本仓库中，第 3 阶段本身也只是部分完成
+- 各阶段明确包含与排除的内容参见
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，各阶段必须持续遵守的安全
 不变量参见 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md)。
 

@@ -12,11 +12,11 @@
   <img src="https://img.shields.io/badge/Licenza-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Linguaggio-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Nucleo-solo%20stdlib-brightgreen.svg" alt="Nucleo solo stdlib">
-  <img src="https://img.shields.io/badge/Fase-0%20di%206-367BF5.svg" alt="Fase 0 di 6">
+  <img src="https://img.shields.io/badge/Fase-3%20di%206-367BF5.svg" alt="Fase 3 di 6">
 </p>
 
-> **Stato: v0.0.1, scaffolding - Fase 0 di 6 (inventario e base di
-> sicurezza).** Questa consegna definisce la politica reale dei livelli
+> **Stato: v0.0.2, funzionale - Fase 3 di 6, parziale (orchestratore di
+> strumenti).** La Fase 0 ha definito la politica reale dei livelli
 > di rischio (`policy/risk_levels.py`), una lista bianca fissa di
 > strumenti (`policy/tool_matrix.py`), i cinque contratti minimi reali
 > che ogni futura chiamata a uno strumento dovrà validare
@@ -25,15 +25,20 @@
 > HYDRA-UMC-OPS-AGENT, e il criterio di uscita letterale della stessa
 > Fase 0: un vero test avversariale che dimostra che un documento
 > malevolo recuperato non può mai innescare una chiamata a uno strumento
-> né rivelare un segreto. Non esistono ancora un motore di inferenza, un
-> indice RAG, una vera esecuzione di strumenti, né un'integrazione con
-> HYDRA-UMC-SERVER - vedi
+> né rivelare un segreto. La Fase 3 collega 5 dei 9 strumenti OBSERVE
+> dichiarati a un handler reale (`orchestrator/dispatch.py`):
+> `service.status`, `storage.usage`, `network.port_status`,
+> `system.temperature` e `manifest.read` - ciascuno risolve solo un nome
+> simbolico in whitelist (`orchestrator/allowlist.py`), mai un
+> percorso/host/porta grezzo che un documento recuperato potrebbe
+> fornire. Non esistono ancora un motore di inferenza, un indice RAG,
+> né un'integrazione con HYDRA-UMC-SERVER - vedi
 > [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) per la superficie di
 > comandi esatta che esiste oggi.
 
 ---
 
-**Controllo di onestà - cosa funziona davvero oggi:** la policy dei livelli di rischio (`policy/risk_levels.py`), l'elenco fisso di strumenti consentiti (`policy/tool_matrix.py`), i cinque validatori di contratto (`contracts.py` + `contracts/*.schema.json`), e il confine di difesa dalle injection (`knowledge/trust.py`, `knowledge/redaction.py`) sono tutti reali e testati (50 test più 28 subtest superati tra `tests/unit/` e `tests/adversarial/`). Ognuno dei nove strumenti in `TOOL_MATRIX` è `implemented=False` - l'allowlist esiste affinché un futuro handler abbia un posto sicuro dove registrarsi, non perché uno di essi sia già chiamabile. Non esiste alcun motore di inferenza, alcun indice RAG, alcuna esecuzione reale di strumenti, né alcuna integrazione con HYDRA-UMC-SERVER in nessuna parte di questo repository - le Fasi da 1 a 5 nella Roadmap più sotto sono interamente aspirazionali, senza alcun codice dietro. Vedi `CHANGELOG.md` per ciò che è stato consegnato esattamente finora.
+**Controllo di onestà - cosa funziona davvero oggi:** la policy dei livelli di rischio (`policy/risk_levels.py`), l'elenco fisso di strumenti consentiti (`policy/tool_matrix.py`), i cinque validatori di contratto (`contracts.py` + `contracts/*.schema.json`), il confine di difesa dalle injection (`knowledge/trust.py`, `knowledge/redaction.py`), e ora i primi 5 handler reali di strumenti OBSERVE (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `system.temperature`, `manifest.read`) sono tutti reali e testati (85 test più 28 subtest superati tra `tests/unit/` e `tests/adversarial/`). Gli altri 4 strumenti in `TOOL_MATRIX` (`process.list`, `network.connectivity`, `update.pending`, `logs.read`) restano `implemented=False` di proposito - ciascuno richiede un proprio disegno separato (filtraggio, redazione, o una vera integrazione con HYDRA-UMC-UPDATER), non è una svista. Non esiste ancora alcun motore di inferenza, alcun indice RAG, né alcuna integrazione con HYDRA-UMC-SERVER in nessuna parte di questo repository - le Fasi 1, 2, 4 e 5 nella Roadmap più sotto restano interamente aspirazionali, senza alcun codice dietro, e la stessa Fase 3 è parziale (5 strumenti su 9). Vedi `CHANGELOG.md` per ciò che è stato consegnato esattamente finora.
 
 ---
 
@@ -189,7 +194,7 @@ esegue la suite di test; esegui `./build.sh`/`build.bat` (o
 
 ## 🚀 ROADMAP
 
-Questa versione porta solo la Fase 0. Ciò che resta, in ordine di fase:
+Questa versione porta la Fase 0 e parte della Fase 3. Ciò che resta, in ordine di fase:
 
 - **Fase 1 - Conoscenza recuperabile.** Un indice locale e versionato di
   documentazione, manifesti, contratti e runbook approvati - mai
@@ -199,9 +204,13 @@ Questa versione porta solo la Fase 0. Ciò che resta, in ordine di fase:
   Qwen3-1.7B-Instruct), scelto solo dopo aver verificato la reale
   compatibilità Hailo, la latenza, la qualità linguistica, il consumo e
   la licenza.
-- **Fase 3 - Orchestratore di strumenti.** Codice deterministico che
-  collega i primi gestori reali di strumenti di livello `OBSERVE` a
-  `TOOL_MATRIX`, con la politica applicata a ogni chiamata.
+- **Fase 3 - Orchestratore di strumenti (parziale: 5 su 9).** Codice
+  deterministico che collega i primi gestori reali di strumenti di
+  livello `OBSERVE` a `TOOL_MATRIX`, con la politica applicata a ogni
+  chiamata. `service.status`, `storage.usage`, `network.port_status`,
+  `system.temperature` e `manifest.read` sono già reali
+  (`orchestrator/dispatch.py`); `process.list`, `network.connectivity`,
+  `update.pending` e `logs.read` restano per una consegna successiva.
 - **Fase 4 - Proposte e prove.** Generazione reale di
   `MaintenanceProposal` ed `EvidenceBundle`, con escalation verso il
   futuro ruolo di Developer Node di HYDRA-UMC-DEV-SERVER.
@@ -209,7 +218,8 @@ Questa versione porta solo la Fase 0. Ciò che resta, in ordine di fase:
   HYDRA-UMC-SERVER/Studio, poi una CLI, poi la voce - senza mai aggirare
   i confini di politica e conferma già stabiliti dalla Fase 0.
 
-Nulla di quanto sopra esiste ancora in questo repository - vedi
+Le Fasi 1, 2, 4 e 5 non esistono ancora in questo repository, e la
+stessa Fase 3 è solo parzialmente fatta - vedi
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) per ciò che ogni fase
 include ed esclude esplicitamente, e
 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) per gli invarianti di
