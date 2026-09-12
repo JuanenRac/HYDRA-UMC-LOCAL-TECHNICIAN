@@ -17,13 +17,12 @@ temperature, connectivity, pending updates, permitted logs). No tool at
 REVERSIBLE_OPERATION or above is registered yet - see risk_levels.py's
 own POLICIES for why (Fase 0 does not implement one).
 
-Fase 3 wires 8 of these (`service.status`, `storage.usage`,
-`network.port_status`, `network.connectivity`, `system.temperature`,
-`manifest.read`, `logs.read`, `process.list`) to a real handler in
-`orchestrator/dispatch.py` - `implemented=True` below reflects that. The
-other 1 (`update.pending`) stays `implemented=False`: real, deliberate
-scope for a later slice, not an oversight - it needs a real
-HYDRA-UMC-UPDATER integration boundary this module does not have yet.
+Fase 3 wires all 9 of these to a real handler in
+`orchestrator/dispatch.py` - `implemented=True` below reflects that.
+`update.pending` is the last one; it needs the optional
+`hydra-umc-updater` dependency (the `update-check` extra) to actually
+check GitHub, and degrades honestly (`available: false`) without it -
+see `dispatch.py`'s own module doc comment for the full design.
 """
 from __future__ import annotations
 
@@ -90,6 +89,7 @@ TOOL_MATRIX: dict[str, ToolDescriptor] = {
         name="update.pending",
         risk_level=RiskLevel.OBSERVE,
         description="Reports whether HYDRA-UMC-UPDATER has a pending update for a named project - never downloads or applies one itself.",
+        implemented=True,
     ),
     "logs.read": ToolDescriptor(
         name="logs.read",

@@ -15,11 +15,13 @@ guesses a reading.
 import json
 import socket
 import unittest
+import unittest.mock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from hydra_umc_local_technician.contracts import ContractValidationError, validate
 from hydra_umc_local_technician.knowledge.trust import build_tool_request_from_model_output
+from hydra_umc_local_technician.orchestrator import dispatch as dispatch_module
 from hydra_umc_local_technician.orchestrator.allowlist import OrchestratorConfig
 from hydra_umc_local_technician.orchestrator.dispatch import ToolDispatchError, dispatch_tool_request
 from hydra_umc_local_technician.policy.tool_matrix import TOOL_MATRIX
@@ -347,6 +349,122 @@ class ManifestReadTests(unittest.TestCase):
             config = OrchestratorConfig(ecosystem_root=Path(tmp))
             with self.assertRaises(ToolDispatchError):
                 dispatch_tool_request(_request("manifest.read", {"project": "HYDRA-UMC-../../etc"}), config)
+
+
+class _FakeUpdaterVersion:
+    """Stand-in for hydra_umc_updater.version_parse.Version - real
+    comparison/str semantics, no dependency on the real optional package
+    being installed to test the deterministic logic around it."""
+
+    def __init__(self, major: int, minor: int, patch: int):
+        self.major, self.minor, self.patch = major, minor, patch
+
+    def _tuple(self):
+        return (self.major, self.minor, self.patch)
+
+    def __lt__(self, other):
+        return self._tuple() < other._tuple()
+
+    def __eq__(self, other):
+        return isinstance(other, _FakeUpdaterVersion) and self._tuple() == other._tuple()
+
+    def __str__(self):
+        return f"{self.major}.{self.minor}.{self.patch}"
+
+
+class _FakeUpdaterManifest:
+    def __init__(self, version: str):
+        self.version = version
+
+
+class _FakeUpdaterEntry:
+    def __init__(self, name: str):
+        self.name = name
+
+
+class _FakeUpdaterRemoteStatus:
+    def __init__(self, version=None, error=None):
+        self.version = version
+        self.error = error
+
+
+class UpdatePendingTests(unittest.TestCase):
+    """update.pending's own real integration boundary, exercised against
+    FAKES of hydra_umc_updater's public API rather than the real package -
+    keeps this suite deterministic and offline regardless of whether the
+    optional `update-check` extra happens to be installed in whatever
+    environment runs it. The allow-list boundary itself (project name
+    pattern + resolving under ecosystem_root) is the real
+    OrchestratorConfig.resolve_project_manifest_path(), the same one
+    manifest.read already exercises above - not faked."""
+
+    def setUp(self):
+        self.tmpdir = TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+        self.root = Path(self.tmpdir.name)
+        project_dir = self.root / "HYDRA-UMC-EXAMPLE"
+        project_dir.mkdir()
+        (project_dir / "hydra-umc.project.json").write_text("{}", encoding="utf-8")
+        self.config = OrchestratorConfig(ecosystem_root=self.root)
+
+    def _patched(self, **overrides):
+        defaults = dict(
+            _HAS_UPDATE_CHECK=True,
+            _updater_parse_manifest=lambda raw, expected_name: _FakeUpdaterManifest("0.6.5"),
+            _updater_entry_from_manifest=lambda manifest: _FakeUpdaterEntry("HYDRA-UMC-EXAMPLE"),
+            _UpdaterVersion=_FakeUpdaterVersion,
+            _UpdaterManifestValidationError=ValueError,
+        )
+        defaults.update(overrides)
+        return unittest.mock.patch.multiple(dispatch_module, **defaults)
+
+    def test_refuses_a_project_name_outside_the_real_naming_pattern(self):
+        with self.assertRaises(ToolDispatchError):
+            dispatch_tool_request(_request("update.pending", {"project": "not-a-real-project-name"}), self.config)
+
+    def test_degrades_honestly_when_the_optional_dependency_is_not_installed(self):
+        with unittest.mock.patch.object(dispatch_module, "_HAS_UPDATE_CHECK", False):
+            result = dispatch_tool_request(_request("update.pending", {"project": "HYDRA-UMC-EXAMPLE"}), self.config)
+        self.assertEqual(result["status"], "ok")
+        self.assertFalse(result["output"]["available"])
+        self.assertIsNone(result["output"]["pending"])
+        self.assertIn("reason", result["output"])
+
+    def test_reports_pending_true_when_the_real_github_version_is_newer(self):
+        with self._patched(_updater_fetch_all=lambda entries: {"HYDRA-UMC-EXAMPLE": _FakeUpdaterRemoteStatus(version=_FakeUpdaterVersion(0, 7, 0))}):
+            result = dispatch_tool_request(_request("update.pending", {"project": "HYDRA-UMC-EXAMPLE"}), self.config)
+        self.assertEqual(result["status"], "ok")
+        self.assertTrue(result["output"]["available"])
+        self.assertTrue(result["output"]["pending"])
+        self.assertEqual(result["output"]["local_version"], "0.6.5")
+        self.assertEqual(result["output"]["remote_version"], "0.7.0")
+
+    def test_reports_pending_false_when_up_to_date(self):
+        with self._patched(_updater_fetch_all=lambda entries: {"HYDRA-UMC-EXAMPLE": _FakeUpdaterRemoteStatus(version=_FakeUpdaterVersion(0, 6, 5))}):
+            result = dispatch_tool_request(_request("update.pending", {"project": "HYDRA-UMC-EXAMPLE"}), self.config)
+        self.assertFalse(result["output"]["pending"])
+
+    def test_reports_pending_false_when_local_is_ahead_of_github(self):
+        # A real, honest case (see main.py's own _state_label): a local
+        # checkout can be ahead of what GitHub has published.
+        with self._patched(_updater_fetch_all=lambda entries: {"HYDRA-UMC-EXAMPLE": _FakeUpdaterRemoteStatus(version=_FakeUpdaterVersion(0, 6, 0))}):
+            result = dispatch_tool_request(_request("update.pending", {"project": "HYDRA-UMC-EXAMPLE"}), self.config)
+        self.assertFalse(result["output"]["pending"])
+
+    def test_reports_a_real_github_lookup_failure_honestly(self):
+        with self._patched(_updater_fetch_all=lambda entries: {"HYDRA-UMC-EXAMPLE": _FakeUpdaterRemoteStatus(version=None, error="404 not found")}):
+            result = dispatch_tool_request(_request("update.pending", {"project": "HYDRA-UMC-EXAMPLE"}), self.config)
+        self.assertEqual(result["status"], "ok")
+        self.assertTrue(result["output"]["available"])
+        self.assertIsNone(result["output"]["pending"])
+        self.assertEqual(result["output"]["reason"], "404 not found")
+
+    def test_reports_a_missing_manifest_honestly(self):
+        with self._patched(_updater_parse_manifest=unittest.mock.Mock(side_effect=ValueError("bad manifest"))):
+            result = dispatch_tool_request(_request("update.pending", {"project": "HYDRA-UMC-EXAMPLE"}), self.config)
+        self.assertEqual(result["status"], "ok")
+        self.assertTrue(result["output"]["available"])
+        self.assertFalse(result["output"]["found"])
 
 
 class UnknownAndUnimplementedToolTests(unittest.TestCase):

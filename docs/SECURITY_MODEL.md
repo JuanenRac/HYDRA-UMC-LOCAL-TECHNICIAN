@@ -71,16 +71,24 @@ only real caller of that result (`knowledge/trust.py`'s
 unconditional refusal. There is no "call anything and classify its risk
 afterward" path anywhere in this codebase.
 
-Fase 0 registers nine OBSERVE-level tool names (`service.status`,
+Fase 0 registered nine OBSERVE-level tool names (`service.status`,
 `process.list`, `network.port_status`, `storage.usage`,
 `system.temperature`, `network.connectivity`, `update.pending`,
 `logs.read`, `manifest.read`) - the exact read-only surface this
-project's own plan lists for its first version. Every single one is
-still `implemented=False`: this delivery declares the matrix so a future
-`ToolRequest` naming one of them is recognized as legitimate, but wires
-no real handler to any of them yet. Attempting to build a `ToolRequest`
-for any of these nine names today still raises `ToolCallRefused` - see
-`tests/adversarial/test_injection_defense.py`'s own point (d).
+project's own plan lists for its first version, every one declared with
+`implemented=False` at that point: the matrix existed so a future
+`ToolRequest` naming one of them would be recognized as legitimate, but
+no real handler was wired to any of them yet.
+
+Fase 3 has since wired a real, read-only handler to all nine
+(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`) - every
+handler still only ever resolves a short, allow-listed symbolic name,
+never a raw path/host/port/URL/pattern a retrieved document could
+supply (see this file's own `resolve_*` methods). A name still absent
+from `TOOL_MATRIX` altogether (`shell.exec`, say) is refused exactly as
+before - see `tests/adversarial/test_injection_defense.py`'s own point
+(d), still exercised as a live invariant even though its own set of
+"still unimplemented" tools is now empty.
 
 ## Data and secrets
 

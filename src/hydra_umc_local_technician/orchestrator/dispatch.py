@@ -17,12 +17,22 @@ construction - none accepts a raw path/host/port from `arguments`, only a
 short symbolic name resolved through `allowlist.OrchestratorConfig` (see
 that module's own header comment for why).
 
-This wires 8 of the 9 tools `policy.tool_matrix` declares: `storage.usage`,
+This wires all 9 of the tools `policy.tool_matrix` declares: `storage.usage`,
 `network.port_status`, `network.connectivity`, `system.temperature`,
-`service.status`, `manifest.read`, `logs.read`, `process.list`. The other
-1 (`update.pending`) stays `implemented=False` - real, deliberate scope
-for a later slice, not an oversight: it needs a real HYDRA-UMC-UPDATER
-integration boundary this module does not have yet.
+`service.status`, `manifest.read`, `logs.read`, `process.list`,
+`update.pending`.
+
+`update.pending` is the one real HYDRA-UMC-UPDATER integration boundary:
+it reuses that project's own already-tested GitHub discovery
+(`github_client.fetch_all`), manifest parsing (`project_manifest.parse_manifest`)
+and version comparison (`version_parse.Version`) instead of a second,
+silently-drifting copy of any of it - the same "delegate to the real
+logic elsewhere" principle `ecosystem_plan.py` already applies in
+HYDRA-UMC-OS-REBUILDER. `hydra-umc-updater` is an OPTIONAL dependency
+(the `update-check` extra) - imported lazily, guarded by `_HAS_UPDATE_CHECK`,
+so every other tool in this package stays usable on a bare stdlib-only
+install; `update.pending` itself degrades honestly (`available: false`)
+when the extra is not installed, never a crash on import.
 
 `logs.read` only ever opens exactly one real, allow-listed FILE
 (`OrchestratorConfig.resolve_log_source`, never a directory or glob), and
@@ -67,6 +77,20 @@ from ..knowledge.redaction import redact_lines
 from ..knowledge.trust import ToolRequest
 from ..policy.tool_matrix import lookup_tool
 from .allowlist import OrchestratorConfig, UnknownAllowlistEntry
+
+# update.pending's own real integration boundary - see this module's own
+# docstring above for why this is lazy/optional rather than a hard
+# dependency of the whole package.
+try:
+    from hydra_umc_updater.github_client import fetch_all as _updater_fetch_all
+    from hydra_umc_updater.project_manifest import ManifestValidationError as _UpdaterManifestValidationError
+    from hydra_umc_updater.project_manifest import parse_manifest as _updater_parse_manifest
+    from hydra_umc_updater.registry import entry_from_manifest as _updater_entry_from_manifest
+    from hydra_umc_updater.version_parse import Version as _UpdaterVersion
+
+    _HAS_UPDATE_CHECK = True
+except ImportError:
+    _HAS_UPDATE_CHECK = False
 
 
 class ToolDispatchError(Exception):
@@ -358,6 +382,56 @@ def _handle_process_list(config: OrchestratorConfig, arguments: dict[str, Any]) 
     return output, f"{len(matches)} real process(es) matching pattern {pattern!r} under /proc" + (" (truncated)" if truncated else "")
 
 
+def _handle_update_pending(config: OrchestratorConfig, arguments: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    project = arguments.get("project")
+    if not isinstance(project, str) or not project:
+        raise UnknownAllowlistEntry("update.pending requires a non-empty 'project' argument")
+    # Reuses manifest.read's own real allow-list boundary (PROJECT_NAME_PATTERN
+    # + "must resolve as a direct child of ecosystem_root") rather than a
+    # second one - update.pending never needs a target beyond that same
+    # local manifest file.
+    manifest_path = config.resolve_project_manifest_path(project)
+
+    if not _HAS_UPDATE_CHECK:
+        output = {
+            "project": project, "available": False,
+            "reason": "hydra-umc-updater is not installed - install this package with its optional 'update-check' extra",
+            "pending": None,
+        }
+        return output, "update.pending needs the optional hydra-umc-updater dependency, which is not installed"
+
+    try:
+        raw = manifest_path.read_text(encoding="utf-8")
+        manifest = _updater_parse_manifest(raw, expected_name=project)
+    except (OSError, _UpdaterManifestValidationError) as exc:
+        output = {"project": project, "available": True, "found": False, "reason": str(exc), "pending": None}
+        return output, f"could not read/parse {manifest_path}: {exc}"
+
+    entry = _updater_entry_from_manifest(manifest)
+    local_major, local_minor, local_patch = (int(part) for part in manifest.version.split("."))
+    local_version = _UpdaterVersion(local_major, local_minor, local_patch)
+
+    remote_results = _updater_fetch_all([entry])
+    remote_status = remote_results.get(entry.name)
+    if remote_status is None or remote_status.version is None:
+        reason = remote_status.error if remote_status is not None else "no result returned from GitHub"
+        output = {
+            "project": project, "available": True, "found": True,
+            "local_version": str(local_version), "remote_version": None,
+            "pending": None, "reason": reason,
+        }
+        return output, f"could not determine {project}'s real GitHub version: {reason}"
+
+    pending = local_version < remote_status.version
+    output = {
+        "project": project, "available": True, "found": True,
+        "local_version": str(local_version), "remote_version": str(remote_status.version),
+        "pending": pending, "reason": None,
+    }
+    verdict = "update pending" if pending else ("ahead of GitHub" if remote_status.version < local_version else "up to date")
+    return output, f"{project}: local {local_version}, GitHub {remote_status.version} - {verdict}"
+
+
 # tool name -> handler(config, arguments) -> (output, evidence). Every
 # entry here MUST have implemented=True in policy.tool_matrix.TOOL_MATRIX -
 # tested by test_dispatch.py's own test_every_implemented_tool_has_a_handler
@@ -371,6 +445,7 @@ _HANDLERS = {
     "manifest.read": _handle_manifest_read,
     "logs.read": _handle_logs_read,
     "process.list": _handle_process_list,
+    "update.pending": _handle_update_pending,
 }
 
 

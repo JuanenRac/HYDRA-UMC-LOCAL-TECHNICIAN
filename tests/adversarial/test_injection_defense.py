@@ -76,10 +76,10 @@ class UntrustedTextHasNoCommandPathTests(unittest.TestCase):
         self.assertNotIn("shell.exec", TOOL_MATRIX)
 
     def test_every_still_unimplemented_tool_is_refused(self):
-        # The honest, current boundary for the 1 tool Fase 3 deliberately
-        # left for a later slice (see dispatch.py's own module doc
-        # comment for exactly why it needs its own separate design) -
-        # not a bug to fix here.
+        # All 9 declared OBSERVE tools are implemented as of this Fase -
+        # this loop is now a no-op over an empty set, kept so a FUTURE
+        # tool added to TOOL_MATRIX with implemented=False is still
+        # covered automatically without anyone remembering to add a test.
         for name, descriptor in TOOL_MATRIX.items():
             if descriptor.implemented:
                 continue
@@ -110,11 +110,11 @@ class UntrustedTextHasNoCommandPathTests(unittest.TestCase):
 
 class AllowlistDefenseTests(unittest.TestCase):
     """Fase 3's own real extension of this file's exit criterion: growing
-    from 'no tool is implemented' to '8 tools are real' must not open a
-    path from a poisoned document's own text into an arbitrary real
-    filesystem path, host, port, systemd unit, log file or process
-    pattern - dispatch.py's handlers only ever resolve a short symbolic
-    name through a fixed OrchestratorConfig, never the raw value
+    from 'no tool is implemented' to 'all 9 tools are real' must not open
+    a path from a poisoned document's own text into an arbitrary real
+    filesystem path, host, port, systemd unit, log file, process pattern
+    or project name - dispatch.py's handlers only ever resolve a short
+    symbolic name through a fixed OrchestratorConfig, never the raw value
     directly."""
 
     def setUp(self):
@@ -208,6 +208,19 @@ class AllowlistDefenseTests(unittest.TestCase):
         request = build_tool_request_from_model_output(
             request_id="adversarial-7c", tool="process.list",
             arguments={"name": "passwd"}, actor="local-technician",
+            reason="adversarial",
+        )
+        with self.assertRaises(ToolDispatchError):
+            dispatch_tool_request(request, self.config)
+
+    def test_update_pending_rejects_a_project_name_that_is_not_the_real_pattern(self):
+        # A poisoned document naming an arbitrary path-shaped "project" -
+        # update.pending reuses manifest.read's own real allow-list
+        # boundary (PROJECT_NAME_PATTERN + ecosystem_root containment),
+        # refused before hydra_umc_updater is ever even consulted.
+        request = build_tool_request_from_model_output(
+            request_id="adversarial-7d", tool="update.pending",
+            arguments={"project": "../../etc/passwd"}, actor="local-technician",
             reason="adversarial",
         )
         with self.assertRaises(ToolDispatchError):
