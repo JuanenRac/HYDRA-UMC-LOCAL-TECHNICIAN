@@ -76,7 +76,7 @@ class UntrustedTextHasNoCommandPathTests(unittest.TestCase):
         self.assertNotIn("shell.exec", TOOL_MATRIX)
 
     def test_every_still_unimplemented_tool_is_refused(self):
-        # The honest, current boundary for the 4 tools Fase 3 deliberately
+        # The honest, current boundary for the 2 tools Fase 3 deliberately
         # left for a later slice (see dispatch.py's own module doc
         # comment for exactly why each one needs its own separate
         # design) - not a bug to fix here.
@@ -110,10 +110,10 @@ class UntrustedTextHasNoCommandPathTests(unittest.TestCase):
 
 class AllowlistDefenseTests(unittest.TestCase):
     """Fase 3's own real extension of this file's exit criterion: growing
-    from 'no tool is implemented' to '5 tools are real' must not open a
+    from 'no tool is implemented' to '7 tools are real' must not open a
     path from a poisoned document's own text into an arbitrary real
-    filesystem path, host, port or systemd unit - dispatch.py's handlers
-    only ever resolve a short symbolic name through a fixed
+    filesystem path, host, port, systemd unit or log file - dispatch.py's
+    handlers only ever resolve a short symbolic name through a fixed
     OrchestratorConfig, never the raw value directly."""
 
     def setUp(self):
@@ -186,6 +186,19 @@ class AllowlistDefenseTests(unittest.TestCase):
         with self.assertRaises(UnknownAllowlistEntry):
             config.resolve_project_manifest_path("../../etc/passwd")
 
+    def test_an_unlisted_log_source_is_refused_not_opened(self):
+        # A poisoned document naming an arbitrary path ("/etc/shadow",
+        # "../../.ssh/id_rsa") must be refused by the allow-list before
+        # any file is ever opened - arguments carries only a symbolic
+        # name, never a path.
+        request = build_tool_request_from_model_output(
+            request_id="adversarial-7b", tool="logs.read",
+            arguments={"name": "/etc/shadow"}, actor="local-technician",
+            reason="adversarial",
+        )
+        with self.assertRaises(ToolDispatchError):
+            dispatch_tool_request(request, self.config)
+
     def test_default_config_targets_the_real_documented_hydra_umc_server_endpoints(self):
         # default_config() itself must stay a real, honest description of
         # this ecosystem's own conventions (HYDRA-UMC-OS's own
@@ -195,6 +208,7 @@ class AllowlistDefenseTests(unittest.TestCase):
         self.assertEqual(config.resolve_port("server_http"), ("127.0.0.1", 3000))
         self.assertEqual(config.resolve_systemd_unit("hydra-umc-server"), "hydra-umc-server")
         self.assertEqual(config.resolve_connectivity_target("server_hydra_info"), "http://127.0.0.1:3000/api/hydra-info")
+        self.assertEqual(config.resolve_log_source("server_log"), Path("/opt/hydra-umc/server/data/logs/server.log"))
 
     def test_a_privileged_risk_level_cannot_be_smuggled_in_by_naming_it_directly(self):
         # Even if a caller (mis-)believed it could pick the risk level

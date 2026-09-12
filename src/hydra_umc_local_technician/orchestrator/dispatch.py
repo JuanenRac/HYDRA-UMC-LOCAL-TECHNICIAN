@@ -17,14 +17,22 @@ construction - none accepts a raw path/host/port from `arguments`, only a
 short symbolic name resolved through `allowlist.OrchestratorConfig` (see
 that module's own header comment for why).
 
-This wires 6 of the 9 tools `policy.tool_matrix` declares: `storage.usage`,
+This wires 7 of the 9 tools `policy.tool_matrix` declares: `storage.usage`,
 `network.port_status`, `network.connectivity`, `system.temperature`,
-`service.status`, `manifest.read`. The other 3 (`process.list`,
-`update.pending`, `logs.read`) stay `implemented=False` - real, deliberate
-scope for a later slice, not an oversight (`process.list`/`logs.read` need
-their own filtering/redaction design beyond what a symbolic-name
-allow-list alone would cover; `update.pending` needs a real
-HYDRA-UMC-UPDATER integration boundary).
+`service.status`, `manifest.read`, `logs.read`. The other 2
+(`process.list`, `update.pending`) stay `implemented=False` - real,
+deliberate scope for a later slice, not an oversight (`process.list`
+needs its own filtering design beyond what a symbolic-name allow-list
+alone would cover - which processes even count as "relevant" is a real
+open design question; `update.pending` needs a real HYDRA-UMC-UPDATER
+integration boundary).
+
+`logs.read` only ever opens exactly one real, allow-listed FILE
+(`OrchestratorConfig.resolve_log_source`, never a directory or glob), and
+every line it returns has already passed through
+`knowledge.redaction.redact_lines()` before this function returns -
+before the ToolResult is even assembled, not as a later serialization
+step that a future change could accidentally skip.
 
 Real platform honesty, not a simulated pass: `system.temperature` and
 `service.status` degrade with a distinct, typed reason (never a guessed
@@ -43,10 +51,12 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from .. import __version__
 from ..contracts import validate
+from ..knowledge.redaction import redact_lines
 from ..knowledge.trust import ToolRequest
 from ..policy.tool_matrix import lookup_tool
 from .allowlist import OrchestratorConfig, UnknownAllowlistEntry
@@ -232,6 +242,56 @@ def _handle_manifest_read(config: OrchestratorConfig, arguments: dict[str, Any])
     return output, f"read {manifest_path}"
 
 
+# Fase 3's own real bound on logs.read, not a stylistic default: a large
+# request never reads an unbounded slice of a real log file, and the
+# tail itself is bounded in raw BYTES first (before ever splitting into
+# lines) so a request against a log that has grown large still costs a
+# fixed amount of memory rather than scaling with the file's own size.
+_LOGS_READ_DEFAULT_LINES = 50
+_LOGS_READ_MAX_LINES = 500
+_LOGS_READ_MAX_TAIL_BYTES = 1_000_000
+
+
+def _tail_lines(path: Path, max_lines: int) -> list[str]:
+    """The last `max_lines` lines of `path`, reading at most
+    `_LOGS_READ_MAX_TAIL_BYTES` of its own tail regardless of how many
+    lines that produces. When the read window starts mid-file, the FIRST
+    decoded line is dropped - it is very likely a partial line split at
+    an arbitrary byte offset, and a truncated line silently presented as
+    complete would be worse than one fewer real line."""
+    size = path.stat().st_size
+    read_from = max(0, size - _LOGS_READ_MAX_TAIL_BYTES)
+    with path.open("rb") as f:
+        f.seek(read_from)
+        raw = f.read()
+    lines = raw.decode("utf-8", errors="replace").splitlines()
+    if read_from > 0 and lines:
+        lines = lines[1:]
+    return lines[-max_lines:] if max_lines > 0 else []
+
+
+def _handle_logs_read(config: OrchestratorConfig, arguments: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    name = arguments.get("name")
+    if not isinstance(name, str) or not name:
+        raise UnknownAllowlistEntry("logs.read requires a non-empty 'name' argument")
+    path = config.resolve_log_source(name)
+    requested = arguments.get("lines", _LOGS_READ_DEFAULT_LINES)
+    if not isinstance(requested, int) or requested <= 0:
+        requested = _LOGS_READ_DEFAULT_LINES
+    max_lines = min(requested, _LOGS_READ_MAX_LINES)
+    if not path.is_file():
+        # A real, expected state (a service that has not logged anything
+        # yet, or a log source configured ahead of the file existing) -
+        # never a ToolDispatchError, which is reserved for a request that
+        # cannot be routed at all.
+        output = {"name": name, "path": str(path), "exists": False, "lines": [], "returned": 0}
+        return output, f"{path} does not exist - nothing to read yet"
+    raw_lines = _tail_lines(path, max_lines)
+    redacted = redact_lines(raw_lines)
+    output = {"name": name, "path": str(path), "exists": True, "lines": redacted, "returned": len(redacted)}
+    return output, f"read the last {len(redacted)} line(s) of {path} (redacted via knowledge.redaction before leaving this module)"
+
+
 # tool name -> handler(config, arguments) -> (output, evidence). Every
 # entry here MUST have implemented=True in policy.tool_matrix.TOOL_MATRIX -
 # tested by test_dispatch.py's own test_every_implemented_tool_has_a_handler
@@ -243,6 +303,7 @@ _HANDLERS = {
     "system.temperature": _handle_system_temperature,
     "service.status": _handle_service_status,
     "manifest.read": _handle_manifest_read,
+    "logs.read": _handle_logs_read,
 }
 
 

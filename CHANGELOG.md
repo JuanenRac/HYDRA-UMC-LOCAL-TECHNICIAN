@@ -9,6 +9,30 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.0.4] - Fase 3: a 7th real OBSERVE-level tool handler (logs.read)
+
+`logs.read`'s own separate design need (called out since Fase 3's first
+slice) is now real: `OrchestratorConfig.log_sources` (a new, separate
+symbolic-name namespace, same pattern as `connectivity_targets`) resolves
+to exactly one real, allow-listed FILE - never a directory or glob, never
+a raw path a retrieved document could supply. `dispatch._handle_logs_read()`
+tails at most 500 lines (default 50) within a bounded 1 MiB read window
+of the file's own tail (so a request against a log that has grown large
+still costs a fixed amount of memory, not one scaling with the file's own
+size), and pipes every line through `knowledge.redaction.redact_lines()`
+before it ever leaves the handler. A missing log file is a real, honest
+`exists: false` result, not an error - a service that has not logged
+anything yet is a legitimate state, not a failure. `default_config()`'s
+own real entry: `server_log` -> HYDRA-UMC-SERVER's own documented
+`LOG_FILE` constant, at its real installed path on the CM5.
+
+Fase 3 is now 7 of 9 tools (`process.list` and `update.pending` remain -
+see `dispatch.py`'s own module doc comment for why each needs its own
+separate design).
+
+Verified: 103 tests + 28 subtests passing (`tests/unit/`,
+`tests/adversarial/`), `tools/ci_validate.py` PASS.
+
 ## [0.0.3] - Fase 3: a 6th real OBSERVE-level tool handler (network.connectivity)
 
 Wires `network.connectivity` to a real handler in

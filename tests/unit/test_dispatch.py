@@ -170,6 +170,62 @@ class NetworkConnectivityTests(unittest.TestCase):
         self.assertIn("scheme", result["output"]["reason"])
 
 
+class LogsReadTests(unittest.TestCase):
+    def test_reads_the_last_n_lines_of_a_real_allow_listed_file(self):
+        with TemporaryDirectory() as tmp:
+            log_path = Path(tmp) / "server.log"
+            log_path.write_text("\n".join(f"line-{i}" for i in range(1, 11)) + "\n", encoding="utf-8")
+            config = OrchestratorConfig(log_sources={"server_log": log_path})
+            result = dispatch_tool_request(_request("logs.read", {"name": "server_log", "lines": 3}), config)
+            validate("ToolResult", result)
+            self.assertEqual(result["status"], "ok")
+            self.assertTrue(result["output"]["exists"])
+            self.assertEqual(result["output"]["lines"], ["line-8", "line-9", "line-10"])
+
+    def test_redacts_a_real_secret_before_it_ever_leaves_the_handler(self):
+        with TemporaryDirectory() as tmp:
+            log_path = Path(tmp) / "server.log"
+            log_path.write_text("normal line\nAuthorization: Bearer sk-real-secret-token\n", encoding="utf-8")
+            config = OrchestratorConfig(log_sources={"server_log": log_path})
+            result = dispatch_tool_request(_request("logs.read", {"name": "server_log"}), config)
+            joined = "\n".join(result["output"]["lines"])
+            self.assertNotIn("sk-real-secret-token", joined)
+
+    def test_reports_a_missing_file_honestly_instead_of_erroring(self):
+        config = OrchestratorConfig(log_sources={"server_log": Path("/does/not/exist.log")})
+        result = dispatch_tool_request(_request("logs.read", {"name": "server_log"}), config)
+        self.assertEqual(result["status"], "ok")
+        self.assertFalse(result["output"]["exists"])
+        self.assertEqual(result["output"]["lines"], [])
+
+    def test_a_requested_line_count_is_capped_not_silently_ignored(self):
+        with TemporaryDirectory() as tmp:
+            log_path = Path(tmp) / "server.log"
+            log_path.write_text("\n".join(f"line-{i}" for i in range(1, 1000)) + "\n", encoding="utf-8")
+            config = OrchestratorConfig(log_sources={"server_log": log_path})
+            result = dispatch_tool_request(_request("logs.read", {"name": "server_log", "lines": 999999}), config)
+            self.assertLessEqual(len(result["output"]["lines"]), 500)
+
+    def test_refuses_a_name_not_on_the_allow_list(self):
+        config = OrchestratorConfig(log_sources={})
+        with self.assertRaises(ToolDispatchError):
+            dispatch_tool_request(_request("logs.read", {"name": "not-configured"}), config)
+
+    def test_a_large_file_is_tailed_within_a_bounded_byte_window(self):
+        # Real proof _tail_lines() bounds the READ itself, not just the
+        # line count after the fact: a file far larger than the byte
+        # window still returns quickly and only the real tail content,
+        # never the file's own beginning.
+        with TemporaryDirectory() as tmp:
+            log_path = Path(tmp) / "server.log"
+            with log_path.open("w", encoding="utf-8") as f:
+                for i in range(200_000):
+                    f.write(f"line-{i}\n")
+            config = OrchestratorConfig(log_sources={"server_log": log_path})
+            result = dispatch_tool_request(_request("logs.read", {"name": "server_log", "lines": 5}), config)
+            self.assertEqual(result["output"]["lines"], ["line-199995", "line-199996", "line-199997", "line-199998", "line-199999"])
+
+
 class SystemTemperatureTests(unittest.TestCase):
     def test_never_raises_and_never_guesses_a_reading(self):
         # Real platform honesty: this runs on whatever host CI/the dev
