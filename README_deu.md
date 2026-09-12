@@ -12,10 +12,10 @@
   <img src="https://img.shields.io/badge/Lizenz-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Sprache-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Kern-nur%20stdlib-brightgreen.svg" alt="Nur-stdlib-Kern">
-  <img src="https://img.shields.io/badge/Phase-3%20von%206-367BF5.svg" alt="Phase 3 von 6">
+  <img src="https://img.shields.io/badge/Phase-3%20von%206%20abgeschlossen-367BF5.svg" alt="Phase 3 von 6 abgeschlossen">
 </p>
 
-> **Status: v0.0.5, funktionsfähig - Phase 3 von 6, teilweise
+> **Status: v0.0.6, funktionsfähig - Phase 3 von 6 abgeschlossen
 > (Werkzeug-Orchestrator).** Phase 0 definierte die reale
 > Risikostufen-Richtlinie (`policy/risk_levels.py`), eine feste
 > Werkzeug-Positivliste (`policy/tool_matrix.py`), die fünf realen
@@ -26,10 +26,10 @@
 > Austrittskriterium dieser Phase 0 selbst: ein echter adversarialer
 > Test, der beweist, dass ein bösartiges abgerufenes Dokument niemals
 > einen Werkzeugaufruf auslösen oder ein Geheimnis preisgeben kann. Phase
-> 3 verbindet 8 der 9 deklarierten OBSERVE-Werkzeuge mit einem echten
+> 3 verbindet alle 9 deklarierten OBSERVE-Werkzeuge mit einem echten
 > Handler (`orchestrator/dispatch.py`): `service.status`,
 > `storage.usage`, `network.port_status`, `network.connectivity`,
-> `system.temperature`, `manifest.read`, `logs.read` und `process.list` - jedes löst nur einen
+> `system.temperature`, `manifest.read`, `logs.read`, `process.list` und `update.pending` - jedes löst nur einen
 > kurzen, auf der Positivliste stehenden symbolischen Namen auf
 > (`orchestrator/allowlist.py`), niemals einen rohen Pfad/Host/Port/URL,
 > den ein abgerufenes Dokument
@@ -40,7 +40,7 @@
 
 ---
 
-**Ehrlichkeitscheck - was heute wirklich läuft:** die Risikostufen-Richtlinie (`policy/risk_levels.py`), die feste Werkzeug-Zulassungsliste (`policy/tool_matrix.py`), die fünf Vertragsvalidatoren (`contracts.py` + `contracts/*.schema.json`), die Injection-Abwehrgrenze (`knowledge/trust.py`, `knowledge/redaction.py`), und nun 8 echte OBSERVE-Werkzeug-Handler (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`) sind alle real und getestet (109 bestandene Tests plus 28 Subtests über `tests/unit/` und `tests/adversarial/`). Das verbleibende Werkzeug in `TOOL_MATRIX` (`update.pending`) bleibt absichtlich `implemented=False` - es benötigt eine echte HYDRA-UMC-UPDATER-Integration, die dieses Modul noch nicht hat, kein Versehen. Es gibt weiterhin keine Inferenz-Engine, keinen RAG-Index und keine HYDRA-UMC-SERVER-Integration irgendwo in diesem Repository - die Phasen 1, 2, 4 und 5 in der Roadmap weiter unten bleiben vollständig angestrebte Zukunftsarbeit ohne jeglichen Code dahinter, und Phase 3 selbst ist teilweise (8 von 9 Werkzeugen). Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
+**Ehrlichkeitscheck - was heute wirklich läuft:** die Risikostufen-Richtlinie (`policy/risk_levels.py`), die feste Werkzeug-Zulassungsliste (`policy/tool_matrix.py`), die fünf Vertragsvalidatoren (`contracts.py` + `contracts/*.schema.json`), die Injection-Abwehrgrenze (`knowledge/trust.py`, `knowledge/redaction.py`), und nun haben alle 9 deklarierten OBSERVE-Werkzeuge einen echten Handler (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`) und sind getestet (117 bestandene Tests plus 28 Subtests über `tests/unit/` und `tests/adversarial/`) - Phase 3 ist abgeschlossen. `update.pending` benötigt die optionale Abhängigkeit `hydra-umc-updater` (Extra `update-check`), um GitHub wirklich zu prüfen, und degradiert ehrlich (`available: false`) ohne sie. Es gibt weiterhin keine Inferenz-Engine, keinen RAG-Index und keine HYDRA-UMC-SERVER-Integration irgendwo in diesem Repository - die Phasen 1, 2, 4 und 5 in der Roadmap weiter unten bleiben vollständig angestrebte Zukunftsarbeit ohne jeglichen Code dahinter. Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
 
 ---
 
@@ -72,9 +72,8 @@ Bausteine:
 2. **Werkzeug-Matrix** (`policy/tool_matrix.py`) - eine feste
    Positivliste von neun realen `OBSERVE`-Stufen-Werkzeugnamen. Ein
    Werkzeugname, der in diesem Dictionary fehlt, kann niemals aufgerufen
-   werden, Punkt - 8 der 9 sind bereits mit einem echten Handler
-   verbunden (siehe Punkt 5 unten), das letzte bleibt absichtlich
-   `implemented=False`.
+   werden, Punkt - alle 9 sind bereits mit einem echten Handler
+   verbunden (siehe Punkt 5 unten).
 3. **Reale Verträge** (`contracts/*.schema.json` + `contracts.py`) -
    `ToolRequest`, `ToolResult`, `MaintenanceProposal`, `EvidenceBundle`
    und `PatchVerificationReport`, jeweils mit einer normativen
@@ -217,14 +216,13 @@ Reihenfolge der Phasen verbleibt:
   Qwen2.5-Coder-1.5B, Qwen3-1.7B-Instruct), erst gewählt, nachdem die
   reale Hailo-Kompatibilität, Latenz, Sprachqualität, Leistungsaufnahme
   und Lizenz verifiziert sind.
-- **Phase 3 - Werkzeug-Orchestrator (teilweise: 8 von 9).**
-  Deterministischer Code, der die ersten realen `OBSERVE`-Stufen-
+- **Phase 3 - Werkzeug-Orchestrator (abgeschlossen: 9 von 9).**
+  Deterministischer Code, der alle realen `OBSERVE`-Stufen-
   Werkzeug-Handler mit `TOOL_MATRIX` verbindet, mit
   Richtliniendurchsetzung bei jedem Aufruf. `service.status`,
   `storage.usage`, `network.port_status`, `network.connectivity`,
-  `system.temperature`, `manifest.read`, `logs.read` und `process.list` sind bereits real
-  (`orchestrator/dispatch.py`); `update.pending` bleibt für eine
-  spätere Lieferung.
+  `system.temperature`, `manifest.read`, `logs.read`, `process.list` und `update.pending` sind bereits real
+  (`orchestrator/dispatch.py`).
 - **Phase 4 - Vorschläge und Nachweise.** Reale Erzeugung von
   `MaintenanceProposal` und `EvidenceBundle`, eskalierend hin zur
   künftigen Developer-Node-Rolle von HYDRA-UMC-DEV-SERVER.

@@ -9,6 +9,39 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.0.6] - Fase 3 complete: the 9th and last real OBSERVE-level tool handler (update.pending)
+
+`update.pending`'s own real integration boundary is now wired - the one
+tool that genuinely needed a dependency on another project rather than
+just its own filtering/allow-list design. Reuses HYDRA-UMC-UPDATER's
+already-tested GitHub discovery (`github_client.fetch_all`), manifest
+parsing (`project_manifest.parse_manifest`) and version comparison
+(`version_parse.Version`) instead of a second, silently-drifting copy of
+any of it - the same "delegate to the real logic elsewhere" principle
+HYDRA-UMC-OS-REBUILDER's own `ecosystem_plan.py` already applies.
+`hydra-umc-updater` is an OPTIONAL dependency (the new `update-check`
+extra) - imported lazily, guarded by `_HAS_UPDATE_CHECK`, so every other
+tool in this package stays usable on a bare stdlib-only install;
+`update.pending` itself degrades honestly (`available: false`) when the
+extra is not installed, never a crash on import. The project name
+argument reuses `manifest.read`'s own real allow-list boundary
+(`resolve_project_manifest_path` - `PROJECT_NAME_PATTERN` + must resolve
+under `ecosystem_root`) rather than a second, redundant one.
+
+**Fase 3 is now complete: all 9 of the 9 declared OBSERVE-level tools
+have a real handler** (`service.status`, `storage.usage`,
+`network.port_status`, `network.connectivity`, `system.temperature`,
+`manifest.read`, `logs.read`, `process.list`, `update.pending`). Also
+fixed two real, unrelated staleness bugs found while closing this out:
+`docs/SECURITY_MODEL.md` still said "every single one is still
+`implemented=False`" (a Fase 0 sentence never updated across 6/9, 7/9 and
+8/9), and this package's own `pyproject.toml` description still said
+"Fase 0 only".
+
+Verified: 117 tests + 28 subtests passing (2 skipped on a host with no
+real `/proc`, exercised for real on Linux CI) (`tests/unit/`,
+`tests/adversarial/`), `tools/ci_validate.py` PASS.
+
 ## [0.0.5] - Fase 3: an 8th real OBSERVE-level tool handler (process.list)
 
 `process.list`'s own separate design need ("which processes even count

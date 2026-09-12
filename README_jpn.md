@@ -12,10 +12,10 @@
   <img src="https://img.shields.io/badge/ライセンス-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/言語-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/コア-標準ライブラリのみ-brightgreen.svg" alt="標準ライブラリのみのコア">
-  <img src="https://img.shields.io/badge/フェーズ-3%2F6-367BF5.svg" alt="全6フェーズ中フェーズ3">
+  <img src="https://img.shields.io/badge/フェーズ-3%2F6%20完了-367BF5.svg" alt="全6フェーズ中フェーズ3完了">
 </p>
 
-> **状態: v0.0.5、機能実装済み - 全6フェーズ中フェーズ3、部分実装
+> **状態: v0.0.6、機能実装済み - 全6フェーズ中フェーズ3完了
 > （ツールオーケストレーター）。** フェーズ0では、実際のリスクレベル・
 > ポリシー（`policy/risk_levels.py`）、固定のツール許可リスト
 > （`policy/tool_matrix.py`）、将来のあらゆるツール呼び出しが検証される
@@ -24,10 +24,10 @@
 > された実際の機密情報マスキング、そしてこのフェーズ0自身の文字通りの終了
 > 基準 - 悪意ある取得ドキュメントが決してツール呼び出しを引き起こしたり
 > 機密情報を漏らしたりできないことを証明する実際の敵対的テスト - を定義し
-> ました。フェーズ3では、宣言済みの9個のOBSERVEレベルツールのうち8個を
+> ました。フェーズ3では、宣言済みの9個のOBSERVEレベルツールすべてを
 > 実際のハンドラー（`orchestrator/dispatch.py`）に接続します:
 > `service.status`、`storage.usage`、`network.port_status`、
-> `network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list` -
+> `network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending` -
 > それぞれが許可リストに載った短いシンボル名
 > （`orchestrator/allowlist.py`）だけを解決し、取得した
 > ドキュメントが提供しうる生のパス・ホスト・ポート・URLを直接使うことは
@@ -37,7 +37,7 @@
 
 ---
 
-**正直な現状確認 - 今日実際に動くもの:** リスクレベルポリシー(`policy/risk_levels.py`)、固定のツール許可リスト(`policy/tool_matrix.py`)、5 つの契約バリデーター(`contracts.py` + `contracts/*.schema.json`)、インジェクション防御境界(`knowledge/trust.py`、`knowledge/redaction.py`)、そして今や8つの実際のOBSERVEツールハンドラー(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`)はすべて本物であり、テスト済みである(`tests/unit/` と `tests/adversarial/` 全体で 109 件のテストと 28 件のサブテストが成功)。`TOOL_MATRIX` に残る1個のツール(`update.pending`)は意図的に `implemented=False` のままである——この モジュールにまだない実際の HYDRA-UMC-UPDATER との統合を必要とするためであり、見落としではない。このリポジトリのどこにも推論エンジン、RAG インデックス、そして HYDRA-UMC-SERVER との統合はまだ存在しない——下記ロードマップのフェーズ 1、2、4、5 は依然として完全に願望であり、裏付けとなるコードは一切なく、フェーズ3自体も部分的である(9個中8個のツール)。これまでに何が実際に出荷されたかは `CHANGELOG.md` を参照。
+**正直な現状確認 - 今日実際に動くもの:** リスクレベルポリシー(`policy/risk_levels.py`)、固定のツール許可リスト(`policy/tool_matrix.py`)、5 つの契約バリデーター(`contracts.py` + `contracts/*.schema.json`)、インジェクション防御境界(`knowledge/trust.py`、`knowledge/redaction.py`)、そして今や宣言済みの9個のOBSERVEツールすべてに実際のハンドラーがある(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`)、テスト済みである(`tests/unit/` と `tests/adversarial/` 全体で 117 件のテストと 28 件のサブテストが成功) - フェーズ3は完了した。`update.pending` は実際にGitHubを確認するためにオプションの依存関係 `hydra-umc-updater`(`update-check` extra)を必要とし、それがない場合は正直に(`available: false`)劣化する。このリポジトリのどこにも推論エンジン、RAG インデックス、そして HYDRA-UMC-SERVER との統合はまだ存在しない——下記ロードマップのフェーズ 1、2、4、5 は依然として完全に願望であり、裏付けとなるコードは一切ない。これまでに何が実際に出荷されたかは `CHANGELOG.md` を参照。
 
 ---
 
@@ -64,9 +64,8 @@ HYDRA-UMC-LOCAL-TECHNICIAN は HYDRA-UMC エコシステム自身のための専
    宣言されており、このコード内のどこにも実装されていません。
 2. **ツール・マトリクス**（`policy/tool_matrix.py`）- 9つの実在する
    `OBSERVE` レベルのツール名からなる固定の許可リスト。この辞書に存在し
-   ないツール名は絶対に呼び出せません、それだけです - 9個のうち8個は
-   すでに実際のハンドラーに接続されており(下記の項目5を参照)、最後の
-   1個は意図的に `implemented=False` のままです。
+   ないツール名は絶対に呼び出せません、それだけです - 9個すべてが
+   すでに実際のハンドラーに接続されています(下記の項目5を参照)。
 3. **実際の契約**（`contracts/*.schema.json` + `contracts.py`）-
    `ToolRequest`、`ToolResult`、`MaintenanceProposal`、`EvidenceBundle`、
    `PatchVerificationReport` は、それぞれに規範的なJSON Schema
@@ -195,13 +194,12 @@ Windows の場合: `build.bat`、続いて `run.bat contracts validate ...` /
   LLM（候補: Qwen2.5-1.5B-Instruct、Qwen2.5-Coder-1.5B、
   Qwen3-1.7B-Instruct）で、実際の Hailo 互換性、レイテンシ、言語品質、
   消費電力、ライセンスが検証されてから初めて選定されます。
-- **フェーズ3 - ツール・オーケストレータ（部分実装: 9個中8個）。**
-  `TOOL_MATRIX` に最初の実際の `OBSERVE` レベルのツールハンドラを接続する
+- **フェーズ3 - ツール・オーケストレータ（完了: 9個中9個）。**
+  `TOOL_MATRIX` にすべての実際の `OBSERVE` レベルのツールハンドラを接続する
   決定論的コードで、すべての呼び出しでポリシーが強制されます。
   `service.status`、`storage.usage`、`network.port_status`、
-  `network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list` はすでに
-  実装済み(`orchestrator/dispatch.py`)。`update.pending`
-  は今後の実装に残されています。
+  `network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending` はすでに
+  実装済みです(`orchestrator/dispatch.py`)。
 - **フェーズ4 - 提案と証拠。** `MaintenanceProposal` と `EvidenceBundle`
   の実際の生成で、HYDRA-UMC-DEV-SERVER の将来の Developer Node 役割へと
   エスカレーションします。

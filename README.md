@@ -12,10 +12,10 @@
   <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="stdlib-only core">
-  <img src="https://img.shields.io/badge/Phase-3%20of%206-367BF5.svg" alt="Fase 3 of 6">
+  <img src="https://img.shields.io/badge/Phase-3%20of%206%20complete-367BF5.svg" alt="Fase 3 of 6 complete">
 </p>
 
-> **Status: v0.0.5, functional - Fase 3 of 6, partial (tool
+> **Status: v0.0.6, functional - Fase 3 of 6 complete (tool
 > orchestrator).** Fase 0 defined the real risk-level policy
 > (`policy/risk_levels.py`), a fixed tool allowlist
 > (`policy/tool_matrix.py`), the five real minimal contracts every future
@@ -24,10 +24,10 @@
 > HYDRA-UMC-OPS-AGENT's own already-tested `log_redaction.py`, and Fase
 > 0's own literal exit criterion: a real adversarial test proving a
 > malicious retrieved document can never trigger a tool call or leak a
-> secret. Fase 3 wires 8 of the 9 declared OBSERVE-level tools
+> secret. Fase 3 wires all 9 of the declared OBSERVE-level tools
 > to a real handler (`orchestrator/dispatch.py`): `service.status`,
 > `storage.usage`, `network.port_status`, `network.connectivity`,
-> `system.temperature`, `manifest.read`, `logs.read` and `process.list` - each resolving only a short,
+> `system.temperature`, `manifest.read`, `logs.read`, `process.list` and `update.pending` - each resolving only a short,
 > allow-listed symbolic name (`orchestrator/allowlist.py`), never a raw
 > path/host/port/URL a retrieved document could supply. No inference
 > engine, no RAG index, and no HYDRA-UMC-SERVER integration exist yet -
@@ -36,7 +36,7 @@
 
 ---
 
-**Honesty check - what actually runs today:** the risk-level policy (`policy/risk_levels.py`), the fixed tool allowlist (`policy/tool_matrix.py`), the five contract validators (`contracts.py` + `contracts/*.schema.json`), the injection-defense boundary (`knowledge/trust.py`, `knowledge/redaction.py`), and now 8 real OBSERVE-level tool handlers (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`) are all real and tested (109 tests plus 28 subtests passing across `tests/unit/` and `tests/adversarial/`). The other tool in `TOOL_MATRIX` (`update.pending`) is still `implemented=False` on purpose - it needs a real HYDRA-UMC-UPDATER integration boundary this module does not have yet, not an oversight. There is still no inference engine, no RAG index, and no HYDRA-UMC-SERVER integration anywhere in this repository - Fases 1, 2, 4 and 5 in the Roadmap below remain entirely aspirational, with zero code behind them, and Fase 3 itself is partial (8 of 9 tools). See `CHANGELOG.md` for exactly what has shipped so far.
+**Honesty check - what actually runs today:** the risk-level policy (`policy/risk_levels.py`), the fixed tool allowlist (`policy/tool_matrix.py`), the five contract validators (`contracts.py` + `contracts/*.schema.json`), the injection-defense boundary (`knowledge/trust.py`, `knowledge/redaction.py`), and now all 9 declared OBSERVE-level tool handlers (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`) are real and tested (117 tests plus 28 subtests passing across `tests/unit/` and `tests/adversarial/`) - Fase 3 is complete. `update.pending` needs the optional `hydra-umc-updater` dependency (the `update-check` extra) to actually check GitHub, and degrades honestly (`available: false`) without it. There is still no inference engine, no RAG index, and no HYDRA-UMC-SERVER integration anywhere in this repository - Fases 1, 2, 4 and 5 in the Roadmap below remain entirely aspirational, with zero code behind them. See `CHANGELOG.md` for exactly what has shipped so far.
 
 ---
 
@@ -65,9 +65,8 @@ This delivery ships five real, independently useful pieces:
    codebase.
 2. **Tool matrix** (`policy/tool_matrix.py`) - a fixed allowlist of nine
    real `OBSERVE`-level tool names. A tool name absent from this
-   dictionary can never be called, full stop - 8 of the 9 are now wired
-   to a real handler (see 5 below), the other one stays `implemented=False`
-   on purpose.
+   dictionary can never be called, full stop - all 9 are now wired
+   to a real handler (see 5 below).
 3. **Real contracts** (`contracts/*.schema.json` + `contracts.py`) -
    `ToolRequest`, `ToolResult`, `MaintenanceProposal`, `EvidenceBundle`
    and `PatchVerificationReport`, each with a normative JSON Schema file
@@ -90,11 +89,14 @@ This delivery ships five real, independently useful pieces:
    `network.port_status`, same real distinction HYDRA-UMC-OPS-AGENT's own
    `inventory.py` draws between a bare TCP connect and a real health GET),
    `system.temperature` (the real Linux thermal-zone sysfs path),
-   `manifest.read` (a real `hydra-umc.project.json` read), and `logs.read`
-   (a bounded, redacted tail of one allow-listed log file). None of these
-   accepts a raw path/host/port/URL/unit name directly - only a short
-   symbolic name resolved through a fixed `OrchestratorConfig`, so a
-   poisoned document's own text can never name
+   `manifest.read` (a real `hydra-umc.project.json` read), `logs.read`
+   (a bounded, redacted tail of one allow-listed log file),
+   `process.list` (a real, allow-listed `/proc/<pid>/cmdline` substring
+   match), and `update.pending` (reuses HYDRA-UMC-UPDATER's own real
+   GitHub discovery and version comparison, optional dependency). None of
+   these accepts a raw path/host/port/URL/unit name/pattern directly -
+   only a short symbolic name resolved through a fixed
+   `OrchestratorConfig`, so a poisoned document's own text can never name
    an arbitrary real target, only ever a name already on the allow-list.
 
 ```
@@ -153,7 +155,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   ├── knowledge/
 │   │   ├── redaction.py      # Real secret redaction, ported from HYDRA-UMC-OPS-AGENT
 │   │   └── trust.py          # UntrustedText + build_tool_request_from_model_output(): the injection-defense boundary
-│   ├── orchestrator/          # Fase 3 - 8 real OBSERVE-level tool handlers so far
+│   ├── orchestrator/          # Fase 3 - all 9 real OBSERVE-level tool handlers, complete
 │   │   ├── allowlist.py      # OrchestratorConfig: symbolic-name allow-list a handler resolves against, never a raw path/host/port
 │   │   └── dispatch.py       # dispatch_tool_request(): runs a validated ToolRequest for real, returns a real ToolResult
 │   ├── contracts.py           # Real, stdlib-only validator for the five minimal contracts
@@ -213,13 +215,12 @@ This version ships Fase 0 and part of Fase 3. What remains, in phase order:
   Hailo-10H (candidates: Qwen2.5-1.5B-Instruct, Qwen2.5-Coder-1.5B,
   Qwen3-1.7B-Instruct), chosen only once real Hailo compatibility,
   latency, language quality, power draw and license are verified.
-- **Fase 3 - Tool orchestrator (partial: 8 of 9 tools).** Deterministic
-  code wiring the first real `OBSERVE`-level tool handlers to
+- **Fase 3 - Tool orchestrator (complete: 9 of 9 tools).** Deterministic
+  code wiring every real `OBSERVE`-level tool handler to
   `TOOL_MATRIX`, with policy enforcement on every call. `service.status`,
   `storage.usage`, `network.port_status`, `network.connectivity`,
-  `system.temperature`, `manifest.read`, `logs.read` and `process.list` are real now
-  (`orchestrator/dispatch.py`); `update.pending`
-  remains for a later slice.
+  `system.temperature`, `manifest.read`, `logs.read`, `process.list` and
+  `update.pending` are all real now (`orchestrator/dispatch.py`).
 - **Fase 4 - Proposals and evidence.** Real `MaintenanceProposal` and
   `EvidenceBundle` generation, escalating toward HYDRA-UMC-DEV-SERVER's
   own future Developer Node role.
