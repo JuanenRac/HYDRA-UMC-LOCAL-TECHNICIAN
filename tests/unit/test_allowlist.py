@@ -53,6 +53,17 @@ class ResolveSystemdUnitTests(unittest.TestCase):
         config = OrchestratorConfig(systemd_units=("hydra-umc-server",))
         self.assertEqual(config.resolve_systemd_unit("hydra-umc-server"), "hydra-umc-server")
 
+
+class ResolveLogSourceTests(unittest.TestCase):
+    def test_resolves_a_configured_name(self):
+        config = OrchestratorConfig(log_sources={"server_log": Path("/opt/hydra-umc/server/data/logs/server.log")})
+        self.assertEqual(config.resolve_log_source("server_log"), Path("/opt/hydra-umc/server/data/logs/server.log"))
+
+    def test_refuses_an_unconfigured_name(self):
+        config = OrchestratorConfig(log_sources={"server_log": Path("/tmp/server.log")})
+        with self.assertRaises(UnknownAllowlistEntry):
+            config.resolve_log_source("other")
+
     def test_refuses_an_unconfigured_unit(self):
         config = OrchestratorConfig(systemd_units=("hydra-umc-server",))
         with self.assertRaises(UnknownAllowlistEntry):
@@ -92,6 +103,10 @@ class DefaultConfigTests(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             config = default_config(ecosystem_root=Path(tmp))
             self.assertEqual(config.ecosystem_root, Path(tmp))
+
+    def test_targets_the_real_documented_server_log_file(self):
+        config = default_config()
+        self.assertEqual(config.resolve_log_source("server_log"), Path("/opt/hydra-umc/server/data/logs/server.log"))
 
 
 if __name__ == "__main__":

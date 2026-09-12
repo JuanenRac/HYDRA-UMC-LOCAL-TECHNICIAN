@@ -70,6 +70,12 @@ class OrchestratorConfig:
     # to a direct child of this root (see resolve_project_manifest_path
     # below), so this alone is not the only guard.
     ecosystem_root: Path | None = None
+    # symbolic name -> a real, fixed log FILE `logs.read` may open - never
+    # a directory or glob (a caller only ever gets bytes from exactly the
+    # one file an operator already decided is safe to expose), and always
+    # piped through knowledge.redaction.redact_lines() before leaving
+    # dispatch.py, regardless of what this dict itself points at.
+    log_sources: dict[str, Path] = field(default_factory=dict)
 
     def resolve_storage_path(self, name: str) -> Path:
         try:
@@ -93,6 +99,12 @@ class OrchestratorConfig:
         if name not in self.systemd_units:
             raise UnknownAllowlistEntry(f"'{name}' is not an allow-listed systemd unit")
         return name
+
+    def resolve_log_source(self, name: str) -> Path:
+        try:
+            return self.log_sources[name]
+        except KeyError:
+            raise UnknownAllowlistEntry(f"'{name}' is not an allow-listed log source") from None
 
     def resolve_project_manifest_path(self, project: str) -> Path:
         """Real path-traversal defense in depth: PROJECT_NAME_PATTERN
@@ -134,4 +146,10 @@ def default_config(ecosystem_root: Path | None = None) -> OrchestratorConfig:
             "hydra-umc-server",
         ),
         ecosystem_root=ecosystem_root,
+        log_sources={
+            # HYDRA-UMC-SERVER's own real LOG_FILE constant (src/server.ts):
+            # path.join(process.cwd(), "data", "logs", "server.log") - its
+            # real installed cwd on the CM5 is /opt/hydra-umc/server.
+            "server_log": Path("/opt/hydra-umc/server/data/logs/server.log"),
+        },
     )

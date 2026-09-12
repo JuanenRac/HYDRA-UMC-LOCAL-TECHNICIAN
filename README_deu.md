@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Phase-3%20von%206-367BF5.svg" alt="Phase 3 von 6">
 </p>
 
-> **Status: v0.0.3, funktionsfähig - Phase 3 von 6, teilweise
+> **Status: v0.0.4, funktionsfähig - Phase 3 von 6, teilweise
 > (Werkzeug-Orchestrator).** Phase 0 definierte die reale
 > Risikostufen-Richtlinie (`policy/risk_levels.py`), eine feste
 > Werkzeug-Positivliste (`policy/tool_matrix.py`), die fünf realen
@@ -26,10 +26,10 @@
 > Austrittskriterium dieser Phase 0 selbst: ein echter adversarialer
 > Test, der beweist, dass ein bösartiges abgerufenes Dokument niemals
 > einen Werkzeugaufruf auslösen oder ein Geheimnis preisgeben kann. Phase
-> 3 verbindet 6 der 9 deklarierten OBSERVE-Werkzeuge mit einem echten
+> 3 verbindet 7 der 9 deklarierten OBSERVE-Werkzeuge mit einem echten
 > Handler (`orchestrator/dispatch.py`): `service.status`,
 > `storage.usage`, `network.port_status`, `network.connectivity`,
-> `system.temperature` und `manifest.read` - jedes löst nur einen
+> `system.temperature`, `manifest.read` und `logs.read` - jedes löst nur einen
 > kurzen, auf der Positivliste stehenden symbolischen Namen auf
 > (`orchestrator/allowlist.py`), niemals einen rohen Pfad/Host/Port/URL,
 > den ein abgerufenes Dokument
@@ -40,7 +40,7 @@
 
 ---
 
-**Ehrlichkeitscheck - was heute wirklich läuft:** die Risikostufen-Richtlinie (`policy/risk_levels.py`), die feste Werkzeug-Zulassungsliste (`policy/tool_matrix.py`), die fünf Vertragsvalidatoren (`contracts.py` + `contracts/*.schema.json`), die Injection-Abwehrgrenze (`knowledge/trust.py`, `knowledge/redaction.py`), und nun 6 echte OBSERVE-Werkzeug-Handler (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`) sind alle real und getestet (93 bestandene Tests plus 28 Subtests über `tests/unit/` und `tests/adversarial/`). Die übrigen 3 Werkzeuge in `TOOL_MATRIX` (`process.list`, `update.pending`, `logs.read`) bleiben absichtlich `implemented=False` - jedes benötigt ein eigenes, separates Design (Filterung, Schwärzung oder eine echte HYDRA-UMC-UPDATER-Integration), kein Versehen. Es gibt weiterhin keine Inferenz-Engine, keinen RAG-Index und keine HYDRA-UMC-SERVER-Integration irgendwo in diesem Repository - die Phasen 1, 2, 4 und 5 in der Roadmap weiter unten bleiben vollständig angestrebte Zukunftsarbeit ohne jeglichen Code dahinter, und Phase 3 selbst ist teilweise (6 von 9 Werkzeugen). Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
+**Ehrlichkeitscheck - was heute wirklich läuft:** die Risikostufen-Richtlinie (`policy/risk_levels.py`), die feste Werkzeug-Zulassungsliste (`policy/tool_matrix.py`), die fünf Vertragsvalidatoren (`contracts.py` + `contracts/*.schema.json`), die Injection-Abwehrgrenze (`knowledge/trust.py`, `knowledge/redaction.py`), und nun 7 echte OBSERVE-Werkzeug-Handler (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`) sind alle real und getestet (103 bestandene Tests plus 28 Subtests über `tests/unit/` und `tests/adversarial/`). Die übrigen 2 Werkzeuge in `TOOL_MATRIX` (`process.list`, `update.pending`) bleiben absichtlich `implemented=False` - jedes benötigt ein eigenes, separates Design (Filterung oder eine echte HYDRA-UMC-UPDATER-Integration), kein Versehen. Es gibt weiterhin keine Inferenz-Engine, keinen RAG-Index und keine HYDRA-UMC-SERVER-Integration irgendwo in diesem Repository - die Phasen 1, 2, 4 und 5 in der Roadmap weiter unten bleiben vollständig angestrebte Zukunftsarbeit ohne jeglichen Code dahinter, und Phase 3 selbst ist teilweise (7 von 9 Werkzeugen). Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
 
 ---
 
@@ -72,8 +72,9 @@ Bausteine:
 2. **Werkzeug-Matrix** (`policy/tool_matrix.py`) - eine feste
    Positivliste von neun realen `OBSERVE`-Stufen-Werkzeugnamen. Ein
    Werkzeugname, der in diesem Dictionary fehlt, kann niemals aufgerufen
-   werden, Punkt - und jeder darin vorhandene Name hat in dieser
-   Lieferung immer noch `implemented=False`.
+   werden, Punkt - 7 der 9 sind bereits mit einem echten Handler
+   verbunden (siehe Punkt 5 unten), die übrigen 2 bleiben absichtlich
+   `implemented=False`.
 3. **Reale Verträge** (`contracts/*.schema.json` + `contracts.py`) -
    `ToolRequest`, `ToolResult`, `MaintenanceProposal`, `EvidenceBundle`
    und `PatchVerificationReport`, jeweils mit einer normativen
@@ -216,14 +217,14 @@ Reihenfolge der Phasen verbleibt:
   Qwen2.5-Coder-1.5B, Qwen3-1.7B-Instruct), erst gewählt, nachdem die
   reale Hailo-Kompatibilität, Latenz, Sprachqualität, Leistungsaufnahme
   und Lizenz verifiziert sind.
-- **Phase 3 - Werkzeug-Orchestrator (teilweise: 6 von 9).**
+- **Phase 3 - Werkzeug-Orchestrator (teilweise: 7 von 9).**
   Deterministischer Code, der die ersten realen `OBSERVE`-Stufen-
   Werkzeug-Handler mit `TOOL_MATRIX` verbindet, mit
   Richtliniendurchsetzung bei jedem Aufruf. `service.status`,
   `storage.usage`, `network.port_status`, `network.connectivity`,
-  `system.temperature` und `manifest.read` sind bereits real
-  (`orchestrator/dispatch.py`); `process.list`, `update.pending` und
-  `logs.read` bleiben für eine spätere Lieferung.
+  `system.temperature`, `manifest.read` und `logs.read` sind bereits real
+  (`orchestrator/dispatch.py`); `process.list` und `update.pending`
+  bleiben für eine spätere Lieferung.
 - **Phase 4 - Vorschläge und Nachweise.** Reale Erzeugung von
   `MaintenanceProposal` und `EvidenceBundle`, eskalierend hin zur
   künftigen Developer-Node-Rolle von HYDRA-UMC-DEV-SERVER.
