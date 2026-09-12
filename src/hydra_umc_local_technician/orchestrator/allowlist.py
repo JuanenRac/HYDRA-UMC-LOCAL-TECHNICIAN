@@ -52,6 +52,15 @@ class OrchestratorConfig:
     storage_paths: dict[str, Path] = field(default_factory=dict)
     # symbolic name -> (host, port) `network.port_status` may probe.
     ports: dict[str, tuple[str, int]] = field(default_factory=dict)
+    # symbolic name -> a real, fixed http(s) URL `network.connectivity`
+    # may GET - a separate namespace and a separate real check from
+    # `ports` on purpose: `port_status` is a bare TCP connect ("is
+    # something listening"), `connectivity` is a real HTTP GET reporting
+    # the endpoint's own real status code ("is it actually answering
+    # requests, and how") - the same real distinction
+    # HYDRA-UMC-OPS-AGENT's own inventory.py already draws between
+    # `check_systemd_unit_health()` and `check_http_health()`.
+    connectivity_targets: dict[str, str] = field(default_factory=dict)
     # real systemd unit names `service.status` may query - not a pattern,
     # an exact allow-list, since a unit name reaches a real subprocess
     # argument.
@@ -73,6 +82,12 @@ class OrchestratorConfig:
             return self.ports[name]
         except KeyError:
             raise UnknownAllowlistEntry(f"'{name}' is not an allow-listed port") from None
+
+    def resolve_connectivity_target(self, name: str) -> str:
+        try:
+            return self.connectivity_targets[name]
+        except KeyError:
+            raise UnknownAllowlistEntry(f"'{name}' is not an allow-listed connectivity target") from None
 
     def resolve_systemd_unit(self, name: str) -> str:
         if name not in self.systemd_units:
@@ -111,6 +126,9 @@ def default_config(ecosystem_root: Path | None = None) -> OrchestratorConfig:
         },
         ports={
             "server_http": ("127.0.0.1", 3000),
+        },
+        connectivity_targets={
+            "server_hydra_info": "http://127.0.0.1:3000/api/hydra-info",
         },
         systemd_units=(
             "hydra-umc-server",

@@ -15,25 +15,26 @@
   <img src="https://img.shields.io/badge/阶段-3%2F6-367BF5.svg" alt="第 3 阶段（共 6 阶段）">
 </p>
 
-> **状态：v0.0.2，功能可用 - 六阶段计划中的第 3 阶段，部分完成（工具编排器）。**
+> **状态：v0.0.3，功能可用 - 六阶段计划中的第 3 阶段，部分完成（工具编排器）。**
 > 第 0 阶段定义了真实的风险等级策略（`policy/risk_levels.py`）、一份固定的
 > 工具白名单（`policy/tool_matrix.py`）、未来每一次工具调用都必须校验通过的
 > 五份真实最小合约（`contracts/*.schema.json` + `contracts.py`）、从
 > HYDRA-UMC-OPS-AGENT 自身已测试的 `log_redaction.py` 移植而来的真实密钥/
 > 敏感信息脱敏功能，以及第 0 阶段自身字面意义上的退出标准：一个真实的
 > 对抗性测试，证明恶意的被检索文档永远无法触发工具调用或泄露密钥。第 3 阶段
-> 将 9 个已声明的 OBSERVE 级工具中的 5 个连接到了真实的处理程序
+> 将 9 个已声明的 OBSERVE 级工具中的 6 个连接到了真实的处理程序
 > （`orchestrator/dispatch.py`）：`service.status`、`storage.usage`、
-> `network.port_status`、`system.temperature` 和 `manifest.read` - 每一个
-> 都只解析一个白名单中的符号化名称（`orchestrator/allowlist.py`），绝不
-> 直接使用被检索文档可能提供的原始路径/主机/端口。目前尚不存在推理引擎、
+> `network.port_status`、`network.connectivity`、`system.temperature`
+> 和 `manifest.read` - 每一个都只解析一个白名单中的符号化名称
+> （`orchestrator/allowlist.py`），绝不直接使用被检索文档可能提供的原始
+> 路径/主机/端口/URL。目前尚不存在推理引擎、
 > RAG 索引，也没有与 HYDRA-UMC-SERVER 的集成 - 参见
 > [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) 了解今天真实存在的命令
 > 界面范围。
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)，以及现在的前 5 个真实 OBSERVE 工具处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`system.temperature`、`manifest.read`)都是真实的并经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 85 个测试外加 28 个子测试全部通过)。`TOOL_MATRIX` 中其余的 4 个工具(`process.list`、`network.connectivity`、`update.pending`、`logs.read`)仍有意保持 `implemented=False`——每一个都需要自己独立的设计(过滤、脱敏，或与 HYDRA-UMC-UPDATER 的真实集成)，并非疏漏。本仓库中任何地方仍不存在推理引擎、RAG 索引，也没有与 HYDRA-UMC-SERVER 的集成——下方路线图中的第 1、2、4、5 阶段仍完全是愿景，背后没有任何代码，第 3 阶段本身也只是部分完成(9 个工具中的 5 个)。具体已交付的内容请见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)，以及现在的 6 个真实 OBSERVE 工具处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`)都是真实的并经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 93 个测试外加 28 个子测试全部通过)。`TOOL_MATRIX` 中其余的 3 个工具(`process.list`、`update.pending`、`logs.read`)仍有意保持 `implemented=False`——每一个都需要自己独立的设计(过滤、脱敏，或与 HYDRA-UMC-UPDATER 的真实集成)，并非疏漏。本仓库中任何地方仍不存在推理引擎、RAG 索引，也没有与 HYDRA-UMC-SERVER 的集成——下方路线图中的第 1、2、4、5 阶段仍完全是愿景，背后没有任何代码，第 3 阶段本身也只是部分完成(9 个工具中的 6 个)。具体已交付的内容请见 `CHANGELOG.md`。
 
 ---
 
@@ -170,12 +171,12 @@ CHANGELOG - 它并**不**运行测试套件；要运行完整的本地测试套�
   Qwen2.5-1.5B-Instruct、Qwen2.5-Coder-1.5B、Qwen3-1.7B-Instruct），只有
   在验证了真实的 Hailo 兼容性、延迟、语言质量、功耗和许可证之后才会真正
   选定。
-- **第 3 阶段 - 工具编排器（部分完成：9 个中的 5 个）。** 确定性代码，将
+- **第 3 阶段 - 工具编排器（部分完成：9 个中的 6 个）。** 确定性代码，将
   首批真实的 `OBSERVE` 级工具处理程序接入 `TOOL_MATRIX`，并在每次调用时
   强制执行策略。`service.status`、`storage.usage`、`network.port_status`、
-  `system.temperature` 和 `manifest.read` 现已真实实现
-  (`orchestrator/dispatch.py`)；`process.list`、`network.connectivity`、
-  `update.pending` 和 `logs.read` 留待后续交付。
+  `network.connectivity`、`system.temperature` 和 `manifest.read` 现已
+  真实实现(`orchestrator/dispatch.py`)；`process.list`、`update.pending`
+  和 `logs.read` 留待后续交付。
 - **第 4 阶段 - 提案与证据。** 真实生成 `MaintenanceProposal` 和
   `EvidenceBundle`，向 HYDRA-UMC-DEV-SERVER 未来的 Developer Node 角色升级。
 - **第 5 阶段 - 用户界面。** 一个集成到 HYDRA-UMC-SERVER/Studio 中的本地

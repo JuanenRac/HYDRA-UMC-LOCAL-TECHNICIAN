@@ -17,12 +17,14 @@ temperature, connectivity, pending updates, permitted logs). No tool at
 REVERSIBLE_OPERATION or above is registered yet - see risk_levels.py's
 own POLICIES for why (Fase 0 does not implement one).
 
-Fase 3 wires the first 5 of these (`service.status`, `storage.usage`,
-`network.port_status`, `system.temperature`, `manifest.read`) to a real
-handler in `orchestrator/dispatch.py` - `implemented=True` below reflects
-that. The other 4 stay `implemented=False`: real, deliberate scope for a
-later slice, not an oversight - see dispatch.py's own module doc comment
-for exactly why each one needs its own separate design.
+Fase 3 wires 6 of these (`service.status`, `storage.usage`,
+`network.port_status`, `network.connectivity`, `system.temperature`,
+`manifest.read`) to a real handler in `orchestrator/dispatch.py` -
+`implemented=True` below reflects that. The other 3
+(`process.list`/`update.pending`/`logs.read`) stay `implemented=False`:
+real, deliberate scope for a later slice, not an oversight - see
+dispatch.py's own module doc comment for exactly why each one needs its
+own separate design.
 """
 from __future__ import annotations
 
@@ -82,6 +84,7 @@ TOOL_MATRIX: dict[str, ToolDescriptor] = {
         name="network.connectivity",
         risk_level=RiskLevel.OBSERVE,
         description="Reports reachability of a configured, allow-listed local endpoint - never an arbitrary caller-supplied host.",
+        implemented=True,
     ),
     "update.pending": ToolDescriptor(
         name="update.pending",
