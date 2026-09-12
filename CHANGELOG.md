@@ -9,6 +9,33 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.0.5] - Fase 3: an 8th real OBSERVE-level tool handler (process.list)
+
+`process.list`'s own separate design need ("which processes even count
+as relevant is a real open design question") is now answered the same
+way every other handler here already answers it: only ever a symbolic
+name an operator explicitly allow-listed. New `OrchestratorConfig.process_patterns`
+(symbolic name -> a real substring) resolves to a real read-only
+`/proc/<pid>/cmdline` scan (`dispatch._list_proc_matches()`) - the same
+mechanism `ps` itself is built on, no subprocess spawned - capped at 20
+real matches, never a raw, unfiltered process table. Honestly degrades
+with `available: false` on a host with no real `/proc` (this dev machine
+included), the same convention `system.temperature`/`service.status`
+already use. `default_config()`'s new real entry: `vision_streamer_worker`
+-> `hydra-umc-vision-streamer`, HYDRA-UMC-SERVER's own real camera
+process supervisor spawns these directly via `child_process.spawn` with
+no systemd unit of their own, so `service.status` can never see them -
+`process.list` is the one real way to check whether a camera worker is
+actually alive.
+
+Fase 3 is now 8 of 9 tools (`update.pending` remains - see
+`dispatch.py`'s own module doc comment for why it needs its own
+separate design).
+
+Verified: 109 tests + 28 subtests passing (2 more skipped on a host with
+no real `/proc`, exercised for real on Linux CI) (`tests/unit/`,
+`tests/adversarial/`), `tools/ci_validate.py` PASS.
+
 ## [0.0.4] - Fase 3: a 7th real OBSERVE-level tool handler (logs.read)
 
 `logs.read`'s own separate design need (called out since Fase 3's first

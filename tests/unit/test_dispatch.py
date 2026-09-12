@@ -211,6 +211,61 @@ class LogsReadTests(unittest.TestCase):
         with self.assertRaises(ToolDispatchError):
             dispatch_tool_request(_request("logs.read", {"name": "not-configured"}), config)
 
+class ProcessListTests(unittest.TestCase):
+    def test_refuses_a_name_not_on_the_allow_list(self):
+        config = OrchestratorConfig(process_patterns={"worker": "hydra-umc-vision-streamer"})
+        with self.assertRaises(ToolDispatchError):
+            dispatch_tool_request(_request("process.list", {"name": "not-configured"}), config)
+
+    def test_an_allow_listed_pattern_never_raises_regardless_of_platform(self):
+        # Real platform honesty (this dev machine may have no real /proc
+        # at all) - the one thing genuinely verifiable everywhere is a
+        # valid, honest ToolResult either way, never an unhandled
+        # exception and never a raw process table.
+        config = OrchestratorConfig(process_patterns={"worker": "a-pattern-nothing-real-matches-xyz"})
+        result = dispatch_tool_request(_request("process.list", {"name": "worker"}), config)
+        self.assertEqual(result["status"], "ok")
+        self.assertIn("available", result["output"])
+        if result["output"]["available"]:
+            self.assertIn("matches", result["output"])
+            self.assertIn("running", result["output"])
+        else:
+            self.assertIn("reason", result["output"])
+
+    @unittest.skipUnless(Path("/proc").is_dir(), "needs a real Linux /proc to exercise a real match")
+    def test_finds_a_real_running_process_by_its_real_cmdline(self):
+        import subprocess
+        import sys
+        import time
+
+        marker = "hydra-umc-local-technician-test-marker-4f3a9c"
+        proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(5)", marker])
+        try:
+            deadline = time.monotonic() + 3
+            matches: list = []
+            while time.monotonic() < deadline:
+                config = OrchestratorConfig(process_patterns={"worker": marker})
+                result = dispatch_tool_request(_request("process.list", {"name": "worker"}), config)
+                matches = result["output"]["matches"]
+                if matches:
+                    break
+                time.sleep(0.1)
+            self.assertTrue(matches, "expected to find the real spawned process by its own cmdline")
+            self.assertEqual(matches[0]["pid"], proc.pid)
+        finally:
+            proc.terminate()
+            proc.wait(timeout=5)
+
+    @unittest.skipUnless(Path("/proc").is_dir(), "needs a real Linux /proc")
+    def test_a_pattern_matching_nothing_reports_not_running(self):
+        config = OrchestratorConfig(process_patterns={"worker": "definitely-not-a-real-process-xyz123"})
+        result = dispatch_tool_request(_request("process.list", {"name": "worker"}), config)
+        self.assertTrue(result["output"]["available"])
+        self.assertFalse(result["output"]["running"])
+        self.assertEqual(result["output"]["matches"], [])
+
+
+class LogsReadLargeFileTests(unittest.TestCase):
     def test_a_large_file_is_tailed_within_a_bounded_byte_window(self):
         # Real proof _tail_lines() bounds the READ itself, not just the
         # line count after the fact: a file far larger than the byte

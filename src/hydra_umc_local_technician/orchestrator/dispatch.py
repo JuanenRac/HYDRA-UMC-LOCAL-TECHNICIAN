@@ -17,15 +17,12 @@ construction - none accepts a raw path/host/port from `arguments`, only a
 short symbolic name resolved through `allowlist.OrchestratorConfig` (see
 that module's own header comment for why).
 
-This wires 7 of the 9 tools `policy.tool_matrix` declares: `storage.usage`,
+This wires 8 of the 9 tools `policy.tool_matrix` declares: `storage.usage`,
 `network.port_status`, `network.connectivity`, `system.temperature`,
-`service.status`, `manifest.read`, `logs.read`. The other 2
-(`process.list`, `update.pending`) stay `implemented=False` - real,
-deliberate scope for a later slice, not an oversight (`process.list`
-needs its own filtering design beyond what a symbolic-name allow-list
-alone would cover - which processes even count as "relevant" is a real
-open design question; `update.pending` needs a real HYDRA-UMC-UPDATER
-integration boundary).
+`service.status`, `manifest.read`, `logs.read`, `process.list`. The other
+1 (`update.pending`) stays `implemented=False` - real, deliberate scope
+for a later slice, not an oversight: it needs a real HYDRA-UMC-UPDATER
+integration boundary this module does not have yet.
 
 `logs.read` only ever opens exactly one real, allow-listed FILE
 (`OrchestratorConfig.resolve_log_source`, never a directory or glob), and
@@ -33,6 +30,16 @@ every line it returns has already passed through
 `knowledge.redaction.redact_lines()` before this function returns -
 before the ToolResult is even assembled, not as a later serialization
 step that a future change could accidentally skip.
+
+`process.list` resolves a symbolic name to a real substring
+(`OrchestratorConfig.resolve_process_pattern`) matched against real
+`/proc/<pid>/cmdline` entries - never a raw, unfiltered process table
+(this is the "which processes even count as relevant" design question
+the module used to leave open: the answer is "only the ones an operator
+explicitly allow-listed", the same symbolic-name discipline every other
+handler here already uses). Honestly degrades with `available: false` on
+a host with no real `/proc` (this dev machine included), the same
+convention `system.temperature`/`service.status` already use.
 
 Real platform honesty, not a simulated pass: `system.temperature` and
 `service.status` degrade with a distinct, typed reason (never a guessed
@@ -292,6 +299,65 @@ def _handle_logs_read(config: OrchestratorConfig, arguments: dict[str, Any]) -> 
     return output, f"read the last {len(redacted)} line(s) of {path} (redacted via knowledge.redaction before leaving this module)"
 
 
+# process.list's own real bound: never report more than this many real
+# matches for one pattern - an allow-listed ecosystem process is expected
+# to have a handful of instances at most (one per camera, say), never an
+# unbounded count; a pattern that somehow matches more says something is
+# already wrong and is itself worth surfacing via `truncated`.
+_PROCESS_LIST_MAX_MATCHES = 20
+
+
+def _list_proc_matches(pattern: str) -> tuple[list[dict[str, Any]], bool]:
+    """Real, read-only /proc enumeration - the same mechanism `ps` itself
+    is built on, with no subprocess spawned. Each match is a real PID
+    whose real cmdline (as the kernel itself reports it, never the
+    process's own possibly-spoofed argv[0] alone) contains `pattern`. A
+    PID that exits between `iterdir()` and reading its own `cmdline` is a
+    real, benign race (the process is simply no longer there) - skipped,
+    never an error. Returns (matches, truncated)."""
+    matches: list[dict[str, Any]] = []
+    truncated = False
+    proc_dir = Path("/proc")
+    for entry in sorted(proc_dir.iterdir(), key=lambda p: p.name):
+        if not entry.name.isdigit():
+            continue
+        try:
+            raw = (entry / "cmdline").read_bytes()
+        except OSError:
+            continue
+        cmdline = raw.decode("utf-8", errors="replace").replace("\x00", " ").strip()
+        if pattern not in cmdline:
+            continue
+        if len(matches) >= _PROCESS_LIST_MAX_MATCHES:
+            truncated = True
+            break
+        matches.append({"pid": int(entry.name), "cmdline": cmdline})
+    return matches, truncated
+
+
+def _handle_process_list(config: OrchestratorConfig, arguments: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    name = arguments.get("name")
+    if not isinstance(name, str) or not name:
+        raise UnknownAllowlistEntry("process.list requires a non-empty 'name' argument")
+    pattern = config.resolve_process_pattern(name)
+    if not Path("/proc").is_dir():
+        # Honest platform degradation, same convention as
+        # system.temperature/service.status - never a guessed or empty-
+        # by-omission result on a host with no real /proc (this dev
+        # machine included).
+        output = {"name": name, "available": False, "reason": "no /proc on this platform", "running": None, "matches": []}
+        return output, "process.list needs a real Linux host with /proc - not available here"
+    matches, truncated = _list_proc_matches(pattern)
+    output = {
+        "name": name,
+        "available": True,
+        "running": len(matches) > 0,
+        "matches": matches,
+        "truncated": truncated,
+    }
+    return output, f"{len(matches)} real process(es) matching pattern {pattern!r} under /proc" + (" (truncated)" if truncated else "")
+
+
 # tool name -> handler(config, arguments) -> (output, evidence). Every
 # entry here MUST have implemented=True in policy.tool_matrix.TOOL_MATRIX -
 # tested by test_dispatch.py's own test_every_implemented_tool_has_a_handler
@@ -304,6 +370,7 @@ _HANDLERS = {
     "service.status": _handle_service_status,
     "manifest.read": _handle_manifest_read,
     "logs.read": _handle_logs_read,
+    "process.list": _handle_process_list,
 }
 
 

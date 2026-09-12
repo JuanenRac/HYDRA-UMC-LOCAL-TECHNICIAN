@@ -64,6 +64,17 @@ class ResolveLogSourceTests(unittest.TestCase):
         with self.assertRaises(UnknownAllowlistEntry):
             config.resolve_log_source("other")
 
+
+class ResolveProcessPatternTests(unittest.TestCase):
+    def test_resolves_a_configured_name(self):
+        config = OrchestratorConfig(process_patterns={"worker": "hydra-umc-vision-streamer"})
+        self.assertEqual(config.resolve_process_pattern("worker"), "hydra-umc-vision-streamer")
+
+    def test_refuses_an_unconfigured_name(self):
+        config = OrchestratorConfig(process_patterns={"worker": "hydra-umc-vision-streamer"})
+        with self.assertRaises(UnknownAllowlistEntry):
+            config.resolve_process_pattern("other")
+
     def test_refuses_an_unconfigured_unit(self):
         config = OrchestratorConfig(systemd_units=("hydra-umc-server",))
         with self.assertRaises(UnknownAllowlistEntry):
@@ -107,6 +118,10 @@ class DefaultConfigTests(unittest.TestCase):
     def test_targets_the_real_documented_server_log_file(self):
         config = default_config()
         self.assertEqual(config.resolve_log_source("server_log"), Path("/opt/hydra-umc/server/data/logs/server.log"))
+
+    def test_targets_the_real_documented_vision_streamer_worker_pattern(self):
+        config = default_config()
+        self.assertEqual(config.resolve_process_pattern("vision_streamer_worker"), "hydra-umc-vision-streamer")
 
 
 if __name__ == "__main__":

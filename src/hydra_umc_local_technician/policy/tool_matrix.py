@@ -17,14 +17,13 @@ temperature, connectivity, pending updates, permitted logs). No tool at
 REVERSIBLE_OPERATION or above is registered yet - see risk_levels.py's
 own POLICIES for why (Fase 0 does not implement one).
 
-Fase 3 wires 7 of these (`service.status`, `storage.usage`,
+Fase 3 wires 8 of these (`service.status`, `storage.usage`,
 `network.port_status`, `network.connectivity`, `system.temperature`,
-`manifest.read`, `logs.read`) to a real handler in
+`manifest.read`, `logs.read`, `process.list`) to a real handler in
 `orchestrator/dispatch.py` - `implemented=True` below reflects that. The
-other 2 (`process.list`/`update.pending`) stay `implemented=False`: real,
-deliberate scope for a later slice, not an oversight - see dispatch.py's
-own module doc comment for exactly why each one needs its own separate
-design.
+other 1 (`update.pending`) stays `implemented=False`: real, deliberate
+scope for a later slice, not an oversight - it needs a real
+HYDRA-UMC-UPDATER integration boundary this module does not have yet.
 """
 from __future__ import annotations
 
@@ -61,6 +60,7 @@ TOOL_MATRIX: dict[str, ToolDescriptor] = {
         name="process.list",
         risk_level=RiskLevel.OBSERVE,
         description="Lists running processes relevant to the ecosystem's own services - never a raw, unfiltered process table.",
+        implemented=True,
     ),
     "network.port_status": ToolDescriptor(
         name="network.port_status",

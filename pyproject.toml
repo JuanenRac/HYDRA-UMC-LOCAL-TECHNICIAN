@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hydra-umc-local-technician"
-version = "0.0.4"
+version = "0.0.5"
 description = "Local, policy-gated AI maintenance technician for the HYDRA-UMC/URTC ecosystem: observes, explains and proposes - it never treats a model's own text as authority to act. Fase 0 only: the tool/risk-level matrix, the real JSON Schema contracts every future tool call must validate against, secret redaction, and a real adversarial test proving a malicious retrieved document can never trigger a tool or leak a secret."
 readme = "README.md"
 requires-python = ">=3.11"
