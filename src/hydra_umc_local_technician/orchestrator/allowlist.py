@@ -76,6 +76,12 @@ class OrchestratorConfig:
     # piped through knowledge.redaction.redact_lines() before leaving
     # dispatch.py, regardless of what this dict itself points at.
     log_sources: dict[str, Path] = field(default_factory=dict)
+    # symbolic name -> a real substring `process.list` matches against a
+    # real process's own /proc/<pid>/cmdline - never a raw, unfiltered
+    # process table (policy.tool_matrix's own description of this tool),
+    # and never a pattern a caller supplies directly: only ever one an
+    # operator already put here for exactly this purpose.
+    process_patterns: dict[str, str] = field(default_factory=dict)
 
     def resolve_storage_path(self, name: str) -> Path:
         try:
@@ -105,6 +111,12 @@ class OrchestratorConfig:
             return self.log_sources[name]
         except KeyError:
             raise UnknownAllowlistEntry(f"'{name}' is not an allow-listed log source") from None
+
+    def resolve_process_pattern(self, name: str) -> str:
+        try:
+            return self.process_patterns[name]
+        except KeyError:
+            raise UnknownAllowlistEntry(f"'{name}' is not an allow-listed process pattern") from None
 
     def resolve_project_manifest_path(self, project: str) -> Path:
         """Real path-traversal defense in depth: PROJECT_NAME_PATTERN
@@ -151,5 +163,15 @@ def default_config(ecosystem_root: Path | None = None) -> OrchestratorConfig:
             # path.join(process.cwd(), "data", "logs", "server.log") - its
             # real installed cwd on the CM5 is /opt/hydra-umc/server.
             "server_log": Path("/opt/hydra-umc/server/data/logs/server.log"),
+        },
+        process_patterns={
+            # HYDRA-UMC-SERVER's own real camera process supervisor
+            # (server.ts) spawns `hydra-umc-vision-streamer stream serve`
+            # directly via child_process.spawn - these are real child
+            # processes with no systemd unit of their own, so
+            # `service.status` can never see them; `process.list` is the
+            # one real way to check whether a camera worker is actually
+            # alive.
+            "vision_streamer_worker": "hydra-umc-vision-streamer",
         },
     )
