@@ -17,17 +17,14 @@ construction - none accepts a raw path/host/port from `arguments`, only a
 short symbolic name resolved through `allowlist.OrchestratorConfig` (see
 that module's own header comment for why).
 
-This first slice wires 5 of the 9 tools `policy.tool_matrix` declares:
-`storage.usage`, `network.port_status`, `system.temperature`,
-`service.status`, `manifest.read`. The other 4 (`process.list`,
-`network.connectivity`, `update.pending`, `logs.read`) stay
-`implemented=False` - real, deliberate scope for a later slice, not an
-oversight (`process.list`/`logs.read` need their own filtering/redaction
-design beyond what a symbolic-name allow-list alone would cover;
-`update.pending` needs a real HYDRA-UMC-UPDATER integration boundary;
-`network.connectivity` is the same shape as `network.port_status` but
-against a REMOTE allow-listed endpoint, worth its own review rather than
-riding along here unverified).
+This wires 6 of the 9 tools `policy.tool_matrix` declares: `storage.usage`,
+`network.port_status`, `network.connectivity`, `system.temperature`,
+`service.status`, `manifest.read`. The other 3 (`process.list`,
+`update.pending`, `logs.read`) stay `implemented=False` - real, deliberate
+scope for a later slice, not an oversight (`process.list`/`logs.read` need
+their own filtering/redaction design beyond what a symbolic-name
+allow-list alone would cover; `update.pending` needs a real
+HYDRA-UMC-UPDATER integration boundary).
 
 Real platform honesty, not a simulated pass: `system.temperature` and
 `service.status` degrade with a distinct, typed reason (never a guessed
@@ -42,6 +39,9 @@ import shutil
 import socket
 import subprocess
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from datetime import datetime, timezone
 from typing import Any
 
@@ -123,6 +123,50 @@ def _handle_network_port_status(config: OrchestratorConfig, arguments: dict[str,
     return output, f"socket.create_connection(({host!r}, {port}), timeout={timeout_s}): {detail}"
 
 
+# The only real schemes _handle_network_connectivity will ever actually
+# open - a real health endpoint is HTTP(S), never `data:`/`file:`/`ftp:`.
+# Mirrors HYDRA-UMC-OPS-AGENT's own inventory.py check_http_health() -
+# restricting this explicitly (rather than trying every scheme and hoping
+# the result looks HTTP-shaped) is what stops a malformed/hostile URL
+# from reaching urlopen() at all.
+_SUPPORTED_HTTP_SCHEMES = ("http", "https")
+
+
+def _handle_network_connectivity(config: OrchestratorConfig, arguments: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    # Distinct real check from network.port_status above: a real HTTP GET
+    # against an allow-listed URL, reporting the endpoint's own real
+    # status code - not just whether some process happens to be bound to
+    # a port. See allowlist.py's own field comment for the full reasoning.
+    name = arguments.get("name")
+    if not isinstance(name, str) or not name:
+        raise UnknownAllowlistEntry("network.connectivity requires a non-empty 'name' argument")
+    url = config.resolve_connectivity_target(name)
+    scheme = urllib.parse.urlsplit(url).scheme.lower()
+    if scheme not in _SUPPORTED_HTTP_SCHEMES:
+        # A real, honest misconfiguration report - the allow-list itself
+        # is fixed at construction time (see OrchestratorConfig's own
+        # docstring), so reaching this means default_config() or a
+        # caller's own config built an unsupported URL, not that
+        # `arguments` smuggled one in.
+        output = {"name": name, "url": url, "reachable": False, "status_code": None, "reason": f"unsupported URL scheme {scheme!r} - only http/https are ever checked"}
+        return output, f"rejected {url!r} before ever calling urlopen() - unsupported scheme"
+    timeout_s = 3.0
+    try:
+        with urllib.request.urlopen(url, timeout=timeout_s) as response:  # noqa: S310 - scheme already restricted above
+            status_code = response.getcode()
+        output = {"name": name, "url": url, "reachable": True, "status_code": status_code, "reason": None}
+        return output, f"urlopen({url!r}, timeout={timeout_s}) -> HTTP {status_code}"
+    except urllib.error.HTTPError as exc:
+        # A real HTTP error response (4xx/5xx) still means the endpoint
+        # itself answered - genuinely different from a connection that
+        # never got a response at all (URLError below).
+        output = {"name": name, "url": url, "reachable": True, "status_code": exc.code, "reason": f"HTTP {exc.code}"}
+        return output, f"urlopen({url!r}, timeout={timeout_s}) -> HTTP {exc.code} (endpoint answered, with an error status)"
+    except urllib.error.URLError as exc:
+        output = {"name": name, "url": url, "reachable": False, "status_code": None, "reason": str(exc.reason)}
+        return output, f"urlopen({url!r}, timeout={timeout_s}) failed: {exc.reason}"
+
+
 def _handle_system_temperature(config: OrchestratorConfig, arguments: dict[str, Any]) -> tuple[dict[str, Any], str]:
     # Same real Linux thermal-zone path HYDRA-UMC-SERVER's own
     # getSystemMetrics() reads (see policy.tool_matrix's own docstring for
@@ -195,6 +239,7 @@ def _handle_manifest_read(config: OrchestratorConfig, arguments: dict[str, Any])
 _HANDLERS = {
     "storage.usage": _handle_storage_usage,
     "network.port_status": _handle_network_port_status,
+    "network.connectivity": _handle_network_connectivity,
     "system.temperature": _handle_system_temperature,
     "service.status": _handle_service_status,
     "manifest.read": _handle_manifest_read,

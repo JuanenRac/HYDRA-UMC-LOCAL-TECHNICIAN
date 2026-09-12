@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Fase-3%20di%206-367BF5.svg" alt="Fase 3 di 6">
 </p>
 
-> **Stato: v0.0.2, funzionale - Fase 3 di 6, parziale (orchestratore di
+> **Stato: v0.0.3, funzionale - Fase 3 di 6, parziale (orchestratore di
 > strumenti).** La Fase 0 ha definito la politica reale dei livelli
 > di rischio (`policy/risk_levels.py`), una lista bianca fissa di
 > strumenti (`policy/tool_matrix.py`), i cinque contratti minimi reali
@@ -25,12 +25,13 @@
 > HYDRA-UMC-OPS-AGENT, e il criterio di uscita letterale della stessa
 > Fase 0: un vero test avversariale che dimostra che un documento
 > malevolo recuperato non può mai innescare una chiamata a uno strumento
-> né rivelare un segreto. La Fase 3 collega 5 dei 9 strumenti OBSERVE
+> né rivelare un segreto. La Fase 3 collega 6 dei 9 strumenti OBSERVE
 > dichiarati a un handler reale (`orchestrator/dispatch.py`):
 > `service.status`, `storage.usage`, `network.port_status`,
-> `system.temperature` e `manifest.read` - ciascuno risolve solo un nome
-> simbolico in whitelist (`orchestrator/allowlist.py`), mai un
-> percorso/host/porta grezzo che un documento recuperato potrebbe
+> `network.connectivity`, `system.temperature` e `manifest.read` -
+> ciascuno risolve solo un nome simbolico in whitelist
+> (`orchestrator/allowlist.py`), mai un percorso/host/porta/URL grezzo
+> che un documento recuperato potrebbe
 > fornire. Non esistono ancora un motore di inferenza, un indice RAG,
 > né un'integrazione con HYDRA-UMC-SERVER - vedi
 > [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) per la superficie di
@@ -38,7 +39,7 @@
 
 ---
 
-**Controllo di onestà - cosa funziona davvero oggi:** la policy dei livelli di rischio (`policy/risk_levels.py`), l'elenco fisso di strumenti consentiti (`policy/tool_matrix.py`), i cinque validatori di contratto (`contracts.py` + `contracts/*.schema.json`), il confine di difesa dalle injection (`knowledge/trust.py`, `knowledge/redaction.py`), e ora i primi 5 handler reali di strumenti OBSERVE (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `system.temperature`, `manifest.read`) sono tutti reali e testati (85 test più 28 subtest superati tra `tests/unit/` e `tests/adversarial/`). Gli altri 4 strumenti in `TOOL_MATRIX` (`process.list`, `network.connectivity`, `update.pending`, `logs.read`) restano `implemented=False` di proposito - ciascuno richiede un proprio disegno separato (filtraggio, redazione, o una vera integrazione con HYDRA-UMC-UPDATER), non è una svista. Non esiste ancora alcun motore di inferenza, alcun indice RAG, né alcuna integrazione con HYDRA-UMC-SERVER in nessuna parte di questo repository - le Fasi 1, 2, 4 e 5 nella Roadmap più sotto restano interamente aspirazionali, senza alcun codice dietro, e la stessa Fase 3 è parziale (5 strumenti su 9). Vedi `CHANGELOG.md` per ciò che è stato consegnato esattamente finora.
+**Controllo di onestà - cosa funziona davvero oggi:** la policy dei livelli di rischio (`policy/risk_levels.py`), l'elenco fisso di strumenti consentiti (`policy/tool_matrix.py`), i cinque validatori di contratto (`contracts.py` + `contracts/*.schema.json`), il confine di difesa dalle injection (`knowledge/trust.py`, `knowledge/redaction.py`), e ora 6 handler reali di strumenti OBSERVE (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`) sono tutti reali e testati (93 test più 28 subtest superati tra `tests/unit/` e `tests/adversarial/`). Gli altri 3 strumenti in `TOOL_MATRIX` (`process.list`, `update.pending`, `logs.read`) restano `implemented=False` di proposito - ciascuno richiede un proprio disegno separato (filtraggio, redazione, o una vera integrazione con HYDRA-UMC-UPDATER), non è una svista. Non esiste ancora alcun motore di inferenza, alcun indice RAG, né alcuna integrazione con HYDRA-UMC-SERVER in nessuna parte di questo repository - le Fasi 1, 2, 4 e 5 nella Roadmap più sotto restano interamente aspirazionali, senza alcun codice dietro, e la stessa Fase 3 è parziale (6 strumenti su 9). Vedi `CHANGELOG.md` per ciò che è stato consegnato esattamente finora.
 
 ---
 
@@ -204,12 +205,12 @@ Questa versione porta la Fase 0 e parte della Fase 3. Ciò che resta, in ordine 
   Qwen3-1.7B-Instruct), scelto solo dopo aver verificato la reale
   compatibilità Hailo, la latenza, la qualità linguistica, il consumo e
   la licenza.
-- **Fase 3 - Orchestratore di strumenti (parziale: 5 su 9).** Codice
+- **Fase 3 - Orchestratore di strumenti (parziale: 6 su 9).** Codice
   deterministico che collega i primi gestori reali di strumenti di
   livello `OBSERVE` a `TOOL_MATRIX`, con la politica applicata a ogni
   chiamata. `service.status`, `storage.usage`, `network.port_status`,
-  `system.temperature` e `manifest.read` sono già reali
-  (`orchestrator/dispatch.py`); `process.list`, `network.connectivity`,
+  `network.connectivity`, `system.temperature` e `manifest.read` sono
+  già reali (`orchestrator/dispatch.py`); `process.list`,
   `update.pending` e `logs.read` restano per una consegna successiva.
 - **Fase 4 - Proposte e prove.** Generazione reale di
   `MaintenanceProposal` ed `EvidenceBundle`, con escalation verso il

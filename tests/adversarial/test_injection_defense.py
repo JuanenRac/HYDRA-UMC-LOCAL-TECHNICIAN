@@ -148,6 +148,18 @@ class AllowlistDefenseTests(unittest.TestCase):
         with self.assertRaises(ToolDispatchError):
             dispatch_tool_request(request, self.config)
 
+    def test_an_unlisted_connectivity_target_is_refused_not_probed(self):
+        # A poisoned document naming an arbitrary internal or external
+        # URL must be refused by the allow-list before urlopen() is ever
+        # called - arguments carries only a symbolic name, never a URL.
+        request = build_tool_request_from_model_output(
+            request_id="adversarial-5b", tool="network.connectivity",
+            arguments={"name": "attacker-supplied-endpoint"}, actor="local-technician",
+            reason="adversarial",
+        )
+        with self.assertRaises(ToolDispatchError):
+            dispatch_tool_request(request, self.config)
+
     def test_an_unlisted_systemd_unit_name_never_reaches_a_subprocess(self):
         # A poisoned document naming a real, dangerous unit
         # ("dangerous.service") must be refused by the allow-list, never
@@ -182,6 +194,7 @@ class AllowlistDefenseTests(unittest.TestCase):
         config = default_config()
         self.assertEqual(config.resolve_port("server_http"), ("127.0.0.1", 3000))
         self.assertEqual(config.resolve_systemd_unit("hydra-umc-server"), "hydra-umc-server")
+        self.assertEqual(config.resolve_connectivity_target("server_hydra_info"), "http://127.0.0.1:3000/api/hydra-info")
 
     def test_a_privileged_risk_level_cannot_be_smuggled_in_by_naming_it_directly(self):
         # Even if a caller (mis-)believed it could pick the risk level

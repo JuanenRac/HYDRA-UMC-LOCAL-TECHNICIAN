@@ -37,6 +37,17 @@ class ResolvePortTests(unittest.TestCase):
             config.resolve_port("other")
 
 
+class ResolveConnectivityTargetTests(unittest.TestCase):
+    def test_resolves_a_configured_name(self):
+        config = OrchestratorConfig(connectivity_targets={"api": "http://127.0.0.1:3000/api/hydra-info"})
+        self.assertEqual(config.resolve_connectivity_target("api"), "http://127.0.0.1:3000/api/hydra-info")
+
+    def test_refuses_an_unconfigured_name(self):
+        config = OrchestratorConfig(connectivity_targets={"api": "http://127.0.0.1:3000/api/hydra-info"})
+        with self.assertRaises(UnknownAllowlistEntry):
+            config.resolve_connectivity_target("other")
+
+
 class ResolveSystemdUnitTests(unittest.TestCase):
     def test_resolves_a_configured_unit(self):
         config = OrchestratorConfig(systemd_units=("hydra-umc-server",))

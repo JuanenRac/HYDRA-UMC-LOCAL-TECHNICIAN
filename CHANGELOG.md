@@ -9,6 +9,41 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.0.3] - Fase 3: a 6th real OBSERVE-level tool handler (network.connectivity)
+
+Wires `network.connectivity` to a real handler in
+`orchestrator/dispatch.py`, a genuinely different check from
+`network.port_status` (already real since 0.0.2): a real HTTP GET
+against an allow-listed URL, reporting the endpoint's own real status
+code, rather than a bare TCP connect - the same real distinction
+HYDRA-UMC-OPS-AGENT's own `inventory.py` already draws between
+`check_systemd_unit_health()` and `check_http_health()`. Only
+`http`/`https` schemes are ever opened (mirrors that same file's own
+`_SUPPORTED_HTTP_SCHEMES` guard); a real HTTP error response (4xx/5xx)
+is still reported as `reachable: true` with the real status code, since
+the endpoint did answer - a genuinely different, more informative
+outcome than a connection that never got a response at all.
+
+New `orchestrator/allowlist.py` field `connectivity_targets` (symbolic
+name -> a real, fixed URL), kept in its own namespace rather than
+folded into `ports` - conflating "is one of this host's own expected
+services listening" with "can this host reach a real endpoint and get
+an answer" would make the tool answer the wrong question for whichever
+entry happened to be resolved. `default_config()` now also targets
+HYDRA-UMC-SERVER's own real `GET /api/hydra-info`.
+
+Fase 3 is now 6 of 9 tools (`process.list`, `update.pending`,
+`logs.read` remain for a later slice, each for the same real reasons
+already documented in `dispatch.py`'s own module comment). 8 new tests
+(3 real local HTTP servers via `http.server.HTTPServer` covering
+reachable/HTTP-error/unreachable, an allow-list refusal, a
+non-http(s)-scheme refusal, plus 2 direct `resolve_connectivity_target`
+unit tests and 1 new adversarial case proving a poisoned document's own
+text can never smuggle in an arbitrary URL). 93 tests total (was 85),
+including 28 subtests. README x7 + CHANGELOG updated throughout.
+
+Verified: 93 tests + 28 subtests, ci_validate PASS.
+
 ## [0.0.2] - Fase 3: the first 5 real OBSERVE-level tool handlers
 
 `policy/tool_matrix.py` declared 9 OBSERVE-level tools, all

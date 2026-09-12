@@ -93,6 +93,83 @@ class NetworkPortStatusTests(unittest.TestCase):
             dispatch_tool_request(_request("network.port_status", {"name": "not-configured"}), config)
 
 
+class NetworkConnectivityTests(unittest.TestCase):
+    def test_reports_reachable_true_with_the_real_status_code_for_a_real_local_server(self):
+        import threading
+        from http.server import BaseHTTPRequestHandler, HTTPServer
+
+        class _Handler(BaseHTTPRequestHandler):
+            def do_GET(self):  # noqa: N802 - stdlib method name
+                self.send_response(200)
+                self.end_headers()
+
+            def log_message(self, *args):
+                pass  # keep test output clean
+
+        server = HTTPServer(("127.0.0.1", 0), _Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            port = server.server_address[1]
+            config = OrchestratorConfig(connectivity_targets={"probe": f"http://127.0.0.1:{port}/"})
+            result = dispatch_tool_request(_request("network.connectivity", {"name": "probe"}), config)
+            self.assertEqual(result["status"], "ok")
+            self.assertTrue(result["output"]["reachable"])
+            self.assertEqual(result["output"]["status_code"], 200)
+        finally:
+            server.shutdown()
+            thread.join(timeout=5)
+
+    def test_a_real_http_error_status_still_counts_as_reachable(self):
+        import threading
+        from http.server import BaseHTTPRequestHandler, HTTPServer
+
+        class _Handler(BaseHTTPRequestHandler):
+            def do_GET(self):  # noqa: N802
+                self.send_response(503)
+                self.end_headers()
+
+            def log_message(self, *args):
+                pass
+
+        server = HTTPServer(("127.0.0.1", 0), _Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            port = server.server_address[1]
+            config = OrchestratorConfig(connectivity_targets={"probe": f"http://127.0.0.1:{port}/"})
+            result = dispatch_tool_request(_request("network.connectivity", {"name": "probe"}), config)
+            self.assertEqual(result["status"], "ok")
+            self.assertTrue(result["output"]["reachable"], "a real HTTP error response still means the endpoint answered")
+            self.assertEqual(result["output"]["status_code"], 503)
+        finally:
+            server.shutdown()
+            thread.join(timeout=5)
+
+    def test_reports_unreachable_for_a_real_closed_port(self):
+        probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+        probe.close()
+        config = OrchestratorConfig(connectivity_targets={"probe": f"http://127.0.0.1:{port}/"})
+        result = dispatch_tool_request(_request("network.connectivity", {"name": "probe"}), config)
+        self.assertEqual(result["status"], "ok")
+        self.assertFalse(result["output"]["reachable"])
+        self.assertIsNone(result["output"]["status_code"])
+
+    def test_refuses_a_name_not_on_the_allow_list(self):
+        config = OrchestratorConfig(connectivity_targets={})
+        with self.assertRaises(ToolDispatchError):
+            dispatch_tool_request(_request("network.connectivity", {"name": "not-configured"}), config)
+
+    def test_refuses_a_non_http_scheme_even_if_somehow_configured(self):
+        config = OrchestratorConfig(connectivity_targets={"probe": "ftp://127.0.0.1/"})
+        result = dispatch_tool_request(_request("network.connectivity", {"name": "probe"}), config)
+        self.assertEqual(result["status"], "ok")
+        self.assertFalse(result["output"]["reachable"])
+        self.assertIn("scheme", result["output"]["reason"])
+
+
 class SystemTemperatureTests(unittest.TestCase):
     def test_never_raises_and_never_guesses_a_reading(self):
         # Real platform honesty: this runs on whatever host CI/the dev
