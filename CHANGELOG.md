@@ -9,6 +9,28 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.0.7] - H020: Python validation now matches the normative schemas' own type/format constraints
+
+- **List elements were never type-checked:** `_require_list()` only
+  checked the container's own type/length - every list field (across
+  all 5 contracts) declares `"items": {"type": "string"}` in its
+  normative `contracts/*.schema.json`, but a number, `null`, or nested
+  object anywhere in the list used to sail through silently. Now
+  rejected element-by-element, matching the schema.
+- **`durationMs` accepted non-finite values:** `duration < 0` alone is
+  not a finiteness check - NaN compares `False` against everything, and
+  Python's own `json.loads()` accepts the bare `NaN`/`Infinity` tokens
+  by default even though real JSON has no such literals. Now rejected
+  via an explicit `math.isfinite()` check.
+- **`timestamp`/`date` ignored their own declared `"format": "date-time"`:**
+  a JSON Schema validator does not enforce `format` unless a
+  format-checking plugin/flag is explicitly turned on, and this
+  hand-written validator never checked it at all - any non-empty string
+  passed. New `_require_iso_timestamp()` parses with
+  `datetime.fromisoformat()` (Python 3.11+, already required), applied
+  to `ToolResult.timestamp` and `EvidenceBundle.date`.
+- 5 new regression tests.
+
 ## [0.0.6] - Fase 3 complete: the 9th and last real OBSERVE-level tool handler (update.pending)
 
 `update.pending`'s own real integration boundary is now wired - the one

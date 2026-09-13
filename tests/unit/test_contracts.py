@@ -53,6 +53,43 @@ class ContractFixtureTests(unittest.TestCase):
             validate("ToolRequest", payload)
         self.assertIn("reason", str(ctx.exception))
 
+    # H020 regressions: the Python validator used to accept several
+    # values its own normative contracts/*.schema.json already declares
+    # invalid, because "type": "string"/format constraints on list items
+    # and the "date-time" format were never actually enforced here.
+    def test_a_non_string_list_element_is_rejected(self):
+        payload = _load("maintenance_proposal.valid.json")
+        payload["steps"] = payload["steps"] + [42]
+        with self.assertRaises(ContractValidationError) as ctx:
+            validate("MaintenanceProposal", payload)
+        self.assertIn("steps[", str(ctx.exception))
+
+    def test_a_non_finite_duration_ms_is_rejected(self):
+        payload = _load("tool_result.valid.json")
+        payload["durationMs"] = float("nan")
+        with self.assertRaises(ContractValidationError):
+            validate("ToolResult", payload)
+
+    def test_an_infinite_duration_ms_is_rejected(self):
+        payload = _load("tool_result.valid.json")
+        payload["durationMs"] = float("inf")
+        with self.assertRaises(ContractValidationError):
+            validate("ToolResult", payload)
+
+    def test_a_non_iso_timestamp_is_rejected(self):
+        payload = _load("tool_result.valid.json")
+        payload["timestamp"] = "not a real date"
+        with self.assertRaises(ContractValidationError) as ctx:
+            validate("ToolResult", payload)
+        self.assertIn("timestamp", str(ctx.exception))
+
+    def test_a_non_iso_date_is_rejected_in_evidence_bundle(self):
+        payload = _load("evidence_bundle.valid.json")
+        payload["date"] = "yesterday"
+        with self.assertRaises(ContractValidationError) as ctx:
+            validate("EvidenceBundle", payload)
+        self.assertIn("date", str(ctx.exception))
+
     def test_an_unexpected_extra_field_is_rejected(self):
         # Real defense-in-depth: additionalProperties=false in the schema
         # files (contracts/*.schema.json) means a smuggled extra field

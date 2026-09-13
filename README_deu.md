@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Phase-3%20von%206%20abgeschlossen-367BF5.svg" alt="Phase 3 von 6 abgeschlossen">
 </p>
 
-> **Status: v0.0.6, funktionsfähig - Phase 3 von 6 abgeschlossen
+> **Status: v0.0.7, funktionsfähig - Phase 3 von 6 abgeschlossen
 > (Werkzeug-Orchestrator).** Phase 0 definierte die reale
 > Risikostufen-Richtlinie (`policy/risk_levels.py`), eine feste
 > Werkzeug-Positivliste (`policy/tool_matrix.py`), die fünf realen

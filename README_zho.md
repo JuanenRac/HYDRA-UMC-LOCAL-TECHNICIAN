@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/阶段-3%2F6%20已完成-367BF5.svg" alt="第 3 阶段（共 6 阶段）已完成">
 </p>
 
-> **状态：v0.0.6，功能可用 - 六阶段计划中的第 3 阶段已完成（工具编排器）。**
+> **状态：v0.0.7，功能可用 - 六阶段计划中的第 3 阶段已完成（工具编排器）。**
 > 第 0 阶段定义了真实的风险等级策略（`policy/risk_levels.py`）、一份固定的
 > 工具白名单（`policy/tool_matrix.py`）、未来每一次工具调用都必须校验通过的
 > 五份真实最小合约（`contracts/*.schema.json` + `contracts.py`）、从
