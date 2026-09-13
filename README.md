@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Phase-3%20of%206%20complete-367BF5.svg" alt="Fase 3 of 6 complete">
 </p>
 
-> **Status: v0.0.6, functional - Fase 3 of 6 complete (tool
+> **Status: v0.0.7, functional - Fase 3 of 6 complete (tool
 > orchestrator).** Fase 0 defined the real risk-level policy
 > (`policy/risk_levels.py`), a fixed tool allowlist
 > (`policy/tool_matrix.py`), the five real minimal contracts every future

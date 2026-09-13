@@ -16,6 +16,8 @@ files field-for-field, not reinterpreted.
 """
 from __future__ import annotations
 
+import math
+from datetime import datetime
 from typing import Any
 
 from .policy.risk_levels import RiskLevel
@@ -56,12 +58,43 @@ def _require_bool(payload: dict[str, Any], name: str) -> None:
         raise ContractValidationError(f"{name} must be a real boolean")
 
 
+def _require_iso_timestamp(payload: dict[str, Any], name: str) -> None:
+    """H020: both `ToolResult.timestamp` and `EvidenceBundle.date`
+    declare `"type": "string", "format": "date-time"` in their normative
+    contracts/*.schema.json - but a JSON Schema validator does not
+    enforce `format` by default (it requires an explicit format-checking
+    plugin/flag to be turned on), and this hand-written Python validator
+    never checked it at all, treating it as an ordinary non-empty string.
+    `datetime.fromisoformat()` (Python 3.11+, which this project already
+    requires) accepts RFC 3339 date-time strings including a trailing
+    'Z', so this enforces the same policy the schema already declares
+    without introducing a new one.
+    """
+    _require_string(payload, name)
+    try:
+        datetime.fromisoformat(payload[name])
+    except ValueError:
+        raise ContractValidationError(f"{name} must be a valid ISO-8601/RFC-3339 date-time, got {payload[name]!r}") from None
+
+
 def _require_list(payload: dict[str, Any], name: str, *, min_items: int = 0) -> None:
     value = payload.get(name)
     if not isinstance(value, list):
         raise ContractValidationError(f"{name} must be a list")
     if len(value) < min_items:
         raise ContractValidationError(f"{name} must have at least {min_items} item(s)")
+    # H020: this used to only check the container's own type/length,
+    # never a single element inside it - every one of this contract's
+    # own list fields declares `"items": {"type": "string"}` in its
+    # normative contracts/*.schema.json (no minLength on the item
+    # itself, so an empty string is schema-valid and deliberately not
+    # rejected here either), but nothing on the Python side actually
+    # enforced that a list entry was ever a string at all. A number,
+    # null, or nested object anywhere in the list used to sail through
+    # silently.
+    for index, item in enumerate(value):
+        if not isinstance(item, str):
+            raise ContractValidationError(f"{name}[{index}] must be a string, got {type(item).__name__}")
 
 
 def _validate_tool_request(payload: dict[str, Any]) -> None:
@@ -85,10 +118,15 @@ def _validate_tool_result(payload: dict[str, Any]) -> None:
         raise ContractValidationError("output must be an object")
     if not isinstance(payload.get("evidence"), str):
         raise ContractValidationError("evidence must be a string")
-    _require_string(payload, "timestamp")
+    _require_iso_timestamp(payload, "timestamp")
     duration = payload.get("durationMs")
-    if isinstance(duration, bool) or not isinstance(duration, (int, float)) or duration < 0:
-        raise ContractValidationError("durationMs must be a non-negative number")
+    # H020: `duration < 0` alone is not a finiteness check - NaN compares
+    # False against everything, so a NaN durationMs (Python's own
+    # json.loads() accepts the bare "NaN"/"Infinity" tokens by default,
+    # even though real JSON has no such literals) used to sail through
+    # as "not negative" instead of being rejected.
+    if isinstance(duration, bool) or not isinstance(duration, (int, float)) or not math.isfinite(duration) or duration < 0:
+        raise ContractValidationError("durationMs must be a finite, non-negative number")
     _require_string(payload, "toolVersion")
     error_code = payload.get("errorCode")
     if error_code is not None and not isinstance(error_code, str):
@@ -119,7 +157,7 @@ def _validate_evidence_bundle(payload: dict[str, Any]) -> None:
     _require_string(payload, "impact")
     _require_list(payload, "actionsAttempted")
     _require_string(payload, "checksum")
-    _require_string(payload, "date")
+    _require_iso_timestamp(payload, "date")
     _require_string(payload, "localValidationResult")
 
 
