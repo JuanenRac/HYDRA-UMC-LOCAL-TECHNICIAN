@@ -15,8 +15,9 @@
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20of%206%20complete-367BF5.svg" alt="Fases 1, 3 and 4 of 6 complete">
 </p>
 
-> **Status: v0.1.0, functional - Fases 1, 3 and 4 of 6 complete
-> (retrievable knowledge, tool orchestrator, escalation).** Fase 0
+> **Status: v0.1.1, functional - Fases 1, 3 and 4 of 6 complete
+> (retrievable knowledge, tool orchestrator, escalation), Fase 5 started
+> (a real local CLI).** Fase 0
 > defined the real risk-level policy (`policy/risk_levels.py`), a fixed
 > tool allowlist (`policy/tool_matrix.py`), the five real minimal
 > contracts every future tool call must validate against
@@ -38,14 +39,18 @@
 > already-observed tool output, never a fabricated diagnosis: there is
 > still no inference engine, so `propose_maintenance()` only ever
 > validates and grounds content a human operator supplies, it never
-> generates one. No inference engine and no HYDRA-UMC-SERVER
+> generates one. Fase 5's own first real slice - `tools list`/`tools
+> call` and `escalation evidence`/`escalation propose` - gives every
+> piece above a real command line, never a new source of authority: it
+> only ever calls the same already policy-enforced code every unit test
+> already exercises. No inference engine and no HYDRA-UMC-SERVER
 > integration exist yet - see
 > [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) for the exact command
 > surface that exists today.
 
 ---
 
-**Honesty check - what actually runs today:** the risk-level policy (`policy/risk_levels.py`), the fixed tool allowlist (`policy/tool_matrix.py`), the five contract validators (`contracts.py` + `contracts/*.schema.json`), the injection-defense boundary (`knowledge/trust.py`, `knowledge/redaction.py`), the local TF-IDF knowledge index (`knowledge/index.py`, Fase 1), all 10 declared OBSERVE-level tool handlers (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), and real `EvidenceBundle`/`MaintenanceProposal` construction (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4) are real and tested (153 tests plus 30 subtests passing across `tests/unit/` and `tests/adversarial/`) - Fases 1, 3 and 4 are all complete. `update.pending` needs the optional `hydra-umc-updater` dependency (the `update-check` extra) to actually check GitHub, and degrades honestly (`available: false`) without it. There is still no inference engine and no HYDRA-UMC-SERVER integration anywhere in this repository, and nothing in this codebase can act on a `MaintenanceProposal` yet - Fases 2 and 5 in the Roadmap below remain entirely aspirational, with zero code behind them. See `CHANGELOG.md` for exactly what has shipped so far.
+**Honesty check - what actually runs today:** the risk-level policy (`policy/risk_levels.py`), the fixed tool allowlist (`policy/tool_matrix.py`), the five contract validators (`contracts.py` + `contracts/*.schema.json`), the injection-defense boundary (`knowledge/trust.py`, `knowledge/redaction.py`), the local TF-IDF knowledge index (`knowledge/index.py`, Fase 1), all 10 declared OBSERVE-level tool handlers (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), real `EvidenceBundle`/`MaintenanceProposal` construction (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4), and a real CLI over all of it (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, Fase 5's own first slice) are real and tested (164 tests plus 30 subtests passing across `tests/unit/` and `tests/adversarial/`) - Fases 1, 3 and 4 are complete, Fase 5 is started. `update.pending` needs the optional `hydra-umc-updater` dependency (the `update-check` extra) to actually check GitHub, and degrades honestly (`available: false`) without it. There is still no inference engine and no HYDRA-UMC-SERVER integration anywhere in this repository, and nothing in this codebase can act on a `MaintenanceProposal` yet - Fase 2, and the rest of Fase 5 (the HYDRA-UMC-SERVER-integrated API, and voice) in the Roadmap below remain entirely aspirational, with zero code behind them. See `CHANGELOG.md` for exactly what has shipped so far.
 
 ---
 
@@ -64,7 +69,7 @@ inference anywhere in this codebase yet.
 a response. Policy, permissions and human confirmation decide every real
 action - never the model's own words.
 
-This delivery ships seven real, independently useful pieces:
+This delivery ships eight real, independently useful pieces:
 
 1. **Risk-level policy** (`policy/risk_levels.py`) - six ordered levels,
    `INFORM` through `PHYSICAL_ACTION`, each with a real, tested policy
@@ -137,6 +142,18 @@ This delivery ships seven real, independently useful pieces:
    `policy/risk_levels.py`'s own policy already says for the proposal's
    declared risk. Nothing in this codebase can act on a
    `MaintenanceProposal` yet.
+8. **CLI surface** (`cli.py`, Fase 5's own first real slice) - `tools
+   list`/`tools call` and `escalation evidence`/`escalation propose`
+   give every piece above a real command line for the first time (until
+   now every one of them was only reachable from a test). Adds no
+   authority of its own: `tools call` builds a `ToolRequest` through the
+   same `build_tool_request_from_model_output()` every test already
+   calls and runs it through the same `dispatch_tool_request()` - still
+   only ever an OBSERVE-level tool, since nothing above OBSERVE is
+   implemented anywhere in this codebase. `--config` loads a real
+   `OrchestratorConfig` from a JSON file (or falls back to
+   `default_config()`); there is still no way to name a raw path/host/
+   port on the command line itself.
 
 ```
 $ hydra-umc-local-technician contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
@@ -209,7 +226,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   ├── evidence.py       # assemble_evidence_bundle(): real ToolResults -> a real, contract-valid EvidenceBundle
 │   │   └── proposal.py       # propose_maintenance(): a real constructor/validator for MaintenanceProposal, never a generator
 │   ├── contracts.py           # Real, stdlib-only validator for the five minimal contracts
-│   └── cli.py                 # contracts validate subcommand + --version
+│   └── cli.py                 # Fase 5 - contracts validate, tools list/call, escalation evidence/propose, --version
 ├── contracts/                 # Normative JSON Schema files (draft 2020-12) for the five contracts
 ├── tests/
 │   ├── unit/                  # Real tests for every module above
@@ -282,12 +299,18 @@ This version ships Fase 0, Fase 1, Fase 3 and Fase 4. What remains, in phase ord
   validates and grounds a human-supplied proposal against real evidence -
   it never generates one, since no inference engine exists yet. Nothing
   in this codebase can act on a `MaintenanceProposal` yet.
-- **Fase 5 - User interface.** A local API integrated into
-  HYDRA-UMC-SERVER/Studio, then a CLI, then voice - never bypassing the
-  policy and confirmation boundaries Fase 0 already establishes.
+- **Fase 5 - User interface (started: the CLI slice).** A local API
+  integrated into HYDRA-UMC-SERVER/Studio, then a CLI, then voice - never
+  bypassing the policy and confirmation boundaries Fase 0 already
+  establishes. The CLI slice is real now: `tools list`/`tools call` and
+  `escalation evidence`/`escalation propose` (`cli.py`) reach every real
+  piece above through the same already-tested, already policy-enforced
+  code path, deliberately scoped to what lives inside this one repo. The
+  HYDRA-UMC-SERVER-integrated API and voice remain separate, cross-repo
+  work for a later delivery.
 
-Fases 2 and 5 do not exist in this repository yet - see
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for what each remaining
+Fase 2, and the rest of Fase 5, do not exist in this repository yet -
+see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for what each remaining
 phase is scoped to include and explicitly exclude, and
 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) for the security
 invariants every phase must keep honoring.

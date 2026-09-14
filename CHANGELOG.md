@@ -9,6 +9,36 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.1.1] - Fase 5's own first real slice: a real CLI over tool calls and escalation
+
+`cli.py` gains three new real command families, none of them a new
+source of authority - each only ever calls the same real,
+already-tested code path every unit test already exercises:
+
+- **`tools list` / `tools call`.** `tools call` builds a real
+  `ToolRequest` (`knowledge/trust.py`'s own
+  `build_tool_request_from_model_output()`) and runs it for real through
+  `dispatch_tool_request()`, printing the resulting `ToolResult` as
+  JSON. `--config` points to a JSON `OrchestratorConfig`
+  (storagePaths/ports/connectivityTargets/systemdUnits/ecosystemRoot/
+  logSources/processPatterns/knowledgeSources); omitted, defaults to
+  `default_config()`. Still only ever reaches an OBSERVE-level tool -
+  nothing above OBSERVE is implemented anywhere in this codebase, so
+  this CLI cannot reach it either.
+- **`escalation evidence`.** Builds a real `EvidenceBundle`
+  (`escalation.evidence.assemble_evidence_bundle()`) from one or more
+  already-produced `ToolResult` JSON files (typically
+  `tools call ... > result.json` first).
+- **`escalation propose`.** Builds a real `MaintenanceProposal`
+  (`escalation.proposal.propose_maintenance()`), grounded against the
+  same real `ToolResult` files - never generates `diagnosis`/`steps`/
+  `rollback` itself, a human operator supplies them.
+
+Deliberately scoped to what lives inside this one repo - the rest of
+Fase 5 (a real API integrated into HYDRA-UMC-SERVER/Studio, then voice)
+stays separate, cross-repo work for a later delivery, not rushed into
+this one. 11 new tests.
+
 ## [0.1.0] - Fase 4: escalation - real EvidenceBundle assembly and MaintenanceProposal construction
 
 New `escalation/` package, two independent pieces:

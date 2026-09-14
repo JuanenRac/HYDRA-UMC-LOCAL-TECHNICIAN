@@ -15,8 +15,9 @@
   <img src="https://img.shields.io/badge/Fase-1%2C%203%20%26%204%20de%206%20completas-367BF5.svg" alt="Fases 1, 3 y 4 de 6 completas">
 </p>
 
-> **Estado: v0.1.0, funcional - Fases 1, 3 y 4 de 6 completas
-> (conocimiento recuperable, orquestador de herramientas, escalado).** La
+> **Estado: v0.1.1, funcional - Fases 1, 3 y 4 de 6 completas
+> (conocimiento recuperable, orquestador de herramientas, escalado),
+> Fase 5 iniciada (una CLI local real).** La
 > Fase 0 definió la política real de niveles de riesgo
 > (`policy/risk_levels.py`), una lista blanca fija de herramientas
 > (`policy/tool_matrix.py`), los cinco contratos mínimos reales que toda
@@ -41,14 +42,19 @@
 > (`escalation/`) - fundamentados en salidas de herramientas ya
 > observadas, nunca un diagnóstico inventado: como todavía no existe
 > motor de inferencia, `propose_maintenance()` solo valida y fundamenta
-> contenido que aporta un operador humano, nunca lo genera. Todavía no
-> existe motor de inferencia ni integración con HYDRA-UMC-SERVER - ver
+> contenido que aporta un operador humano, nunca lo genera. La primera
+> porción real de la Fase 5 - `tools list`/`tools call` y `escalation
+> evidence`/`escalation propose` - da a cada pieza anterior una línea de
+> comandos real, nunca una nueva fuente de autoridad: solo llama al
+> mismo código ya validado por política que cada test ya ejercita.
+> Todavía no existe motor de inferencia ni integración con
+> HYDRA-UMC-SERVER - ver
 > [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) para la superficie de
 > comandos exacta que existe hoy.
 
 ---
 
-**Comprobación de honestidad - qué funciona realmente hoy:** la política de niveles de riesgo (`policy/risk_levels.py`), la lista fija de herramientas permitidas (`policy/tool_matrix.py`), los cinco validadores de contrato (`contracts.py` + `contracts/*.schema.json`), el límite de defensa contra inyecciones (`knowledge/trust.py`, `knowledge/redaction.py`), el índice de conocimiento TF-IDF local (`knowledge/index.py`, Fase 1), las 10 herramientas OBSERVE declaradas con manejador real (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), y la construcción real de `EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4) están testeadas (153 tests más 30 subtests pasando entre `tests/unit/` y `tests/adversarial/`) - las Fases 1, 3 y 4 están completas. `update.pending` necesita la dependencia opcional `hydra-umc-updater` (extra `update-check`) para consultar GitHub de verdad, y degrada honestamente (`available: false`) sin ella. Todavía no hay motor de inferencia ni integración con HYDRA-UMC-SERVER en ningún lugar de este repositorio, y nada en este código puede actuar sobre un `MaintenanceProposal` todavía - las Fases 2 y 5 del Roadmap más abajo siguen siendo totalmente aspiracionales, sin ningún código detrás. Ver `CHANGELOG.md` para lo que se ha entregado exactamente hasta ahora.
+**Comprobación de honestidad - qué funciona realmente hoy:** la política de niveles de riesgo (`policy/risk_levels.py`), la lista fija de herramientas permitidas (`policy/tool_matrix.py`), los cinco validadores de contrato (`contracts.py` + `contracts/*.schema.json`), el límite de defensa contra inyecciones (`knowledge/trust.py`, `knowledge/redaction.py`), el índice de conocimiento TF-IDF local (`knowledge/index.py`, Fase 1), las 10 herramientas OBSERVE declaradas con manejador real (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), la construcción real de `EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4), y una CLI real sobre todo lo anterior (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, primera porción de la Fase 5) están testeadas (164 tests más 30 subtests pasando entre `tests/unit/` y `tests/adversarial/`) - las Fases 1, 3 y 4 están completas, la Fase 5 está iniciada. `update.pending` necesita la dependencia opcional `hydra-umc-updater` (extra `update-check`) para consultar GitHub de verdad, y degrada honestamente (`available: false`) sin ella. Todavía no hay motor de inferencia ni integración con HYDRA-UMC-SERVER en ningún lugar de este repositorio, y nada en este código puede actuar sobre un `MaintenanceProposal` todavía - la Fase 2 y el resto de la Fase 5 (la API integrada con HYDRA-UMC-SERVER, y la voz) del Roadmap más abajo siguen siendo totalmente aspiracionales, sin ningún código detrás. Ver `CHANGELOG.md` para lo que se ha entregado exactamente hasta ahora.
 
 ---
 
@@ -66,7 +72,7 @@ entrega es Python puro validando datos puros.
 respuesta. La política, los permisos y la confirmación humana deciden
 cada acción real - nunca las propias palabras del modelo.
 
-Esta entrega trae siete piezas reales y de utilidad independiente:
+Esta entrega trae ocho piezas reales y de utilidad independiente:
 
 1. **Política de niveles de riesgo** (`policy/risk_levels.py`) - seis
    niveles ordenados, de `INFORM` a `PHYSICAL_ACTION`, cada uno con una
@@ -148,6 +154,18 @@ Esta entrega trae siete piezas reales y de utilidad independiente:
    `policy/risk_levels.py` para el riesgo declarado de la propuesta.
    Nada en este código puede actuar sobre un `MaintenanceProposal`
    todavía.
+8. **Superficie CLI** (`cli.py`, primera porción real de la Fase 5) -
+   `tools list`/`tools call` y `escalation evidence`/`escalation
+   propose` dan a cada pieza anterior una línea de comandos real por
+   primera vez (hasta ahora solo eran alcanzables desde un test). No
+   añade autoridad propia: `tools call` construye un `ToolRequest` con
+   el mismo `build_tool_request_from_model_output()` que ya usa cada
+   test y lo ejecuta con el mismo `dispatch_tool_request()` - solo
+   alcanza herramientas de nivel OBSERVE, porque nada por encima de
+   OBSERVE está implementado en este código. `--config` carga un
+   `OrchestratorConfig` real desde un archivo JSON (o recurre a
+   `default_config()`); sigue sin haber forma de nombrar una ruta/host/
+   puerto en bruto directamente en la línea de comandos.
 
 ```
 $ hydra-umc-local-technician contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
@@ -223,7 +241,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   ├── evidence.py       # assemble_evidence_bundle(): ToolResults reales -> un EvidenceBundle real y válido según contrato
 │   │   └── proposal.py       # propose_maintenance(): constructor/validador real de MaintenanceProposal, nunca un generador
 │   ├── contracts.py           # Validador real solo-stdlib para los cinco contratos mínimos
-│   └── cli.py                 # Subcomando contracts validate + --version
+│   └── cli.py                 # Fase 5 - contracts validate, tools list/call, escalation evidence/propose, --version
 ├── contracts/                  # Archivos JSON Schema normativos (draft 2020-12) para los cinco contratos
 ├── tests/
 │   ├── unit/                   # Pruebas reales de cada módulo anterior
@@ -300,11 +318,17 @@ Esta versión trae la Fase 0, la Fase 1, la Fase 3 y la Fase 4. Lo que queda, en
   y fundamenta una propuesta aportada por un humano contra evidencia
   real - nunca la genera, ya que todavía no existe motor de inferencia.
   Nada en este código puede actuar sobre un `MaintenanceProposal` todavía.
-- **Fase 5 - Interfaz de usuario.** Una API local integrada en
-  HYDRA-UMC-SERVER/Studio, luego una CLI, luego voz - nunca sorteando los
-  límites de política y confirmación que la Fase 0 ya establece.
+- **Fase 5 - Interfaz de usuario (iniciada: la porción CLI).** Una API
+  local integrada en HYDRA-UMC-SERVER/Studio, luego una CLI, luego voz -
+  nunca sorteando los límites de política y confirmación que la Fase 0
+  ya establece. La porción CLI ya es real: `tools list`/`tools call` y
+  `escalation evidence`/`escalation propose` (`cli.py`) alcanzan cada
+  pieza real anterior a través del mismo código ya probado y ya
+  forzado por política, deliberadamente acotado a lo que vive dentro de
+  este mismo repositorio. La API integrada con HYDRA-UMC-SERVER y la voz
+  siguen siendo trabajo aparte, entre repos, para una entrega futura.
 
-Las Fases 2 y 5 no existen todavía en este repositorio - ver
+La Fase 2 y el resto de la Fase 5 no existen todavía en este repositorio - ver
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) para lo que cada fase
 restante incluye y excluye explícitamente, y
 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) para los invariantes de
