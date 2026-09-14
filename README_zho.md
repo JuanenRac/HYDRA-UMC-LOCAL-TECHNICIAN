@@ -15,8 +15,8 @@
   <img src="https://img.shields.io/badge/阶段-1%2C%203%20%26%204%2F6%20已完成-367BF5.svg" alt="第 1、3、4 阶段（共 6 阶段）已完成">
 </p>
 
-> **状态：v0.1.0，功能可用 - 六阶段计划中的第 1、3、4 阶段已完成（可检索知识、
-> 工具编排器、升级上报）。**
+> **状态：v0.1.1，功能可用 - 六阶段计划中的第 1、3、4 阶段已完成（可检索知识、
+> 工具编排器、升级上报），第 5 阶段已启动（一个真实的本地 CLI）。**
 > 第 0 阶段定义了真实的风险等级策略（`policy/risk_levels.py`）、一份固定的
 > 工具白名单（`policy/tool_matrix.py`）、未来每一次工具调用都必须校验通过的
 > 五份真实最小合约（`contracts/*.schema.json` + `contracts.py`）、从
@@ -35,13 +35,16 @@
 > `MaintenanceProposal` 构建（`escalation/`）- 以已观测到的工具输出为
 > 依据，绝不是编造的诊断：由于目前仍不存在推理引擎，
 > `propose_maintenance()` 只会校验并印证人工操作员提供的内容，绝不会
-> 自行生成。目前尚不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成 - 参见
+> 自行生成。第 5 阶段自身的第一个真实切片 - `tools list`/`tools call`
+> 和 `escalation evidence`/`escalation propose` - 为上述每一部分都提供
+> 了真实的命令行，绝不是新增的权限来源：它只调用每个测试早已在行使的、
+> 同样经过策略校验的代码。目前尚不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成 - 参见
 > [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) 了解今天真实存在的命令
 > 界面范围。
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)、本地 TF-IDF 知识索引(`knowledge/index.py`，第 1 阶段)、全部 10 个已声明的 OBSERVE 工具都有真实的处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)，以及真实的 `EvidenceBundle`/`MaintenanceProposal` 构建(`escalation/evidence.py`、`escalation/proposal.py`，第 4 阶段)，都经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 153 个测试外加 30 个子测试全部通过)——第 1、3、4 阶段均已完成。`update.pending` 需要可选依赖 `hydra-umc-updater`(`update-check` extra)才能真正查询 GitHub，没有它时会诚实降级(`available: false`)。本仓库中任何地方仍不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成，本代码中也没有任何地方能对 `MaintenanceProposal` 采取行动——下方路线图中的第 2、5 阶段仍完全是愿景，背后没有任何代码。具体已交付的内容请见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)、本地 TF-IDF 知识索引(`knowledge/index.py`，第 1 阶段)、全部 10 个已声明的 OBSERVE 工具都有真实的处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)，真实的 `EvidenceBundle`/`MaintenanceProposal` 构建(`escalation/evidence.py`、`escalation/proposal.py`，第 4 阶段)，以及覆盖以上全部内容的真实 CLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`，第 5 阶段自身的第一个切片)，都经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 164 个测试外加 30 个子测试全部通过)——第 1、3、4 阶段均已完成，第 5 阶段已启动。`update.pending` 需要可选依赖 `hydra-umc-updater`(`update-check` extra)才能真正查询 GitHub，没有它时会诚实降级(`available: false`)。本仓库中任何地方仍不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成，本代码中也没有任何地方能对 `MaintenanceProposal` 采取行动——下方路线图中的第 2 阶段，以及第 5 阶段的其余部分（与 HYDRA-UMC-SERVER 集成的 API，以及语音）仍完全是愿景，背后没有任何代码。具体已交付的内容请见 `CHANGELOG.md`。
 
 ---
 
@@ -56,7 +59,7 @@ AI：它观察、解释、诊断并为生态系统自己的服务和节点提出
 **不可协商的原则：** AI 永远不会因生成一段回复而获得权限。策略、权限与人工
 确认决定每一个真实动作 - 绝不是模型自己说的话。
 
-本次交付带来了七个真实、且各自独立有用的部分：
+本次交付带来了八个真实、且各自独立有用的部分：
 
 1. **风险等级策略**（`policy/risk_levels.py`）- 六个有序等级，从
    `INFORM` 到 `PHYSICAL_ACTION`，每一级都有真实、经过测试的策略（是否可以
@@ -115,6 +118,16 @@ AI：它观察、解释、诊断并为生态系统自己的服务和节点提出
    完全等于 `policy/risk_levels.py` 自身策略中对该提案所声明风险等级已
    经规定的值。本代码中还没有任何地方能对 `MaintenanceProposal` 采取
    行动。
+8. **CLI 界面**（`cli.py`，第 5 阶段自身的第一个真实切片）-
+   `tools list`/`tools call` 和 `escalation evidence`/`escalation
+   propose` 首次为上述每一部分提供了真实的命令行（此前每一部分都只能
+   从测试中触及）。不新增任何自身权限：`tools call` 通过每个测试早已
+   调用的同一个 `build_tool_request_from_model_output()` 构建
+   `ToolRequest`，并通过同一个 `dispatch_tool_request()` 执行它 - 仍然
+   只能触及 OBSERVE 级工具，因为本代码中任何地方都没有实现高于
+   OBSERVE 的内容。`--config` 从一个 JSON 文件加载真实的
+   `OrchestratorConfig`（省略时回退到 `default_config()`）；命令行本身
+   依旧无法直接指定原始的路径/主机/端口。
 
 ```
 $ hydra-umc-local-technician contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
@@ -179,7 +192,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   ├── evidence.py       # assemble_evidence_bundle()：真实 ToolResult -> 一份符合契约的真实 EvidenceBundle
 │   │   └── proposal.py       # propose_maintenance()：MaintenanceProposal 的真实构造器/校验器，绝不是生成器
 │   ├── contracts.py           # 五份最小合约的真实、仅标准库校验器
-│   └── cli.py                 # contracts validate 子命令 + --version
+│   └── cli.py                 # 第 5 阶段 - contracts validate、tools list/call、escalation evidence/propose、--version
 ├── contracts/                  # 五份合约的规范性 JSON Schema 文件（draft 2020-12）
 ├── tests/
 │   ├── unit/                   # 上述每个模块的真实测试
@@ -247,11 +260,15 @@ CHANGELOG - 它并**不**运行测试套件；要运行完整的本地测试套�
   会校验并印证人工提供的提案与真实证据是否相符 - 绝不会自行生成，因为
   目前仍不存在推理引擎。本代码中还没有任何地方能对 `MaintenanceProposal`
   采取行动。
-- **第 5 阶段 - 用户界面。** 一个集成到 HYDRA-UMC-SERVER/Studio 中的本地
-  API，然后是一个 CLI，再然后是语音 - 绝不会绕过第 0 阶段已经建立的策略与
-  确认边界。
+- **第 5 阶段 - 用户界面（已启动：CLI 切片）。** 一个集成到
+  HYDRA-UMC-SERVER/Studio 中的本地 API，然后是一个 CLI，再然后是语音 -
+  绝不会绕过第 0 阶段已经建立的策略与确认边界。CLI 切片现在已是真实的：
+  `tools list`/`tools call` 和 `escalation evidence`/`escalation
+  propose`（`cli.py`）通过同样已测试、已受策略约束的代码触及上述每一个
+  真实部分，刻意将范围限定在这一个仓库内部。与 HYDRA-UMC-SERVER 集成的
+  API 以及语音仍是留待未来交付的、独立的跨仓库工作。
 
-第 2、5 阶段目前均尚未存在于本仓库中 - 剩余各阶段明确包含与排除的内容
+第 2 阶段，以及第 5 阶段的其余部分，目前均尚未存在于本仓库中 - 剩余各阶段明确包含与排除的内容
 参见
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，各阶段必须持续遵守的安全
 不变量参见 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md)。
