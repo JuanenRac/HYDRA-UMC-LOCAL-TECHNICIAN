@@ -9,6 +9,23 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.0.8] - Real CI bug fixed: update.pending's own optional-dependency tests
+
+`UpdatePendingTests` documents its own intent in its docstring - stay
+deterministic and offline "regardless of whether the optional
+`update-check` extra happens to be installed" - but
+`unittest.mock.patch.multiple()` (used without `create=True`) can only
+patch a module attribute that already exists. `dispatch.py`'s own
+lazy `hydra_umc_updater` import only ever *defined* `_updater_parse_manifest`
+and friends on a successful import; on `ImportError` it left them
+undefined entirely. Every environment without `hydra-umc-updater`
+installed as a sibling package - including this repo's own GitHub
+Actions CI - hit a real `AttributeError` on 5 of these tests, not the
+honest degraded-mode result the suite was written to exercise. Fixed
+by defining those names as `None` placeholders on `ImportError`; every
+real call site already guards on `_HAS_UPDATE_CHECK` first, so this
+changes no runtime behavior.
+
 ## [0.0.7] - H020: Python validation now matches the normative schemas' own type/format constraints
 
 - **List elements were never type-checked:** `_require_list()` only

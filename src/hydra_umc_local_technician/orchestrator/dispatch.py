@@ -91,6 +91,19 @@ try:
     _HAS_UPDATE_CHECK = True
 except ImportError:
     _HAS_UPDATE_CHECK = False
+    # Real bug found while auditing CI: every actual call site below
+    # already guards on _HAS_UPDATE_CHECK before touching these names,
+    # but leaving them undefined here meant unittest.mock.patch.multiple
+    # (used by UpdatePendingTests, without create=True) raised
+    # AttributeError in any environment - including real CI - where the
+    # optional hydra-umc-updater dependency isn't installed, even though
+    # that test suite's own docstring promises it stays deterministic
+    # and offline regardless of whether that extra is present.
+    _updater_fetch_all = None
+    _UpdaterManifestValidationError = None
+    _updater_parse_manifest = None
+    _updater_entry_from_manifest = None
+    _UpdaterVersion = None
 
 
 class ToolDispatchError(Exception):
