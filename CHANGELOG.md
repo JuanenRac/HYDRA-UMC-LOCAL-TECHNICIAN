@@ -9,6 +9,39 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.1.0] - Fase 4: escalation - real EvidenceBundle assembly and MaintenanceProposal construction
+
+New `escalation/` package, two independent pieces:
+
+- **`escalation/evidence.py` - `assemble_evidence_bundle()`.** Turns a real
+  batch of already-run, already-validated OBSERVE-level `ToolResult`s into
+  a real, `contracts.validate("EvidenceBundle", ...)`-passing bundle -
+  mirrors HYDRA-UMC-OPS-AGENT's own `incident.py`: pure derivation from
+  already-observed data, never an AI call. `componentVersions`,
+  `relevantManifests`, `redactedLogExcerpts` and `reproductionSteps` are
+  mechanical extraction from real tool output; `checksum` is a real
+  SHA-256 over the bundle's own deterministic content. Every input
+  `ToolResult` is re-validated here too, never merely trusted because a
+  caller labeled it one.
+- **`escalation/proposal.py` - `propose_maintenance()`.** A real
+  constructor/validator for `MaintenanceProposal`, deliberately NOT a
+  generator: there is no inference engine yet (Fase 2), and this
+  project's own non-negotiable principle - the AI never gets authority by
+  generating a response - rules out fabricating a diagnosis or a
+  remediation plan. Today only a human operator supplies
+  `diagnosis`/`steps`/`rollback`; the one real guardrail this module adds
+  beyond bare contract validity is that every `citedEvidence` entry must
+  be grounded - it must literally be the `evidence` field of some
+  already-observed `ToolResult` passed as `evidence_pool`, or the
+  proposal is refused outright (`UngroundedEvidenceError`). `confirmationRequired`
+  is never a caller-supplied boolean - it is always exactly what
+  `policy/risk_levels.py`'s own `POLICIES` already says for the proposal's
+  declared `risk`.
+
+Nothing in this codebase can act on a `MaintenanceProposal` yet - Fase 4
+only ever builds and validates one; execution stays Fase 5+'s own,
+separate, human-confirmed concern. 15 new tests.
+
 ## [0.0.9] - Fase 1: retrievable knowledge index (real, complete)
 
 `knowledge/index.py` is a real, local TF-IDF search engine over an

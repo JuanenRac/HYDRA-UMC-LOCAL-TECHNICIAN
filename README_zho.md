@@ -12,11 +12,11 @@
   <img src="https://img.shields.io/badge/许可证-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/语言-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/核心-仅标准库-brightgreen.svg" alt="仅标准库核心">
-  <img src="https://img.shields.io/badge/阶段-1%20%26%203%2F6%20已完成-367BF5.svg" alt="第 1、3 阶段（共 6 阶段）已完成">
+  <img src="https://img.shields.io/badge/阶段-1%2C%203%20%26%204%2F6%20已完成-367BF5.svg" alt="第 1、3、4 阶段（共 6 阶段）已完成">
 </p>
 
-> **状态：v0.0.9，功能可用 - 六阶段计划中的第 1、3 阶段已完成（可检索知识、
-> 工具编排器）。**
+> **状态：v0.1.0，功能可用 - 六阶段计划中的第 1、3、4 阶段已完成（可检索知识、
+> 工具编排器、升级上报）。**
 > 第 0 阶段定义了真实的风险等级策略（`policy/risk_levels.py`）、一份固定的
 > 工具白名单（`policy/tool_matrix.py`）、未来每一次工具调用都必须校验通过的
 > 五份真实最小合约（`contracts/*.schema.json` + `contracts.py`）、从
@@ -31,13 +31,17 @@
 > 路径/主机/端口/URL。第 1 阶段新增了第十个工具 `knowledge.search`
 > （`knowledge/index.py`）- 一个真实的本地 TF-IDF 索引，覆盖一个白名单中
 > 的、已批准的文档/清单/合约根目录，移植自 HYDRA-UMC-DOCS-QA 自身已测试的
-> 检索引擎。目前尚不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成 - 参见
+> 检索引擎。第 4 阶段新增了真实的 `EvidenceBundle` 组装和
+> `MaintenanceProposal` 构建（`escalation/`）- 以已观测到的工具输出为
+> 依据，绝不是编造的诊断：由于目前仍不存在推理引擎，
+> `propose_maintenance()` 只会校验并印证人工操作员提供的内容，绝不会
+> 自行生成。目前尚不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成 - 参见
 > [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) 了解今天真实存在的命令
 > 界面范围。
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)、本地 TF-IDF 知识索引(`knowledge/index.py`，第 1 阶段)，以及全部 10 个已声明的 OBSERVE 工具都有真实的处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)，并且都经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 138 个测试外加 30 个子测试全部通过)——第 1 阶段和第 3 阶段均已完成。`update.pending` 需要可选依赖 `hydra-umc-updater`(`update-check` extra)才能真正查询 GitHub，没有它时会诚实降级(`available: false`)。本仓库中任何地方仍不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成——下方路线图中的第 2、4、5 阶段仍完全是愿景，背后没有任何代码。具体已交付的内容请见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)、本地 TF-IDF 知识索引(`knowledge/index.py`，第 1 阶段)、全部 10 个已声明的 OBSERVE 工具都有真实的处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)，以及真实的 `EvidenceBundle`/`MaintenanceProposal` 构建(`escalation/evidence.py`、`escalation/proposal.py`，第 4 阶段)，都经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 153 个测试外加 30 个子测试全部通过)——第 1、3、4 阶段均已完成。`update.pending` 需要可选依赖 `hydra-umc-updater`(`update-check` extra)才能真正查询 GitHub，没有它时会诚实降级(`available: false`)。本仓库中任何地方仍不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成，本代码中也没有任何地方能对 `MaintenanceProposal` 采取行动——下方路线图中的第 2、5 阶段仍完全是愿景，背后没有任何代码。具体已交付的内容请见 `CHANGELOG.md`。
 
 ---
 
@@ -52,7 +56,7 @@ AI：它观察、解释、诊断并为生态系统自己的服务和节点提出
 **不可协商的原则：** AI 永远不会因生成一段回复而获得权限。策略、权限与人工
 确认决定每一个真实动作 - 绝不是模型自己说的话。
 
-本次交付带来了六个真实、且各自独立有用的部分：
+本次交付带来了七个真实、且各自独立有用的部分：
 
 1. **风险等级策略**（`policy/risk_levels.py`）- 六个有序等级，从
    `INFORM` 到 `PHYSICAL_ACTION`，每一级都有真实、经过测试的策略（是否可以
@@ -97,6 +101,20 @@ AI：它观察、解释、诊断并为生态系统自己的服务和节点提出
    来源，永远不能是原始路径，并且每一条返回的真实匹配结果在离开处理程序前
    都仍然被包装为 `UntrustedText`。即使是一个合法在白名单中的根目录，遍历
    本身也受到限制（文件数量、单文件大小）- 绝不盲目，绝不遍历整块磁盘。
+7. **升级上报：证据与提案**（`escalation/`，第 4 阶段）-
+   `evidence.assemble_evidence_bundle()` 将一批已经执行、已经通过校验的
+   真实 `ToolResult` 转换为一份真实、符合契约的 `EvidenceBundle`，采用
+   与 HYDRA-UMC-OPS-AGENT 自身 `incident.py` 相同的模式：纯粹从已观测
+   数据中推导，绝不调用 AI。`proposal.propose_maintenance()` 是
+   `MaintenanceProposal` 的真实构造器/校验器 - 刻意不是一个生成器，因为
+   目前仍不存在推理引擎，而本项目自身不可协商的原则排除了编造诊断的
+   可能。今天只有人工操作员能提供 `diagnosis`/`steps`/`rollback`；这个
+   模块新增的唯一真实防护措施是：`citedEvidence` 中的每一条都必须与某
+   个真实的、已观测工具结果自身的 `evidence` 字段逐字匹配，否则该提案
+   会被直接拒绝。`confirmationRequired` 绝不是调用方可设置的 - 它始终
+   完全等于 `policy/risk_levels.py` 自身策略中对该提案所声明风险等级已
+   经规定的值。本代码中还没有任何地方能对 `MaintenanceProposal` 采取
+   行动。
 
 ```
 $ hydra-umc-local-technician contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
@@ -157,6 +175,9 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   ├── orchestrator/          # 第 3 阶段 + 第 1 阶段 - 全部 10 个真实的 OBSERVE 工具处理程序，已完成
 │   │   ├── allowlist.py      # OrchestratorConfig：处理程序解析的符号化名称白名单，绝不使用原始路径/主机/端口
 │   │   └── dispatch.py       # dispatch_tool_request()：真实执行一个已校验的 ToolRequest，返回一个真实的 ToolResult
+│   ├── escalation/            # 第 4 阶段 - 真实的 EvidenceBundle 组装 + MaintenanceProposal 构建，已完成
+│   │   ├── evidence.py       # assemble_evidence_bundle()：真实 ToolResult -> 一份符合契约的真实 EvidenceBundle
+│   │   └── proposal.py       # propose_maintenance()：MaintenanceProposal 的真实构造器/校验器，绝不是生成器
 │   ├── contracts.py           # 五份最小合约的真实、仅标准库校验器
 │   └── cli.py                 # contracts validate 子命令 + --version
 ├── contracts/                  # 五份合约的规范性 JSON Schema 文件（draft 2020-12）
@@ -203,7 +224,7 @@ CHANGELOG - 它并**不**运行测试套件；要运行完整的本地测试套�
 
 ## 🚀 路线图
 
-本版本交付了第 0 阶段、第 1 阶段和第 3 阶段。剩余部分，按阶段顺序：
+本版本交付了第 0 阶段、第 1 阶段、第 3 阶段和第 4 阶段。剩余部分，按阶段顺序：
 
 - **第 1 阶段 - 可检索知识（已完成）。** 一个本地的、带版本管理的索引，
   涵盖已批准的文档、清单、合约和运维手册 - 绝不会盲目地在整块磁盘上训练。
@@ -219,13 +240,18 @@ CHANGELOG - 它并**不**运行测试套件；要运行完整的本地测试套�
   强制执行策略。`service.status`、`storage.usage`、`network.port_status`、
   `network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list` 和 `update.pending` 现已
   真实实现(`orchestrator/dispatch.py`)。
-- **第 4 阶段 - 提案与证据。** 真实生成 `MaintenanceProposal` 和
-  `EvidenceBundle`，向 HYDRA-UMC-DEV-SERVER 未来的 Developer Node 角色升级。
+- **第 4 阶段 - 提案与证据（已完成）。** 真实构建 `MaintenanceProposal`
+  和 `EvidenceBundle`（`escalation/`），向 HYDRA-UMC-DEV-SERVER 未来的
+  Developer Node 角色升级。`evidence.assemble_evidence_bundle()` 从已
+  观测的 `ToolResult` 推导出一份真实的证据包；`proposal.propose_maintenance()`
+  会校验并印证人工提供的提案与真实证据是否相符 - 绝不会自行生成，因为
+  目前仍不存在推理引擎。本代码中还没有任何地方能对 `MaintenanceProposal`
+  采取行动。
 - **第 5 阶段 - 用户界面。** 一个集成到 HYDRA-UMC-SERVER/Studio 中的本地
   API，然后是一个 CLI，再然后是语音 - 绝不会绕过第 0 阶段已经建立的策略与
   确认边界。
 
-第 2、4、5 阶段目前均尚未存在于本仓库中 - 剩余各阶段明确包含与排除的内容
+第 2、5 阶段目前均尚未存在于本仓库中 - 剩余各阶段明确包含与排除的内容
 参见
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，各阶段必须持续遵守的安全
 不变量参见 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md)。

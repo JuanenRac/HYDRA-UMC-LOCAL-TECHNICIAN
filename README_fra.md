@@ -12,12 +12,12 @@
   <img src="https://img.shields.io/badge/Licence-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Langage-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Noyau-stdlib%20uniquement-brightgreen.svg" alt="Noyau stdlib uniquement">
-  <img src="https://img.shields.io/badge/Phase-1%20%26%203%20sur%206%20compl%C3%A8tes-367BF5.svg" alt="Phases 1 et 3 sur 6 complètes">
+  <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20sur%206%20compl%C3%A8tes-367BF5.svg" alt="Phases 1, 3 et 4 sur 6 complètes">
 </p>
 
-> **Statut : v0.0.9, fonctionnel - Phases 1 et 3 sur 6 complètes
-> (connaissance récupérable, orchestrateur d'outils).** La Phase 0 a
-> défini la politique réelle de niveaux de risque
+> **Statut : v0.1.0, fonctionnel - Phases 1, 3 et 4 sur 6 complètes
+> (connaissance récupérable, orchestrateur d'outils, escalade).** La
+> Phase 0 a défini la politique réelle de niveaux de risque
 > (`policy/risk_levels.py`), une liste blanche fixe d'outils
 > (`policy/tool_matrix.py`), les cinq contrats minimaux réels que tout
 > futur appel d'outil devra valider (`contracts/*.schema.json` +
@@ -36,14 +36,20 @@
 > dixième outil, `knowledge.search` (`knowledge/index.py`) - un index
 > TF-IDF local et réel sur une racine sur liste blanche de
 > documentation, manifestes et contrats approuvés, porté depuis le
-> moteur de récupération déjà testé de HYDRA-UMC-DOCS-QA. Aucun moteur
-> d'inférence et aucune intégration avec HYDRA-UMC-SERVER n'existent
-> encore - voir [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) pour la
-> surface de commandes exacte qui existe aujourd'hui.
+> moteur de récupération déjà testé de HYDRA-UMC-DOCS-QA. La Phase 4
+> ajoute l'assemblage réel d'`EvidenceBundle` et la construction de
+> `MaintenanceProposal` (`escalation/`) - fondés sur des sorties d'outils
+> déjà observées, jamais un diagnostic inventé : comme aucun moteur
+> d'inférence n'existe encore, `propose_maintenance()` ne fait que
+> valider et fonder un contenu fourni par un opérateur humain, elle ne le
+> génère jamais. Aucun moteur d'inférence et aucune intégration avec
+> HYDRA-UMC-SERVER n'existent encore - voir
+> [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) pour la surface de
+> commandes exacte qui existe aujourd'hui.
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** la politique de niveaux de risque (`policy/risk_levels.py`), la liste fixe d'outils autorisés (`policy/tool_matrix.py`), les cinq validateurs de contrat (`contracts.py` + `contracts/*.schema.json`), la frontière de défense contre l'injection (`knowledge/trust.py`, `knowledge/redaction.py`), l'index de connaissance TF-IDF local (`knowledge/index.py`, Phase 1), et les 10 outils OBSERVE déclarés ont un gestionnaire réel (`orchestrator/dispatch.py` + `orchestrator/allowlist.py` : `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`) et sont testés (138 tests plus 30 sous-tests passants entre `tests/unit/` et `tests/adversarial/`) - la Phase 1 et la Phase 3 sont complètes. `update.pending` nécessite la dépendance optionnelle `hydra-umc-updater` (extra `update-check`) pour vérifier GitHub réellement, et se dégrade honnêtement (`available: false`) sans elle. Il n'y a toujours aucun moteur d'inférence, et aucune intégration avec HYDRA-UMC-SERVER nulle part dans ce dépôt - les Phases 2, 4 et 5 de la feuille de route ci-dessous restent entièrement aspirationnelles, sans aucun code derrière. Voir `CHANGELOG.md` pour ce qui a été livré exactement jusqu'à présent.
+**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** la politique de niveaux de risque (`policy/risk_levels.py`), la liste fixe d'outils autorisés (`policy/tool_matrix.py`), les cinq validateurs de contrat (`contracts.py` + `contracts/*.schema.json`), la frontière de défense contre l'injection (`knowledge/trust.py`, `knowledge/redaction.py`), l'index de connaissance TF-IDF local (`knowledge/index.py`, Phase 1), les 10 outils OBSERVE déclarés avec un gestionnaire réel (`orchestrator/dispatch.py` + `orchestrator/allowlist.py` : `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), et la construction réelle d'`EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Phase 4) sont testés (153 tests plus 30 sous-tests passants entre `tests/unit/` et `tests/adversarial/`) - les Phases 1, 3 et 4 sont complètes. `update.pending` nécessite la dépendance optionnelle `hydra-umc-updater` (extra `update-check`) pour vérifier GitHub réellement, et se dégrade honnêtement (`available: false`) sans elle. Il n'y a toujours aucun moteur d'inférence, ni aucune intégration avec HYDRA-UMC-SERVER nulle part dans ce dépôt, et rien dans ce code ne peut encore agir sur un `MaintenanceProposal` - les Phases 2 et 5 de la feuille de route ci-dessous restent entièrement aspirationnelles, sans aucun code derrière. Voir `CHANGELOG.md` pour ce qui a été livré exactement jusqu'à présent.
 
 ---
 
@@ -63,7 +69,7 @@ générant une réponse. La politique, les permissions et la confirmation
 humaine décident de chaque action réelle - jamais les mots du modèle
 lui-même.
 
-Cette livraison apporte six pièces réelles et utiles de manière
+Cette livraison apporte sept pièces réelles et utiles de manière
 indépendante :
 
 1. **Politique de niveaux de risque** (`policy/risk_levels.py`) - six
@@ -129,6 +135,24 @@ indépendante :
    lui-même est borné (nombre de fichiers, taille par fichier) même
    pour une racine légitimement sur liste blanche - jamais aveugle,
    jamais tout le disque.
+7. **Escalade : preuves et propositions** (`escalation/`, Phase 4) -
+   `evidence.assemble_evidence_bundle()` transforme un lot réel de
+   `ToolResult` déjà exécutés et déjà validés en un `EvidenceBundle` réel,
+   selon le même schéma que le `incident.py` de HYDRA-UMC-OPS-AGENT :
+   dérivation pure à partir de données déjà observées, jamais un appel à
+   l'IA. `proposal.propose_maintenance()` est un constructeur/validateur
+   réel pour `MaintenanceProposal` - délibérément PAS un générateur,
+   puisqu'aucun moteur d'inférence n'existe encore et que le principe non
+   négociable de ce projet exclut de fabriquer un diagnostic. Aujourd'hui
+   seul un opérateur humain fournit `diagnosis`/`steps`/`rollback` ; la
+   seule vraie garantie que ce module ajoute est que chaque entrée de
+   `citedEvidence` doit correspondre littéralement au champ `evidence`
+   d'un résultat d'outil réellement observé, sinon la proposition est
+   purement et simplement refusée. `confirmationRequired` n'est jamais
+   réglable par l'appelant - c'est toujours exactement ce que la
+   politique de `policy/risk_levels.py` dit déjà pour le risque déclaré
+   de la proposition. Rien dans ce code ne peut encore agir sur un
+   `MaintenanceProposal`.
 
 ```
 $ hydra-umc-local-technician contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
@@ -201,6 +225,9 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   ├── orchestrator/          # Phase 3 + Phase 1 - les 10 vrais gestionnaires d'outils OBSERVE, complet
 │   │   ├── allowlist.py      # OrchestratorConfig : liste blanche de noms symboliques qu'un gestionnaire résout, jamais un chemin/hôte/port brut
 │   │   └── dispatch.py       # dispatch_tool_request() : exécute réellement un ToolRequest validé, retourne un vrai ToolResult
+│   ├── escalation/            # Phase 4 - assemblage réel d'EvidenceBundle + construction de MaintenanceProposal, complet
+│   │   ├── evidence.py       # assemble_evidence_bundle() : de vrais ToolResult -> un EvidenceBundle réel et valide selon le contrat
+│   │   └── proposal.py       # propose_maintenance() : constructeur/validateur réel pour MaintenanceProposal, jamais un générateur
 │   ├── contracts.py           # Validateur réel, stdlib uniquement, pour les cinq contrats minimaux
 │   └── cli.py                 # Sous-commande contracts validate + --version
 ├── contracts/                  # Fichiers JSON Schema normatifs (draft 2020-12) pour les cinq contrats
@@ -251,7 +278,7 @@ directement) pour la suite de tests locale complète.
 
 ## 🚀 FEUILLE DE ROUTE
 
-Cette version apporte la Phase 0, la Phase 1 et la Phase 3. Ce qui reste, dans l'ordre des
+Cette version apporte la Phase 0, la Phase 1, la Phase 3 et la Phase 4. Ce qui reste, dans l'ordre des
 phases :
 
 - **Phase 1 - Connaissance récupérable (complète).** Un index local et
@@ -272,15 +299,21 @@ phases :
   appel. `service.status`, `storage.usage`, `network.port_status`,
   `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list` et `update.pending` sont
   déjà réels (`orchestrator/dispatch.py`).
-- **Phase 4 - Propositions et preuves.** Génération réelle de
-  `MaintenanceProposal` et `EvidenceBundle`, escaladant vers le futur
-  rôle de Developer Node de HYDRA-UMC-DEV-SERVER.
+- **Phase 4 - Propositions et preuves (complète).** Construction réelle de
+  `MaintenanceProposal` et `EvidenceBundle` (`escalation/`), escaladant
+  vers le futur rôle de Developer Node de HYDRA-UMC-DEV-SERVER.
+  `evidence.assemble_evidence_bundle()` dérive un paquet réel à partir de
+  `ToolResult` déjà observés ; `proposal.propose_maintenance()` valide et
+  fonde une proposition fournie par un humain contre des preuves
+  réelles - elle ne la génère jamais, puisqu'aucun moteur d'inférence
+  n'existe encore. Rien dans ce code ne peut encore agir sur un
+  `MaintenanceProposal`.
 - **Phase 5 - Interface utilisateur.** Une API locale intégrée dans
   HYDRA-UMC-SERVER/Studio, puis une CLI, puis la voix - sans jamais
   contourner les limites de politique et de confirmation déjà établies
   par la Phase 0.
 
-Les Phases 2, 4 et 5 n'existent pas encore dans ce dépôt - voir
+Les Phases 2 et 5 n'existent pas encore dans ce dépôt - voir
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) pour ce que chaque phase restante
 inclut et exclut explicitement, et
 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) pour les invariants de
