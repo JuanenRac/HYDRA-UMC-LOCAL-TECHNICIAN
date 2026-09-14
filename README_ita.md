@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Fase-3%20di%206%20completa-367BF5.svg" alt="Fase 3 di 6 completa">
 </p>
 
-> **Stato: v0.0.7, funzionale - Fase 3 di 6 completa (orchestratore di
+> **Stato: v0.0.8, funzionale - Fase 3 di 6 completa (orchestratore di
 > strumenti).** La Fase 0 ha definito la politica reale dei livelli
 > di rischio (`policy/risk_levels.py`), una lista bianca fissa di
 > strumenti (`policy/tool_matrix.py`), i cinque contratti minimi reali
