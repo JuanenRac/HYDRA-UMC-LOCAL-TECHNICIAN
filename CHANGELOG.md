@@ -9,6 +9,25 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.0.9] - Fase 1: retrievable knowledge index (real, complete)
+
+`knowledge/index.py` is a real, local TF-IDF search engine over an
+allow-listed root directory - the tokenize/build_index/search kernel is
+ported unchanged from HYDRA-UMC-DOCS-QA's own already-tested `index.py`
+(same accented-Latin + CJK-bigram tokenizer, same fenced-code-block
+heading guard); new here is bounded ingestion for both Markdown
+(heading-scoped chunks) and JSON (one whole, pretty-printed file per
+chunk - a manifest or contract schema is never usefully split
+mid-object), capped by a real per-file byte size and a total indexed-file
+count so even a legitimately allow-listed root cannot become an
+unbounded read. Wired as the tenth OBSERVE-level tool, `knowledge.search`
+(`orchestrator/dispatch.py`), through a new
+`OrchestratorConfig.resolve_knowledge_source()` (`orchestrator/allowlist.py`)
+- a caller only ever names an already allow-listed symbolic source, never
+a raw path, and every real match returned is still wrapped as
+`UntrustedText` before it ever leaves the handler, same injection-defense
+boundary every other tool already respects. 16 new tests.
+
 ## [0.0.8] - Real CI bug fixed: update.pending's own optional-dependency tests
 
 `UpdatePendingTests` documents its own intent in its docstring - stay

@@ -17,10 +17,18 @@ construction - none accepts a raw path/host/port from `arguments`, only a
 short symbolic name resolved through `allowlist.OrchestratorConfig` (see
 that module's own header comment for why).
 
-This wires all 9 of the tools `policy.tool_matrix` declares: `storage.usage`,
+This wires all 10 of the tools `policy.tool_matrix` declares: `storage.usage`,
 `network.port_status`, `network.connectivity`, `system.temperature`,
 `service.status`, `manifest.read`, `logs.read`, `process.list`,
-`update.pending`.
+`update.pending`, `knowledge.search`.
+
+`knowledge.search` (Fase 1) runs real TF-IDF search
+(`knowledge.index.search`) over an index built fresh from one
+allow-listed root (`OrchestratorConfig.resolve_knowledge_source` -
+never a raw caller-supplied path, same discipline as every other
+handler here) - see `knowledge/index.py`'s own header comment for the
+per-file bounds (allowed suffixes, size cap, file-count cap) that hold
+even within that allow-listed root.
 
 `update.pending` is the one real HYDRA-UMC-UPDATER integration boundary:
 it reuses that project's own already-tested GitHub discovery
@@ -73,8 +81,9 @@ from typing import Any
 
 from .. import __version__
 from ..contracts import validate
+from ..knowledge import index as knowledge_index
 from ..knowledge.redaction import redact_lines
-from ..knowledge.trust import ToolRequest
+from ..knowledge.trust import ToolRequest, UntrustedText
 from ..policy.tool_matrix import lookup_tool
 from .allowlist import OrchestratorConfig, UnknownAllowlistEntry
 
@@ -286,6 +295,64 @@ def _handle_manifest_read(config: OrchestratorConfig, arguments: dict[str, Any])
     return output, f"read {manifest_path}"
 
 
+# Fase 1's own real bound on knowledge.search, not a stylistic default -
+# same "cap it at the tool boundary too, not just deep inside
+# knowledge/index.py" discipline logs.read's own _LOGS_READ_MAX_LINES
+# already applies.
+_KNOWLEDGE_SEARCH_DEFAULT_TOP_K = 5
+_KNOWLEDGE_SEARCH_MAX_TOP_K = 20
+
+
+def _handle_knowledge_search(config: OrchestratorConfig, arguments: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    source = arguments.get("source")
+    if not isinstance(source, str) or not source:
+        raise UnknownAllowlistEntry("knowledge.search requires a non-empty 'source' argument")
+    query = arguments.get("query")
+    if not isinstance(query, str) or not query.strip():
+        raise UnknownAllowlistEntry("knowledge.search requires a non-empty 'query' argument")
+    root = config.resolve_knowledge_source(source)
+
+    requested = arguments.get("topK", _KNOWLEDGE_SEARCH_DEFAULT_TOP_K)
+    if not isinstance(requested, int) or requested <= 0:
+        requested = _KNOWLEDGE_SEARCH_DEFAULT_TOP_K
+    top_k = min(requested, _KNOWLEDGE_SEARCH_MAX_TOP_K)
+
+    ingest_result = knowledge_index.ingest_source_directory(root)
+    index = knowledge_index.build_index(list(ingest_result.chunks))
+    results = knowledge_index.search(index, query, top_k=top_k)
+
+    output = {
+        "source": source,
+        "query": query,
+        "indexedFileCount": len(ingest_result.indexed_sources),
+        "skippedFileCount": len(ingest_result.skipped_sources),
+        "truncated": ingest_result.truncated,
+        "results": [
+            {
+                "source": result.chunk.source,
+                "heading": result.chunk.heading,
+                "kind": result.chunk.kind,
+                "score": result.score,
+                # UntrustedText, not a plain str: this text came from an
+                # indexed document, never from a source this technician
+                # itself controls - see knowledge/trust.py's own header
+                # comment for why that distinction is load-bearing. A
+                # caller that goes on to build a ToolRequest from model
+                # output already only ever does so through
+                # build_tool_request_from_model_output(), which has no
+                # path that accepts this field at all.
+                "text": str(UntrustedText(result.chunk.text)),
+            }
+            for result in results
+        ],
+    }
+    evidence = (
+        f"searched {len(ingest_result.indexed_sources)} indexed document(s) under {root} "
+        f"for {query!r}, {len(results)} real match(es) above zero score"
+    )
+    return output, evidence
+
+
 # Fase 3's own real bound on logs.read, not a stylistic default: a large
 # request never reads an unbounded slice of a real log file, and the
 # tail itself is bounded in raw BYTES first (before ever splitting into
@@ -459,6 +526,7 @@ _HANDLERS = {
     "logs.read": _handle_logs_read,
     "process.list": _handle_process_list,
     "update.pending": _handle_update_pending,
+    "knowledge.search": _handle_knowledge_search,
 }
 
 

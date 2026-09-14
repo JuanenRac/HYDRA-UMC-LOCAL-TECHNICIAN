@@ -12,12 +12,12 @@
   <img src="https://img.shields.io/badge/Lizenz-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Sprache-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Kern-nur%20stdlib-brightgreen.svg" alt="Nur-stdlib-Kern">
-  <img src="https://img.shields.io/badge/Phase-3%20von%206%20abgeschlossen-367BF5.svg" alt="Phase 3 von 6 abgeschlossen">
+  <img src="https://img.shields.io/badge/Phase-1%20%26%203%20von%206%20abgeschlossen-367BF5.svg" alt="Phasen 1 und 3 von 6 abgeschlossen">
 </p>
 
-> **Status: v0.0.8, funktionsfähig - Phase 3 von 6 abgeschlossen
-> (Werkzeug-Orchestrator).** Phase 0 definierte die reale
-> Risikostufen-Richtlinie (`policy/risk_levels.py`), eine feste
+> **Status: v0.0.9, funktionsfähig - Phasen 1 und 3 von 6 abgeschlossen
+> (abrufbares Wissen, Werkzeug-Orchestrator).** Phase 0 definierte die
+> reale Risikostufen-Richtlinie (`policy/risk_levels.py`), eine feste
 > Werkzeug-Positivliste (`policy/tool_matrix.py`), die fünf realen
 > Minimalverträge, gegen die jeder künftige Werkzeugaufruf validieren
 > muss (`contracts/*.schema.json` + `contracts.py`), eine reale
@@ -26,21 +26,25 @@
 > Austrittskriterium dieser Phase 0 selbst: ein echter adversarialer
 > Test, der beweist, dass ein bösartiges abgerufenes Dokument niemals
 > einen Werkzeugaufruf auslösen oder ein Geheimnis preisgeben kann. Phase
-> 3 verbindet alle 9 deklarierten OBSERVE-Werkzeuge mit einem echten
+> 3 verbindet 9 der deklarierten OBSERVE-Werkzeuge mit einem echten
 > Handler (`orchestrator/dispatch.py`): `service.status`,
 > `storage.usage`, `network.port_status`, `network.connectivity`,
 > `system.temperature`, `manifest.read`, `logs.read`, `process.list` und `update.pending` - jedes löst nur einen
 > kurzen, auf der Positivliste stehenden symbolischen Namen auf
 > (`orchestrator/allowlist.py`), niemals einen rohen Pfad/Host/Port/URL,
-> den ein abgerufenes Dokument
-> liefern könnte. Es gibt noch keine Inferenz-Engine, keinen RAG-Index
-> und keine Integration mit HYDRA-UMC-SERVER - siehe
+> den ein abgerufenes Dokument liefern könnte. Phase 1 fügt ein
+> zehntes hinzu, `knowledge.search` (`knowledge/index.py`) - einen
+> realen, lokalen TF-IDF-Index über eine auf der Positivliste stehende
+> Wurzel genehmigter Dokumentation, Manifeste und Verträge, portiert aus
+> der bereits getesteten Retrieval-Engine von HYDRA-UMC-DOCS-QA. Es gibt
+> noch keine Inferenz-Engine und keine Integration mit
+> HYDRA-UMC-SERVER - siehe
 > [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) für die exakte
 > Befehlsoberfläche, die heute existiert.
 
 ---
 
-**Ehrlichkeitscheck - was heute wirklich läuft:** die Risikostufen-Richtlinie (`policy/risk_levels.py`), die feste Werkzeug-Zulassungsliste (`policy/tool_matrix.py`), die fünf Vertragsvalidatoren (`contracts.py` + `contracts/*.schema.json`), die Injection-Abwehrgrenze (`knowledge/trust.py`, `knowledge/redaction.py`), und nun haben alle 9 deklarierten OBSERVE-Werkzeuge einen echten Handler (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`) und sind getestet (117 bestandene Tests plus 28 Subtests über `tests/unit/` und `tests/adversarial/`) - Phase 3 ist abgeschlossen. `update.pending` benötigt die optionale Abhängigkeit `hydra-umc-updater` (Extra `update-check`), um GitHub wirklich zu prüfen, und degradiert ehrlich (`available: false`) ohne sie. Es gibt weiterhin keine Inferenz-Engine, keinen RAG-Index und keine HYDRA-UMC-SERVER-Integration irgendwo in diesem Repository - die Phasen 1, 2, 4 und 5 in der Roadmap weiter unten bleiben vollständig angestrebte Zukunftsarbeit ohne jeglichen Code dahinter. Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
+**Ehrlichkeitscheck - was heute wirklich läuft:** die Risikostufen-Richtlinie (`policy/risk_levels.py`), die feste Werkzeug-Zulassungsliste (`policy/tool_matrix.py`), die fünf Vertragsvalidatoren (`contracts.py` + `contracts/*.schema.json`), die Injection-Abwehrgrenze (`knowledge/trust.py`, `knowledge/redaction.py`), der lokale TF-IDF-Wissensindex (`knowledge/index.py`, Phase 1), und alle 10 deklarierten OBSERVE-Werkzeuge haben einen echten Handler (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`) und sind getestet (138 bestandene Tests plus 30 Subtests über `tests/unit/` und `tests/adversarial/`) - Phase 1 und Phase 3 sind abgeschlossen. `update.pending` benötigt die optionale Abhängigkeit `hydra-umc-updater` (Extra `update-check`), um GitHub wirklich zu prüfen, und degradiert ehrlich (`available: false`) ohne sie. Es gibt weiterhin keine Inferenz-Engine und keine HYDRA-UMC-SERVER-Integration irgendwo in diesem Repository - die Phasen 2, 4 und 5 in der Roadmap weiter unten bleiben vollständig angestrebte Zukunftsarbeit ohne jeglichen Code dahinter. Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
 
 ---
 
@@ -60,8 +64,7 @@ das Generieren einer Antwort. Richtlinie, Berechtigungen und menschliche
 Bestätigung entscheiden über jede reale Aktion - niemals die eigenen
 Worte des Modells.
 
-Diese Lieferung (Phase 0) bringt vier reale, unabhängig nützliche
-Bausteine:
+Diese Lieferung bringt sechs reale, unabhängig nützliche Bausteine:
 
 1. **Risikostufen-Richtlinie** (`policy/risk_levels.py`) - sechs
    geordnete Stufen, von `INFORM` bis `PHYSICAL_ACTION`, jede mit einer
@@ -70,10 +73,10 @@ Bausteine:
    beiden obersten Stufen sind nur der Vertragsvollständigkeit halber
    deklariert - in diesem Code tatsächlich nirgendwo implementiert.
 2. **Werkzeug-Matrix** (`policy/tool_matrix.py`) - eine feste
-   Positivliste von neun realen `OBSERVE`-Stufen-Werkzeugnamen. Ein
+   Positivliste von zehn realen `OBSERVE`-Stufen-Werkzeugnamen. Ein
    Werkzeugname, der in diesem Dictionary fehlt, kann niemals aufgerufen
-   werden, Punkt - alle 9 sind bereits mit einem echten Handler
-   verbunden (siehe Punkt 5 unten).
+   werden, Punkt - alle 10 sind bereits mit einem echten Handler
+   verbunden (siehe Punkte 5 und 6 unten).
 3. **Reale Verträge** (`contracts/*.schema.json` + `contracts.py`) -
    `ToolRequest`, `ToolResult`, `MaintenanceProposal`, `EvidenceBundle`
    und `PatchVerificationReport`, jeweils mit einer normativen
@@ -89,6 +92,46 @@ Bausteine:
    getrennte Felder entgegen und verweigert jeden nicht registrierten
    oder nicht implementierten Werkzeugnamen, bevor das Objekt überhaupt
    existiert.
+5. **Werkzeug-Orchestrator** (`orchestrator/dispatch.py` +
+   `orchestrator/allowlist.py`, Phase 3) - `dispatch_tool_request()`
+   führt einen bereits validierten `ToolRequest` real aus und liefert
+   ein reales `ToolResult`: `service.status` (echtes
+   `systemctl is-active`), `storage.usage` (`shutil.disk_usage`),
+   `network.port_status` (eine echte Socket-Sonde),
+   `network.connectivity` (ein echter HTTP-GET, der den eigenen realen
+   Statuscode des Endpunkts meldet - eine tatsächlich andere Prüfung als
+   `network.port_status`, dieselbe reale Unterscheidung, die das eigene
+   `inventory.py` von HYDRA-UMC-OPS-AGENT bereits zwischen einer reinen
+   TCP-Verbindung und einem echten Health-GET zieht), `system.temperature`
+   (der reale Linux-Thermalzonen-sysfs-Pfad), `manifest.read` (ein
+   echtes Lesen von `hydra-umc.project.json`), `logs.read` (ein
+   begrenztes, geschwärztes Ende einer auf der Positivliste stehenden
+   Log-Datei), `process.list` (ein echter, auf der Positivliste
+   stehender Teilstring-Abgleich gegen `/proc/<pid>/cmdline`), und
+   `update.pending` (nutzt die eigene reale GitHub-Erkennung und den
+   Versionsvergleich von HYDRA-UMC-UPDATER wieder, optionale
+   Abhängigkeit). Keines davon akzeptiert direkt einen rohen
+   Pfad/Host/Port/URL/Einheitennamen/Muster - nur einen kurzen
+   symbolischen Namen, aufgelöst über ein festes `OrchestratorConfig`,
+   sodass der eigene Text eines vergifteten Dokuments niemals ein
+   beliebiges reales Ziel benennen kann, sondern nur einen bereits auf
+   der Positivliste stehenden Namen.
+6. **Abrufbarer Wissensindex** (`knowledge/index.py`, Phase 1) - eine
+   reale, lokale TF-IDF-Suchmaschine (tokenize/build_index/search),
+   unverändert portiert aus dem bereits getesteten `index.py` von
+   HYDRA-UMC-DOCS-QA, plus eine neue begrenzte Aufnahme für
+   Markdown-Quellen (nach Überschrift segmentierte Abschnitte) und
+   JSON-Quellen (eine ganze Datei pro Abschnitt - ein Manifest oder ein
+   Vertragsschema wird niemals sinnvoll mitten im Objekt geteilt).
+   Verbunden als zehntes Werkzeug, `knowledge.search`, über das neue
+   `resolve_knowledge_source()` von `orchestrator/allowlist.py`: ein
+   Aufrufer kann nur eine bereits auf der Positivliste stehende
+   symbolische Quelle benennen, niemals einen rohen Pfad, und jeder
+   real zurückgegebene Treffer bleibt als `UntrustedText` eingehüllt,
+   bevor er den Handler verlässt. Der Durchlauf selbst ist begrenzt
+   (Dateianzahl, Dateigröße), selbst für eine legitim auf der
+   Positivliste stehende Wurzel - niemals blind, niemals die gesamte
+   Festplatte.
 
 ```
 $ hydra-umc-local-technician contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
@@ -138,10 +181,17 @@ reale Befehlsoberfläche.
   Design, ein separater Autorisierungspfad und, für physische Aktion,
   echte Verriegelungen existieren - kein Versehen, das später
   nachgeholt wird.
-- **Diese Lieferung deklariert und validiert nur - sie handelt noch
-  nicht.** Es existiert nirgendwo in diesem Repository eine
-  Inferenz-Engine, ein RAG-Index, eine echte Werkzeugausführung oder
-  eine Integration mit HYDRA-UMC-SERVER.
+- **Wissensabruf ist begrenzt und auf der Positivliste, niemals
+  blind.** `knowledge.search` indiziert nur eine bereits auf der
+  Positivliste stehende Wurzel (`resolve_knowledge_source()` von
+  `orchestrator/allowlist.py`), und der Durchlauf selbst ist durch eine
+  echte Dateianzahl- und Dateigrößengrenze begrenzt - "niemals blind auf
+  der gesamten Festplatte trainiert" gilt auch für eine Wurzel, die ein
+  Betreiber bereits als sicher eingestuft hat.
+- **Diese Lieferung deklariert, ruft ab und validiert nur - sie handelt
+  noch nicht.** Es existiert nirgendwo in diesem Repository eine
+  Inferenz-Engine, eine echte Werkzeugausführung oberhalb von OBSERVE
+  oder eine Integration mit HYDRA-UMC-SERVER.
 
 ## 📂 VERZEICHNISSTRUKTUR
 
@@ -150,10 +200,14 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 ├── src/hydra_umc_local_technician/
 │   ├── policy/
 │   │   ├── risk_levels.py    # RiskLevel + RiskLevelPolicy: die sechs Stufen, reale Richtlinie pro Stufe
-│   │   └── tool_matrix.py    # TOOL_MATRIX: die feste, reale Werkzeug-Positivliste (9 OBSERVE-Namen)
+│   │   └── tool_matrix.py    # TOOL_MATRIX: die feste, reale Werkzeug-Positivliste (10 OBSERVE-Namen)
 │   ├── knowledge/
 │   │   ├── redaction.py      # Reale Geheimnis-Schwärzung, portiert aus HYDRA-UMC-OPS-AGENT
-│   │   └── trust.py          # UntrustedText + build_tool_request_from_model_output(): die Injection-Abwehrgrenze
+│   │   ├── trust.py          # UntrustedText + build_tool_request_from_model_output(): die Injection-Abwehrgrenze
+│   │   └── index.py          # Phase 1 - reale TF-IDF-Suche + begrenzte Markdown-/JSON-Aufnahme, portiert aus HYDRA-UMC-DOCS-QA
+│   ├── orchestrator/          # Phase 3 + Phase 1 - alle 10 realen OBSERVE-Werkzeug-Handler, vollständig
+│   │   ├── allowlist.py      # OrchestratorConfig: Positivliste symbolischer Namen, die ein Handler auflöst, niemals ein roher Pfad/Host/Port
+│   │   └── dispatch.py       # dispatch_tool_request(): führt einen validierten ToolRequest real aus, liefert ein reales ToolResult
 │   ├── contracts.py           # Realer, nur-stdlib Validator für die fünf Minimalverträge
 │   └── cli.py                 # Subbefehl contracts validate + --version
 ├── contracts/                  # Normative JSON-Schema-Dateien (Draft 2020-12) für die fünf Verträge
@@ -205,18 +259,22 @@ vollständige lokale Testsuite aus.
 
 ## 🚀 ROADMAP
 
-Diese Version bringt Phase 0 und einen Teil von Phase 3. Was in der
+Diese Version bringt Phase 0, Phase 1 und Phase 3. Was in der
 Reihenfolge der Phasen verbleibt:
 
-- **Phase 1 - Abrufbares Wissen.** Ein lokaler, versionierter Index
-  genehmigter Dokumentation, Manifeste, Verträge und Runbooks - niemals
-  blind auf der gesamten Festplatte trainiert.
+- **Phase 1 - Abrufbares Wissen (abgeschlossen).** Ein lokaler,
+  versionierter Index genehmigter Dokumentation, Manifeste, Verträge und
+  Runbooks - niemals blind auf der gesamten Festplatte trainiert.
+  `knowledge/index.py` portiert unverändert die bereits getestete
+  TF-IDF-Suche von HYDRA-UMC-DOCS-QA und fügt eine begrenzte, auf der
+  Positivliste stehende Aufnahme für Markdown- und JSON-Quellen hinzu,
+  verbunden als zehntes OBSERVE-Stufen-Werkzeug, `knowledge.search`.
 - **Phase 2 - Lokale Inferenz-Engine.** Ein kleines, mit Hailo-10H
   kompatibles LLM (Kandidaten: Qwen2.5-1.5B-Instruct,
   Qwen2.5-Coder-1.5B, Qwen3-1.7B-Instruct), erst gewählt, nachdem die
   reale Hailo-Kompatibilität, Latenz, Sprachqualität, Leistungsaufnahme
   und Lizenz verifiziert sind.
-- **Phase 3 - Werkzeug-Orchestrator (abgeschlossen: 9 von 9).**
+- **Phase 3 - Werkzeug-Orchestrator (abgeschlossen: 9 von 9 deklarierten).**
   Deterministischer Code, der alle realen `OBSERVE`-Stufen-
   Werkzeug-Handler mit `TOOL_MATRIX` verbindet, mit
   Richtliniendurchsetzung bei jedem Aufruf. `service.status`,
@@ -231,10 +289,9 @@ Reihenfolge der Phasen verbleibt:
   von Phase 0 bereits etablierten Richtlinien- und Bestätigungsgrenzen
   zu umgehen.
 
-Phase 1, 2, 4 und 5 existieren noch nicht in diesem Repository, und
-Phase 3 selbst ist nur teilweise fertig - siehe
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) dafür, was jede Phase
-einschließt und explizit ausschließt, und
+Phase 2, 4 und 5 existieren noch nicht in diesem Repository - siehe
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) dafür, was jede verbleibende
+Phase einschließt und explizit ausschließt, und
 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) für die
 Sicherheitsinvarianten, die jede Phase weiterhin einhalten muss.
 

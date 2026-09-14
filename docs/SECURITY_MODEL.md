@@ -34,10 +34,10 @@ plain numeric comparison instead of a lookup table of its own.
 - **INFORM** - read documentation or explain status already known to the
   assistant. No tool access at all.
 - **OBSERVE** - read manifests, versions, allow-listed logs, service
-  health, storage, temperature and connectivity. Never modifies anything.
-  This is the only level with a real, named tool registry today -
-  `policy/tool_matrix.py`'s nine `TOOL_MATRIX` entries, every one of
-  which is still `implemented=False` in this delivery (see below).
+  health, storage, temperature, connectivity and indexed knowledge.
+  Never modifies anything. This is the only level with a real, named
+  tool registry today - `policy/tool_matrix.py`'s ten `TOOL_MATRIX`
+  entries, every one of which is now `implemented=True` (see below).
 - **PREPARE** - generate a diagnosis, a plan, a proposed diff, an
   evidence bundle, or a command that is written but not executed. Must
   be shown to a human before anything past this point happens.
@@ -84,7 +84,10 @@ Fase 3 has since wired a real, read-only handler to all nine
 (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`) - every
 handler still only ever resolves a short, allow-listed symbolic name,
 never a raw path/host/port/URL/pattern a retrieved document could
-supply (see this file's own `resolve_*` methods). A name still absent
+supply (see this file's own `resolve_*` methods). Fase 1 has since added
+a tenth, `knowledge.search` (`knowledge/index.py`'s own bounded TF-IDF
+index over an allow-listed root), wired the same way through
+`OrchestratorConfig.resolve_knowledge_source`. A name still absent
 from `TOOL_MATRIX` altogether (`shell.exec`, say) is refused exactly as
 before - see `tests/adversarial/test_injection_defense.py`'s own point
 (d), still exercised as a live invariant even though its own set of

@@ -12,31 +12,35 @@
   <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="stdlib-only core">
-  <img src="https://img.shields.io/badge/Phase-3%20of%206%20complete-367BF5.svg" alt="Fase 3 of 6 complete">
+  <img src="https://img.shields.io/badge/Phase-1%20%26%203%20of%206%20complete-367BF5.svg" alt="Fases 1 and 3 of 6 complete">
 </p>
 
-> **Status: v0.0.8, functional - Fase 3 of 6 complete (tool
-> orchestrator).** Fase 0 defined the real risk-level policy
-> (`policy/risk_levels.py`), a fixed tool allowlist
+> **Status: v0.0.9, functional - Fases 1 and 3 of 6 complete (retrievable
+> knowledge, tool orchestrator).** Fase 0 defined the real risk-level
+> policy (`policy/risk_levels.py`), a fixed tool allowlist
 > (`policy/tool_matrix.py`), the five real minimal contracts every future
 > tool call must validate against (`contracts/*.schema.json` +
 > `contracts.py`), real secret redaction ported from
 > HYDRA-UMC-OPS-AGENT's own already-tested `log_redaction.py`, and Fase
 > 0's own literal exit criterion: a real adversarial test proving a
 > malicious retrieved document can never trigger a tool call or leak a
-> secret. Fase 3 wires all 9 of the declared OBSERVE-level tools
+> secret. Fase 3 wires 9 of the declared OBSERVE-level tools
 > to a real handler (`orchestrator/dispatch.py`): `service.status`,
 > `storage.usage`, `network.port_status`, `network.connectivity`,
 > `system.temperature`, `manifest.read`, `logs.read`, `process.list` and `update.pending` - each resolving only a short,
 > allow-listed symbolic name (`orchestrator/allowlist.py`), never a raw
-> path/host/port/URL a retrieved document could supply. No inference
-> engine, no RAG index, and no HYDRA-UMC-SERVER integration exist yet -
-> see [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) for the exact
-> command surface that exists today.
+> path/host/port/URL a retrieved document could supply. Fase 1 adds a
+> tenth, `knowledge.search` (`knowledge/index.py`) - a real, local
+> TF-IDF index over an allow-listed root of approved documentation,
+> manifests and contracts, ported from HYDRA-UMC-DOCS-QA's own tested
+> retrieval kernel. No inference engine and no HYDRA-UMC-SERVER
+> integration exist yet - see
+> [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) for the exact command
+> surface that exists today.
 
 ---
 
-**Honesty check - what actually runs today:** the risk-level policy (`policy/risk_levels.py`), the fixed tool allowlist (`policy/tool_matrix.py`), the five contract validators (`contracts.py` + `contracts/*.schema.json`), the injection-defense boundary (`knowledge/trust.py`, `knowledge/redaction.py`), and now all 9 declared OBSERVE-level tool handlers (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`) are real and tested (117 tests plus 28 subtests passing across `tests/unit/` and `tests/adversarial/`) - Fase 3 is complete. `update.pending` needs the optional `hydra-umc-updater` dependency (the `update-check` extra) to actually check GitHub, and degrades honestly (`available: false`) without it. There is still no inference engine, no RAG index, and no HYDRA-UMC-SERVER integration anywhere in this repository - Fases 1, 2, 4 and 5 in the Roadmap below remain entirely aspirational, with zero code behind them. See `CHANGELOG.md` for exactly what has shipped so far.
+**Honesty check - what actually runs today:** the risk-level policy (`policy/risk_levels.py`), the fixed tool allowlist (`policy/tool_matrix.py`), the five contract validators (`contracts.py` + `contracts/*.schema.json`), the injection-defense boundary (`knowledge/trust.py`, `knowledge/redaction.py`), the local TF-IDF knowledge index (`knowledge/index.py`, Fase 1), and all 10 declared OBSERVE-level tool handlers (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`) are real and tested (138 tests plus 30 subtests passing across `tests/unit/` and `tests/adversarial/`) - Fase 1 and Fase 3 are both complete. `update.pending` needs the optional `hydra-umc-updater` dependency (the `update-check` extra) to actually check GitHub, and degrades honestly (`available: false`) without it. There is still no inference engine and no HYDRA-UMC-SERVER integration anywhere in this repository - Fases 2, 4 and 5 in the Roadmap below remain entirely aspirational, with zero code behind them. See `CHANGELOG.md` for exactly what has shipped so far.
 
 ---
 
@@ -55,7 +59,7 @@ inference anywhere in this codebase yet.
 a response. Policy, permissions and human confirmation decide every real
 action - never the model's own words.
 
-This delivery ships five real, independently useful pieces:
+This delivery ships six real, independently useful pieces:
 
 1. **Risk-level policy** (`policy/risk_levels.py`) - six ordered levels,
    `INFORM` through `PHYSICAL_ACTION`, each with a real, tested policy
@@ -63,10 +67,10 @@ This delivery ships five real, independently useful pieces:
    it implemented). The top two levels are declared for contract
    completeness only - genuinely not implemented anywhere in this
    codebase.
-2. **Tool matrix** (`policy/tool_matrix.py`) - a fixed allowlist of nine
+2. **Tool matrix** (`policy/tool_matrix.py`) - a fixed allowlist of ten
    real `OBSERVE`-level tool names. A tool name absent from this
-   dictionary can never be called, full stop - all 9 are now wired
-   to a real handler (see 5 below).
+   dictionary can never be called, full stop - all 10 are now wired
+   to a real handler (see 5 and 6 below).
 3. **Real contracts** (`contracts/*.schema.json` + `contracts.py`) -
    `ToolRequest`, `ToolResult`, `MaintenanceProposal`, `EvidenceBundle`
    and `PatchVerificationReport`, each with a normative JSON Schema file
@@ -98,6 +102,19 @@ This delivery ships five real, independently useful pieces:
    only a short symbolic name resolved through a fixed
    `OrchestratorConfig`, so a poisoned document's own text can never name
    an arbitrary real target, only ever a name already on the allow-list.
+6. **Retrievable knowledge index** (`knowledge/index.py`, Fase 1) - a
+   real, local TF-IDF search engine (tokenize/build_index/search),
+   ported unchanged from HYDRA-UMC-DOCS-QA's own already-tested
+   `index.py`, plus new bounded ingestion for Markdown (heading-scoped
+   chunks) and JSON (one whole file per chunk - a manifest or contract
+   schema is never usefully split mid-object) sources. Wired as the
+   tenth tool, `knowledge.search`, through
+   `orchestrator/allowlist.py`'s new `resolve_knowledge_source()`: a
+   caller only ever names an already allow-listed symbolic source, never
+   a raw path, and every real match returned is still wrapped as
+   `UntrustedText` before it ever leaves the handler. The walk itself is
+   bounded (file count, per-file size) even for a legitimately
+   allow-listed root - never blind, never the whole disk.
 
 ```
 $ hydra-umc-local-technician contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
@@ -140,9 +157,16 @@ surface.
   deliberate, permanent gate until a dedicated design, a separate
   authorization path and, for physical action, real interlocks exist -
   not an oversight to complete later.
-- **This delivery only ever declares and validates - it does not act.**
-  No inference engine, no RAG index, no real tool execution, and no
-  HYDRA-UMC-SERVER integration exist anywhere in this repository yet.
+- **Knowledge retrieval is bounded and allow-listed, never blind.**
+  `knowledge.search` only ever indexes one already allow-listed root
+  (`orchestrator/allowlist.py`'s own `resolve_knowledge_source`), and
+  the walk itself is bounded by a real file-count and per-file size cap
+  - "never trained blindly on the whole disk" holds even for a root an
+  operator already decided is safe.
+- **This delivery only ever declares, retrieves and validates - it does
+  not act.** No inference engine, no real tool execution above OBSERVE,
+  and no HYDRA-UMC-SERVER integration exist anywhere in this repository
+  yet.
 
 ## 📂 DIRECTORY STRUCTURE
 
@@ -151,11 +175,12 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 ├── src/hydra_umc_local_technician/
 │   ├── policy/
 │   │   ├── risk_levels.py    # RiskLevel + RiskLevelPolicy: the six levels, real per-level policy
-│   │   └── tool_matrix.py    # TOOL_MATRIX: the fixed, real tool allowlist (9 OBSERVE-level names)
+│   │   └── tool_matrix.py    # TOOL_MATRIX: the fixed, real tool allowlist (10 OBSERVE-level names)
 │   ├── knowledge/
 │   │   ├── redaction.py      # Real secret redaction, ported from HYDRA-UMC-OPS-AGENT
-│   │   └── trust.py          # UntrustedText + build_tool_request_from_model_output(): the injection-defense boundary
-│   ├── orchestrator/          # Fase 3 - all 9 real OBSERVE-level tool handlers, complete
+│   │   ├── trust.py          # UntrustedText + build_tool_request_from_model_output(): the injection-defense boundary
+│   │   └── index.py          # Fase 1 - real TF-IDF search + bounded Markdown/JSON ingestion, ported from HYDRA-UMC-DOCS-QA
+│   ├── orchestrator/          # Fase 3 + Fase 1 - all 10 real OBSERVE-level tool handlers, complete
 │   │   ├── allowlist.py      # OrchestratorConfig: symbolic-name allow-list a handler resolves against, never a raw path/host/port
 │   │   └── dispatch.py       # dispatch_tool_request(): runs a validated ToolRequest for real, returns a real ToolResult
 │   ├── contracts.py           # Real, stdlib-only validator for the five minimal contracts
@@ -206,17 +231,20 @@ NOT run the test suite itself; run `./build.sh`/`build.bat` (or
 
 ## 🚀 ROADMAP
 
-This version ships Fase 0 and part of Fase 3. What remains, in phase order:
+This version ships Fase 0, Fase 1 and Fase 3. What remains, in phase order:
 
-- **Fase 1 - Retrievable knowledge.** A local, versioned index of
-  approved documentation, manifests, contracts and runbooks - never
-  trained blindly on the whole disk.
+- **Fase 1 - Retrievable knowledge (complete).** A local, versioned
+  index of approved documentation, manifests, contracts and runbooks -
+  never trained blindly on the whole disk. `knowledge/index.py` ports
+  HYDRA-UMC-DOCS-QA's own tested TF-IDF search unchanged and adds
+  bounded, allow-listed ingestion for Markdown and JSON sources, wired
+  as the tenth OBSERVE-level tool, `knowledge.search`.
 - **Fase 2 - Local inference engine.** A small LLM compatible with
   Hailo-10H (candidates: Qwen2.5-1.5B-Instruct, Qwen2.5-Coder-1.5B,
   Qwen3-1.7B-Instruct), chosen only once real Hailo compatibility,
   latency, language quality, power draw and license are verified.
-- **Fase 3 - Tool orchestrator (complete: 9 of 9 tools).** Deterministic
-  code wiring every real `OBSERVE`-level tool handler to
+- **Fase 3 - Tool orchestrator (complete: 9 of 9 declared tools).**
+  Deterministic code wiring every real `OBSERVE`-level tool handler to
   `TOOL_MATRIX`, with policy enforcement on every call. `service.status`,
   `storage.usage`, `network.port_status`, `network.connectivity`,
   `system.temperature`, `manifest.read`, `logs.read`, `process.list` and
@@ -228,10 +256,9 @@ This version ships Fase 0 and part of Fase 3. What remains, in phase order:
   HYDRA-UMC-SERVER/Studio, then a CLI, then voice - never bypassing the
   policy and confirmation boundaries Fase 0 already establishes.
 
-Fases 1, 2, 4 and 5 do not exist in this repository yet, and Fase 3
-itself is only partially done - see
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for what each phase is
-scoped to include and explicitly exclude, and
+Fases 2, 4 and 5 do not exist in this repository yet - see
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for what each remaining
+phase is scoped to include and explicitly exclude, and
 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) for the security
 invariants every phase must keep honoring.
 
