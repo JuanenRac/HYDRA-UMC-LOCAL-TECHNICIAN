@@ -12,34 +12,37 @@
   <img src="https://img.shields.io/badge/Licenza-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Linguaggio-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Nucleo-solo%20stdlib-brightgreen.svg" alt="Nucleo solo stdlib">
-  <img src="https://img.shields.io/badge/Fase-3%20di%206%20completa-367BF5.svg" alt="Fase 3 di 6 completa">
+  <img src="https://img.shields.io/badge/Fase-1%20%26%203%20di%206%20complete-367BF5.svg" alt="Fasi 1 e 3 di 6 complete">
 </p>
 
-> **Stato: v0.0.8, funzionale - Fase 3 di 6 completa (orchestratore di
-> strumenti).** La Fase 0 ha definito la politica reale dei livelli
-> di rischio (`policy/risk_levels.py`), una lista bianca fissa di
-> strumenti (`policy/tool_matrix.py`), i cinque contratti minimi reali
-> che ogni futura chiamata a uno strumento dovrà validare
-> (`contracts/*.schema.json` + `contracts.py`), una reale redazione dei
-> segreti portata dal già testato `log_redaction.py` di
+> **Stato: v0.0.9, funzionale - Fasi 1 e 3 di 6 complete (conoscenza
+> recuperabile, orchestratore di strumenti).** La Fase 0 ha definito la
+> politica reale dei livelli di rischio (`policy/risk_levels.py`), una
+> lista bianca fissa di strumenti (`policy/tool_matrix.py`), i cinque
+> contratti minimi reali che ogni futura chiamata a uno strumento dovrà
+> validare (`contracts/*.schema.json` + `contracts.py`), una reale
+> redazione dei segreti portata dal già testato `log_redaction.py` di
 > HYDRA-UMC-OPS-AGENT, e il criterio di uscita letterale della stessa
 > Fase 0: un vero test avversariale che dimostra che un documento
 > malevolo recuperato non può mai innescare una chiamata a uno strumento
-> né rivelare un segreto. La Fase 3 collega tutti i 9 strumenti OBSERVE
+> né rivelare un segreto. La Fase 3 collega 9 dei strumenti OBSERVE
 > dichiarati a un handler reale (`orchestrator/dispatch.py`):
 > `service.status`, `storage.usage`, `network.port_status`,
 > `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list` e `update.pending` -
 > ciascuno risolve solo un nome simbolico in whitelist
 > (`orchestrator/allowlist.py`), mai un percorso/host/porta/URL grezzo
-> che un documento recuperato potrebbe
-> fornire. Non esistono ancora un motore di inferenza, un indice RAG,
-> né un'integrazione con HYDRA-UMC-SERVER - vedi
+> che un documento recuperato potrebbe fornire. La Fase 1 aggiunge un
+> decimo strumento, `knowledge.search` (`knowledge/index.py`) - un
+> indice TF-IDF locale e reale su una radice in whitelist di
+> documentazione, manifesti e contratti approvati, portato dal motore
+> di recupero già testato di HYDRA-UMC-DOCS-QA. Non esiste ancora un
+> motore di inferenza, né un'integrazione con HYDRA-UMC-SERVER - vedi
 > [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) per la superficie di
 > comandi esatta che esiste oggi.
 
 ---
 
-**Controllo di onestà - cosa funziona davvero oggi:** la policy dei livelli di rischio (`policy/risk_levels.py`), l'elenco fisso di strumenti consentiti (`policy/tool_matrix.py`), i cinque validatori di contratto (`contracts.py` + `contracts/*.schema.json`), il confine di difesa dalle injection (`knowledge/trust.py`, `knowledge/redaction.py`), e ora tutti i 9 strumenti OBSERVE dichiarati hanno un handler reale (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`) e sono testati (117 test più 28 subtest superati tra `tests/unit/` e `tests/adversarial/`) - la Fase 3 è completa. `update.pending` richiede la dipendenza opzionale `hydra-umc-updater` (extra `update-check`) per verificare GitHub davvero, e degrada onestamente (`available: false`) senza di essa. Non esiste ancora alcun motore di inferenza, alcun indice RAG, né alcuna integrazione con HYDRA-UMC-SERVER in nessuna parte di questo repository - le Fasi 1, 2, 4 e 5 nella Roadmap più sotto restano interamente aspirazionali, senza alcun codice dietro. Vedi `CHANGELOG.md` per ciò che è stato consegnato esattamente finora.
+**Controllo di onestà - cosa funziona davvero oggi:** la policy dei livelli di rischio (`policy/risk_levels.py`), l'elenco fisso di strumenti consentiti (`policy/tool_matrix.py`), i cinque validatori di contratto (`contracts.py` + `contracts/*.schema.json`), il confine di difesa dalle injection (`knowledge/trust.py`, `knowledge/redaction.py`), l'indice di conoscenza TF-IDF locale (`knowledge/index.py`, Fase 1), e tutti i 10 strumenti OBSERVE dichiarati hanno un handler reale (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`) e sono testati (138 test più 30 subtest superati tra `tests/unit/` e `tests/adversarial/`) - la Fase 1 e la Fase 3 sono complete. `update.pending` richiede la dipendenza opzionale `hydra-umc-updater` (extra `update-check`) per verificare GitHub davvero, e degrada onestamente (`available: false`) senza di essa. Non esiste ancora alcun motore di inferenza, né alcuna integrazione con HYDRA-UMC-SERVER in nessuna parte di questo repository - le Fasi 2, 4 e 5 nella Roadmap più sotto restano interamente aspirazionali, senza alcun codice dietro. Vedi `CHANGELOG.md` per ciò che è stato consegnato esattamente finora.
 
 ---
 
@@ -57,8 +60,7 @@ questa consegna è puro Python che valida dati puri.
 una risposta. La politica, i permessi e la conferma umana decidono ogni
 azione reale - mai le parole stesse del modello.
 
-Questa consegna (Fase 0) porta quattro pezzi reali e utili in modo
-indipendente:
+Questa consegna porta sei pezzi reali e utili in modo indipendente:
 
 1. **Politica dei livelli di rischio** (`policy/risk_levels.py`) - sei
    livelli ordinati, da `INFORM` a `PHYSICAL_ACTION`, ognuno con una
@@ -67,10 +69,10 @@ indipendente:
    superiori sono dichiarati solo per completezza del contratto -
    davvero non implementati in nessuna parte di questo codice.
 2. **Matrice degli strumenti** (`policy/tool_matrix.py`) - una lista
-   bianca fissa di nove nomi reali di strumenti di livello `OBSERVE`. Un
+   bianca fissa di dieci nomi reali di strumenti di livello `OBSERVE`. Un
    nome di strumento assente da questo dizionario non può mai essere
-   chiamato, punto - tutti i 9 sono già collegati a un handler reale
-   (vedi il punto 5 più sotto).
+   chiamato, punto - tutti i 10 sono già collegati a un handler reale
+   (vedi i punti 5 e 6 più sotto).
 3. **Contratti reali** (`contracts/*.schema.json` + `contracts.py`) -
    `ToolRequest`, `ToolResult`, `MaintenanceProposal`, `EvidenceBundle` e
    `PatchVerificationReport`, ciascuno con un file JSON Schema normativo
@@ -84,6 +86,43 @@ indipendente:
    `ToolRequest` prende campi già tipizzati e già separati, e rifiuta
    qualsiasi nome di strumento non registrato o non implementato prima
    ancora che l'oggetto esista.
+5. **Orchestratore di strumenti** (`orchestrator/dispatch.py` +
+   `orchestrator/allowlist.py`, Fase 3) - `dispatch_tool_request()`
+   esegue davvero un `ToolRequest` già validato e restituisce un
+   `ToolResult` reale: `service.status` (`systemctl is-active` reale),
+   `storage.usage` (`shutil.disk_usage`), `network.port_status` (una
+   vera sonda socket), `network.connectivity` (una vera richiesta HTTP
+   GET che riporta il codice di stato reale dell'endpoint - una verifica
+   genuinamente diversa da `network.port_status`, la stessa distinzione
+   reale che il proprio `inventory.py` di HYDRA-UMC-OPS-AGENT traccia tra
+   una semplice connessione TCP e un vero GET di salute),
+   `system.temperature` (il vero percorso sysfs della zona termica
+   Linux), `manifest.read` (una vera lettura di
+   `hydra-umc.project.json`), `logs.read` (una coda limitata e redatta
+   di un file di log in whitelist), `process.list` (una vera
+   corrispondenza di sottostringa in whitelist contro
+   `/proc/<pid>/cmdline`), e `update.pending` (riutilizza la vera
+   scoperta GitHub e il confronto di versioni di HYDRA-UMC-UPDATER,
+   dipendenza opzionale). Nessuno di questi accetta direttamente un
+   percorso/host/porta/URL/nome unità/pattern grezzo - solo un nome
+   simbolico breve risolto tramite un `OrchestratorConfig` fisso, così
+   che il testo di un documento avvelenato non possa mai nominare un
+   bersaglio reale arbitrario, solo un nome già in whitelist.
+6. **Indice di conoscenza recuperabile** (`knowledge/index.py`, Fase 1)
+   - un vero motore di ricerca TF-IDF locale
+   (tokenize/build_index/search), portato senza modifiche dal già
+   testato `index.py` di HYDRA-UMC-DOCS-QA, più una nuova ingestione
+   limitata per fonti Markdown (frammenti per intestazione) e JSON (un
+   intero file per frammento - un manifesto o uno schema di contratto
+   non viene mai utilmente diviso a metà oggetto). Collegato come
+   decimo strumento, `knowledge.search`, tramite il nuovo
+   `resolve_knowledge_source()` di `orchestrator/allowlist.py`: chi
+   chiama può nominare solo una fonte simbolica già in whitelist, mai un
+   percorso grezzo, e ogni corrispondenza reale restituita resta
+   avvolta come `UntrustedText` prima di lasciare l'handler. La
+   scansione stessa è limitata (numero di file, dimensione per file)
+   anche per una radice legittimamente in whitelist - mai alla cieca,
+   mai tutto il disco.
 
 ```
 $ hydra-umc-local-technician contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
@@ -130,10 +169,17 @@ per la superficie di comandi reale e completa.
   Una porta deliberata e permanente finché non esistano un design
   dedicato, un percorso di autorizzazione separato e, per l'azione
   fisica, veri interlock - non una svista da completare più avanti.
-- **Questa consegna dichiara e valida soltanto - non agisce ancora.**
-  Non esiste ancora un motore di inferenza, un indice RAG, una vera
-  esecuzione di strumenti, né un'integrazione con HYDRA-UMC-SERVER in
-  nessuna parte di questo repository.
+- **Il recupero di conoscenza è limitato e in whitelist, mai alla
+  cieca.** `knowledge.search` indicizza solo una radice già in whitelist
+  (`resolve_knowledge_source()` di `orchestrator/allowlist.py`), e la
+  scansione stessa è limitata da un vero limite di numero di file e di
+  dimensione per file - "mai addestrato alla cieca su tutto il disco"
+  vale anche per una radice che un operatore ha già deciso essere
+  sicura.
+- **Questa consegna dichiara, recupera e valida soltanto - non agisce
+  ancora.** Non esiste ancora un motore di inferenza, né una vera
+  esecuzione di strumenti oltre OBSERVE, né un'integrazione con
+  HYDRA-UMC-SERVER in nessuna parte di questo repository.
 
 ## 📂 STRUTTURA DELLE DIRECTORY
 
@@ -142,10 +188,14 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 ├── src/hydra_umc_local_technician/
 │   ├── policy/
 │   │   ├── risk_levels.py    # RiskLevel + RiskLevelPolicy: i sei livelli, politica reale per livello
-│   │   └── tool_matrix.py    # TOOL_MATRIX: la lista bianca fissa e reale di strumenti (9 nomi OBSERVE)
+│   │   └── tool_matrix.py    # TOOL_MATRIX: la lista bianca fissa e reale di strumenti (10 nomi OBSERVE)
 │   ├── knowledge/
 │   │   ├── redaction.py      # Redazione reale dei segreti, portata da HYDRA-UMC-OPS-AGENT
-│   │   └── trust.py          # UntrustedText + build_tool_request_from_model_output(): il confine di difesa contro l'injection
+│   │   ├── trust.py          # UntrustedText + build_tool_request_from_model_output(): il confine di difesa contro l'injection
+│   │   └── index.py          # Fase 1 - vera ricerca TF-IDF + ingestione limitata Markdown/JSON, portata da HYDRA-UMC-DOCS-QA
+│   ├── orchestrator/          # Fase 3 + Fase 1 - tutti i 10 gestori reali di strumenti OBSERVE, completo
+│   │   ├── allowlist.py      # OrchestratorConfig: whitelist di nomi simbolici che un gestore risolve, mai un percorso/host/porta grezzo
+│   │   └── dispatch.py       # dispatch_tool_request(): esegue davvero un ToolRequest validato, restituisce un vero ToolResult
 │   ├── contracts.py           # Validatore reale, solo stdlib, per i cinque contratti minimi
 │   └── cli.py                 # Sottocomando contracts validate + --version
 ├── contracts/                  # File JSON Schema normativi (draft 2020-12) per i cinque contratti
@@ -195,17 +245,21 @@ esegue la suite di test; esegui `./build.sh`/`build.bat` (o
 
 ## 🚀 ROADMAP
 
-Questa versione porta la Fase 0 e parte della Fase 3. Ciò che resta, in ordine di fase:
+Questa versione porta la Fase 0, la Fase 1 e la Fase 3. Ciò che resta, in ordine di fase:
 
-- **Fase 1 - Conoscenza recuperabile.** Un indice locale e versionato di
-  documentazione, manifesti, contratti e runbook approvati - mai
-  addestrato alla cieca su tutto il disco.
+- **Fase 1 - Conoscenza recuperabile (completa).** Un indice locale e
+  versionato di documentazione, manifesti, contratti e runbook
+  approvati - mai addestrato alla cieca su tutto il disco.
+  `knowledge/index.py` porta senza modifiche la ricerca TF-IDF già
+  testata di HYDRA-UMC-DOCS-QA e aggiunge un'ingestione limitata e in
+  whitelist per fonti Markdown e JSON, collegata come decimo strumento
+  di livello OBSERVE, `knowledge.search`.
 - **Fase 2 - Motore di inferenza locale.** Un piccolo LLM compatibile
   con Hailo-10H (candidati: Qwen2.5-1.5B-Instruct, Qwen2.5-Coder-1.5B,
   Qwen3-1.7B-Instruct), scelto solo dopo aver verificato la reale
   compatibilità Hailo, la latenza, la qualità linguistica, il consumo e
   la licenza.
-- **Fase 3 - Orchestratore di strumenti (completa: 9 su 9).** Codice
+- **Fase 3 - Orchestratore di strumenti (completa: 9 su 9 dichiarati).** Codice
   deterministico che collega tutti i gestori reali di strumenti di
   livello `OBSERVE` a `TOOL_MATRIX`, con la politica applicata a ogni
   chiamata. `service.status`, `storage.usage`, `network.port_status`,
@@ -218,10 +272,9 @@ Questa versione porta la Fase 0 e parte della Fase 3. Ciò che resta, in ordine 
   HYDRA-UMC-SERVER/Studio, poi una CLI, poi la voce - senza mai aggirare
   i confini di politica e conferma già stabiliti dalla Fase 0.
 
-Le Fasi 1, 2, 4 e 5 non esistono ancora in questo repository, e la
-stessa Fase 3 è solo parzialmente fatta - vedi
+Le Fasi 2, 4 e 5 non esistono ancora in questo repository - vedi
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) per ciò che ogni fase
-include ed esclude esplicitamente, e
+restante include ed esclude esplicitamente, e
 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) per gli invarianti di
 sicurezza che ogni fase deve continuare a rispettare.
 

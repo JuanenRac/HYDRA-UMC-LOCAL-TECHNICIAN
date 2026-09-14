@@ -82,6 +82,14 @@ class OrchestratorConfig:
     # and never a pattern a caller supplies directly: only ever one an
     # operator already put here for exactly this purpose.
     process_patterns: dict[str, str] = field(default_factory=dict)
+    # symbolic name -> a real, fixed directory `knowledge.search` (Fase 1)
+    # may index - never a raw path a caller supplies, and never "the
+    # whole disk": an operator decides up front exactly which real
+    # documentation/manifest/contract trees this technician is allowed to
+    # read at all. See knowledge/index.py's own further, per-file bounds
+    # (allowed suffixes, size cap, file-count cap) - this allow-list is
+    # the outer boundary, not the only one.
+    knowledge_sources: dict[str, Path] = field(default_factory=dict)
 
     def resolve_storage_path(self, name: str) -> Path:
         try:
@@ -117,6 +125,12 @@ class OrchestratorConfig:
             return self.process_patterns[name]
         except KeyError:
             raise UnknownAllowlistEntry(f"'{name}' is not an allow-listed process pattern") from None
+
+    def resolve_knowledge_source(self, name: str) -> Path:
+        try:
+            return self.knowledge_sources[name]
+        except KeyError:
+            raise UnknownAllowlistEntry(f"'{name}' is not an allow-listed knowledge source") from None
 
     def resolve_project_manifest_path(self, project: str) -> Path:
         """Real path-traversal defense in depth: PROJECT_NAME_PATTERN

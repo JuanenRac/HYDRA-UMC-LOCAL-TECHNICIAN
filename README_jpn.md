@@ -12,11 +12,11 @@
   <img src="https://img.shields.io/badge/ライセンス-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/言語-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/コア-標準ライブラリのみ-brightgreen.svg" alt="標準ライブラリのみのコア">
-  <img src="https://img.shields.io/badge/フェーズ-3%2F6%20完了-367BF5.svg" alt="全6フェーズ中フェーズ3完了">
+  <img src="https://img.shields.io/badge/フェーズ-1%20%26%203%2F6%20完了-367BF5.svg" alt="全6フェーズ中フェーズ1と3完了">
 </p>
 
-> **状態: v0.0.8、機能実装済み - 全6フェーズ中フェーズ3完了
-> （ツールオーケストレーター）。** フェーズ0では、実際のリスクレベル・
+> **状態: v0.0.9、機能実装済み - 全6フェーズ中フェーズ1と3完了
+> （検索可能な知識、ツールオーケストレーター）。** フェーズ0では、実際のリスクレベル・
 > ポリシー（`policy/risk_levels.py`）、固定のツール許可リスト
 > （`policy/tool_matrix.py`）、将来のあらゆるツール呼び出しが検証される
 > べき5つの実在する最小契約（`contracts/*.schema.json` + `contracts.py`）、
@@ -24,20 +24,24 @@
 > された実際の機密情報マスキング、そしてこのフェーズ0自身の文字通りの終了
 > 基準 - 悪意ある取得ドキュメントが決してツール呼び出しを引き起こしたり
 > 機密情報を漏らしたりできないことを証明する実際の敵対的テスト - を定義し
-> ました。フェーズ3では、宣言済みの9個のOBSERVEレベルツールすべてを
+> ました。フェーズ3では、宣言済みのOBSERVEレベルツールのうち9個を
 > 実際のハンドラー（`orchestrator/dispatch.py`）に接続します:
 > `service.status`、`storage.usage`、`network.port_status`、
 > `network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending` -
 > それぞれが許可リストに載った短いシンボル名
 > （`orchestrator/allowlist.py`）だけを解決し、取得した
 > ドキュメントが提供しうる生のパス・ホスト・ポート・URLを直接使うことは
-> 決してありません。推論エンジン、RAGインデックス、HYDRA-UMC-SERVER との統合は
+> 決してありません。フェーズ1は10番目のツール `knowledge.search`
+> （`knowledge/index.py`）を追加します - 承認済みのドキュメント、マニフェスト、
+> 契約の許可リストに載ったルート上で動く、実際のローカルTF-IDFインデックス
+> で、HYDRA-UMC-DOCS-QA 自身のすでにテスト済みの検索エンジンから移植された
+> ものです。推論エンジン、HYDRA-UMC-SERVER との統合は
 > まだ存在しません - 今日実際に存在するコマンド範囲については
 > [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) を参照してください。
 
 ---
 
-**正直な現状確認 - 今日実際に動くもの:** リスクレベルポリシー(`policy/risk_levels.py`)、固定のツール許可リスト(`policy/tool_matrix.py`)、5 つの契約バリデーター(`contracts.py` + `contracts/*.schema.json`)、インジェクション防御境界(`knowledge/trust.py`、`knowledge/redaction.py`)、そして今や宣言済みの9個のOBSERVEツールすべてに実際のハンドラーがある(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`)、テスト済みである(`tests/unit/` と `tests/adversarial/` 全体で 117 件のテストと 28 件のサブテストが成功) - フェーズ3は完了した。`update.pending` は実際にGitHubを確認するためにオプションの依存関係 `hydra-umc-updater`(`update-check` extra)を必要とし、それがない場合は正直に(`available: false`)劣化する。このリポジトリのどこにも推論エンジン、RAG インデックス、そして HYDRA-UMC-SERVER との統合はまだ存在しない——下記ロードマップのフェーズ 1、2、4、5 は依然として完全に願望であり、裏付けとなるコードは一切ない。これまでに何が実際に出荷されたかは `CHANGELOG.md` を参照。
+**正直な現状確認 - 今日実際に動くもの:** リスクレベルポリシー(`policy/risk_levels.py`)、固定のツール許可リスト(`policy/tool_matrix.py`)、5 つの契約バリデーター(`contracts.py` + `contracts/*.schema.json`)、インジェクション防御境界(`knowledge/trust.py`、`knowledge/redaction.py`)、ローカルTF-IDF知識インデックス(`knowledge/index.py`、フェーズ1)、そして宣言済みの10個のOBSERVEツールすべてに実際のハンドラーがある(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)、テスト済みである(`tests/unit/` と `tests/adversarial/` 全体で 138 件のテストと 30 件のサブテストが成功) - フェーズ1とフェーズ3は完了した。`update.pending` は実際にGitHubを確認するためにオプションの依存関係 `hydra-umc-updater`(`update-check` extra)を必要とし、それがない場合は正直に(`available: false`)劣化する。このリポジトリのどこにも推論エンジン、そして HYDRA-UMC-SERVER との統合はまだ存在しない——下記ロードマップのフェーズ 2、4、5 は依然として完全に願望であり、裏付けとなるコードは一切ない。これまでに何が実際に出荷されたかは `CHANGELOG.md` を参照。
 
 ---
 
@@ -55,17 +59,17 @@ HYDRA-UMC-LOCAL-TECHNICIAN は HYDRA-UMC エコシステム自身のための専
 ありません。ポリシー、権限、人間による確認がすべての実際の行動を決定しま
 す - モデル自身の言葉では決してありません。
 
-本リリース（フェーズ0）は、独立して有用な4つの実在する要素をもたらします:
+本リリースは、独立して有用な6つの実在する要素をもたらします:
 
 1. **リスクレベル・ポリシー**（`policy/risk_levels.py`）- `INFORM` から
    `PHYSICAL_ACTION` までの6つの順序付けられたレベルで、それぞれに実際の
    テスト済みポリシー（ツールを読み取れるか、変更できるか、確認が必要か、
    実装されているか）があります。上位2レベルは契約の完全性のためだけに
    宣言されており、このコード内のどこにも実装されていません。
-2. **ツール・マトリクス**（`policy/tool_matrix.py`）- 9つの実在する
+2. **ツール・マトリクス**（`policy/tool_matrix.py`）- 10個の実在する
    `OBSERVE` レベルのツール名からなる固定の許可リスト。この辞書に存在し
-   ないツール名は絶対に呼び出せません、それだけです - 9個すべてが
-   すでに実際のハンドラーに接続されています(下記の項目5を参照)。
+   ないツール名は絶対に呼び出せません、それだけです - 10個すべてが
+   すでに実際のハンドラーに接続されています(下記の項目5と6を参照)。
 3. **実際の契約**（`contracts/*.schema.json` + `contracts.py`）-
    `ToolRequest`、`ToolResult`、`MaintenanceProposal`、`EvidenceBundle`、
    `PatchVerificationReport` は、それぞれに規範的なJSON Schema
@@ -78,6 +82,41 @@ HYDRA-UMC-LOCAL-TECHNICIAN は HYDRA-UMC エコシステム自身のための専
    コードベースで `ToolRequest` を構築する唯一の実際の方法は、すでに型付
    けされ、すでに分離されたフィールドを受け取り、オブジェクトが存在する
    前に、未登録または未実装のツール名を拒否します。
+5. **ツール・オーケストレーター**（`orchestrator/dispatch.py` +
+   `orchestrator/allowlist.py`、フェーズ3）- `dispatch_tool_request()`
+   はすでに検証済みの `ToolRequest` を実際に実行し、実際の `ToolResult`
+   を返します: `service.status`（実際の `systemctl is-active`）、
+   `storage.usage`（`shutil.disk_usage`）、`network.port_status`（実際の
+   ソケットプローブ）、`network.connectivity`（エンドポイント自身の実際の
+   ステータスコードを報告する実際のHTTP GET - `network.port_status` とは
+   本質的に異なるチェックであり、HYDRA-UMC-OPS-AGENT 自身の `inventory.py`
+   が単純なTCP接続と実際のヘルスGETの間で引いているのと同じ実際の区別で
+   す)、`system.temperature`（実際のLinuxサーマルゾーンsysfsパス)、
+   `manifest.read`（実際の `hydra-umc.project.json` の読み取り)、
+   `logs.read`（許可リストに載ったログファイルの範囲限定でマスキング
+   済みの末尾)、`process.list`（`/proc/<pid>/cmdline` に対する実際の
+   許可リストに載った部分文字列一致)、そして `update.pending`（
+   HYDRA-UMC-UPDATER 自身の実際のGitHub検出とバージョン比較を再利用する、
+   オプションの依存関係)。これらのいずれも生のパス・ホスト・ポート・
+   URL・ユニット名・パターンを直接受け付けません - 固定の
+   `OrchestratorConfig` を通じて解決される短いシンボル名だけであり、
+   毒された文書自身のテキストが任意の実在ターゲットを名指しすること
+   は決してなく、すでに許可リストに載った名前だけです。
+6. **検索可能な知識インデックス**（`knowledge/index.py`、フェーズ1）
+   - 実際のローカルTF-IDF検索エンジン(tokenize/build_index/search)で、
+   HYDRA-UMC-DOCS-QA 自身のすでにテスト済みの `index.py` から変更なし
+   で移植されており、Markdownソース(見出しで区切られた断片)とJSON
+   ソース(マニフェストや契約スキーマはオブジェクトの途中で有用に分割
+   されることは決してないため、断片ごとにファイル全体)向けの新しい
+   範囲限定の取り込みが加わっています。10番目のツール
+   `knowledge.search` として、`orchestrator/allowlist.py` の新しい
+   `resolve_knowledge_source()` を通じて接続されています: 呼び出し側は
+   すでに許可リストに載ったシンボリックなソース名だけを指定でき、生の
+   パスは決して指定できず、返される実際の一致はハンドラーを出る前に
+   常に `UntrustedText` としてラップされたままです。走査自体も
+   (ファイル数、ファイルごとのサイズで)範囲限定されており、正当に
+   許可リストに載ったルートであっても - 決して盲目的にならず、決して
+   ディスク全体にはなりません。
 
 ```
 $ hydra-umc-local-technician contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
@@ -121,9 +160,16 @@ INVALID: tests/fixtures/tool_request.invalid.json (ToolRequest): ...
   専用の設計、別個の認可経路、そして物理的行動については実際のインター
   ロックが存在するまでの、意図的かつ恒久的な関門です - 後で完成させる
   見落としではありません。
-- **本リリースは宣言と検証のみを行い、まだ行動はしません。** 推論エンジ
-  ン、RAGインデックス、実際のツール実行、HYDRA-UMC-SERVER との統合は、
-  このリポジトリのどこにもまだ存在しません。
+- **知識の検索は範囲限定・許可リスト化されており、決して盲目的ではあり
+  ません。** `knowledge.search` はすでに許可リストに載った1つのルート
+  だけをインデックス化し(`orchestrator/allowlist.py` の
+  `resolve_knowledge_source()`)、走査自体も実際のファイル数とファイル
+  ごとのサイズの上限で範囲限定されています - 「ディスク全体を盲目的に
+  学習させることは決してありません」は、運用者がすでに安全と判断した
+  ルートであっても成り立ちます。
+- **本リリースは宣言・検索・検証のみを行い、まだ行動はしません。** 推論
+  エンジン、OBSERVEを超える実際のツール実行、HYDRA-UMC-SERVER との統合
+  は、このリポジトリのどこにもまだ存在しません。
 
 ## 📂 ディレクトリ構造
 
@@ -132,10 +178,14 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 ├── src/hydra_umc_local_technician/
 │   ├── policy/
 │   │   ├── risk_levels.py    # RiskLevel + RiskLevelPolicy: 6つのレベル、レベルごとの実際のポリシー
-│   │   └── tool_matrix.py    # TOOL_MATRIX: 固定かつ実在するツール許可リスト（9つの OBSERVE 名）
+│   │   └── tool_matrix.py    # TOOL_MATRIX: 固定かつ実在するツール許可リスト（10個の OBSERVE 名）
 │   ├── knowledge/
 │   │   ├── redaction.py      # 実際の機密情報マスキング、HYDRA-UMC-OPS-AGENT から移植
-│   │   └── trust.py          # UntrustedText + build_tool_request_from_model_output(): インジェクション防御境界
+│   │   ├── trust.py          # UntrustedText + build_tool_request_from_model_output(): インジェクション防御境界
+│   │   └── index.py          # フェーズ1 - 実際のTF-IDF検索 + 範囲限定のMarkdown/JSON取り込み、HYDRA-UMC-DOCS-QA から移植
+│   ├── orchestrator/          # フェーズ3 + フェーズ1 - 10個すべての実際のOBSERVEツールハンドラー、完了
+│   │   ├── allowlist.py      # OrchestratorConfig: ハンドラーが解決するシンボル名の許可リスト、生のパス・ホスト・ポートは決して使わない
+│   │   └── dispatch.py       # dispatch_tool_request(): 検証済みの ToolRequest を実際に実行し、実際の ToolResult を返す
 │   ├── contracts.py           # 5つの最小契約のための実際の標準ライブラリのみのバリデータ
 │   └── cli.py                 # contracts validate サブコマンド + --version
 ├── contracts/                  # 5つの契約のための規範的な JSON Schema ファイル（draft 2020-12）
@@ -185,16 +235,20 @@ Windows の場合: `build.bat`、続いて `run.bat contracts validate ...` /
 
 ## 🚀 ロードマップ
 
-このバージョンはフェーズ0とフェーズ3の一部を提供します。残りは、フェーズ順に:
+このバージョンはフェーズ0、フェーズ1、フェーズ3を提供します。残りは、フェーズ順に:
 
-- **フェーズ1 - 検索可能な知識。** 承認済みのドキュメント、マニフェスト、
-  契約、runbook のローカルでバージョン管理されたインデックス - ディスク
-  全体を盲目的に学習させることは決してありません。
+- **フェーズ1 - 検索可能な知識(完了)。** 承認済みのドキュメント、
+  マニフェスト、契約、runbook のローカルでバージョン管理されたインデッ
+  クス - ディスク全体を盲目的に学習させることは決してありません。
+  `knowledge/index.py` は HYDRA-UMC-DOCS-QA 自身のすでにテスト済みの
+  TF-IDF検索を変更なしで移植し、Markdown・JSONソース向けの範囲限定・
+  許可リスト化された取り込みを追加しており、10番目のOBSERVEレベルツール
+  `knowledge.search` として接続されています。
 - **フェーズ2 - ローカル推論エンジン。** Hailo-10H と互換性のある小型
   LLM（候補: Qwen2.5-1.5B-Instruct、Qwen2.5-Coder-1.5B、
   Qwen3-1.7B-Instruct）で、実際の Hailo 互換性、レイテンシ、言語品質、
   消費電力、ライセンスが検証されてから初めて選定されます。
-- **フェーズ3 - ツール・オーケストレータ（完了: 9個中9個）。**
+- **フェーズ3 - ツール・オーケストレータ（完了: 宣言済み9個中9個）。**
   `TOOL_MATRIX` にすべての実際の `OBSERVE` レベルのツールハンドラを接続する
   決定論的コードで、すべての呼び出しでポリシーが強制されます。
   `service.status`、`storage.usage`、`network.port_status`、
@@ -207,9 +261,8 @@ Windows の場合: `build.bat`、続いて `run.bat contracts validate ...` /
   統合されたローカルAPI、続いてCLI、その後音声 - フェーズ0がすでに確立
   したポリシーと確認の境界を決して迂回しません。
 
-フェーズ1、2、4、5はこのリポジトリにまだ存在せず、フェーズ3自体も部分的
-にしか実装されていません - 各フェーズが明示的に
-含むもの・除外するものについては
+フェーズ2、4、5はこのリポジトリにまだ存在しません - 残る各フェーズが
+明示的に含むもの・除外するものについては
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) を、各フェーズが引き続き
 尊重しなければならないセキュリティ不変条件については
 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) を参照してください。

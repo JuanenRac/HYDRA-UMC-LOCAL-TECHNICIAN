@@ -103,6 +103,12 @@ TOOL_MATRIX: dict[str, ToolDescriptor] = {
         description="Reads a real hydra-umc.project.json (name/version/maturity/role) for a named project - same real, tested pattern as HYDRA-UMC-OPS-AGENT's and HYDRA-UMC-DEV-SERVER's own inventory.py.",
         implemented=True,
     ),
+    "knowledge.search": ToolDescriptor(
+        name="knowledge.search",
+        risk_level=RiskLevel.OBSERVE,
+        description="Fase 1: real TF-IDF search over an allow-listed root of approved documentation/manifests/contracts - never the whole disk, never an arbitrary caller-supplied path.",
+        implemented=True,
+    ),
 }
 
 

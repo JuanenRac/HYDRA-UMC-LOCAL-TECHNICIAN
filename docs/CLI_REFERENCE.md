@@ -82,12 +82,14 @@ Not implemented in this delivery - listed here only so a reader of this
 file knows what is coming and in roughly what order, per the README's
 own Roadmap section:
 
-- A `tools list` command (Fase 1+) surfacing the real
+- A `tools list` command (Fase 5) surfacing the real
   `policy/tool_matrix.py` registry and each entry's own
   `implemented` status.
 - A `contracts schema` command printing the real JSON Schema file for a
   given contract name, once the schema files are also published as a
   standalone artifact.
-- Any command that actually invokes a registered OBSERVE-level tool -
-  blocked until a real handler exists for at least one entry in
-  `TOOL_MATRIX` (currently none do).
+- A CLI command that actually invokes `dispatch_tool_request()` for a
+  registered OBSERVE-level tool - real handlers already exist for all
+  ten `TOOL_MATRIX` entries (`orchestrator/dispatch.py`, Fase 1 and Fase
+  3), but no CLI surface calls them yet; that is Fase 5's own scope, the
+  same local API/CLI/voice surface as `tools list` above.
