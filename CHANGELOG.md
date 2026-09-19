@@ -108,7 +108,7 @@ by defining those names as `None` placeholders on `ImportError`; every
 real call site already guards on `_HAS_UPDATE_CHECK` first, so this
 changes no runtime behavior.
 
-## [0.0.7] - H020: Python validation now matches the normative schemas' own type/format constraints
+## [0.0.7] - Python validation now matches the normative schemas' own type/format constraints
 
 - **List elements were never type-checked:** `_require_list()` only
   checked the container's own type/length - every list field (across
