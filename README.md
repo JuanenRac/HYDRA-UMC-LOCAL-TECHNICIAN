@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20of%206%20complete-367BF5.svg" alt="Fases 1, 3 and 4 of 6 complete">
 </p>
 
-> **Status: v0.1.1, functional - Fases 1, 3 and 4 of 6 complete
+> **Status: v0.1.2, functional - Fases 1, 3 and 4 of 6 complete
 > (retrievable knowledge, tool orchestrator, escalation), Fase 5 started
 > (a real local CLI).** Fase 0
 > defined the real risk-level policy (`policy/risk_levels.py`), a fixed

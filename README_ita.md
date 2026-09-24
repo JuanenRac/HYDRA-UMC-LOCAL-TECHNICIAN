@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Fase-1%2C%203%20%26%204%20di%206%20complete-367BF5.svg" alt="Fasi 1, 3 e 4 di 6 complete">
 </p>
 
-> **Stato: v0.1.1, funzionale - Fasi 1, 3 e 4 di 6 complete (conoscenza
+> **Stato: v0.1.2, funzionale - Fasi 1, 3 e 4 di 6 complete (conoscenza
 > recuperabile, orchestratore di strumenti, escalation), Fase 5 avviata
 > (una vera CLI locale).** La Fase 0 ha
 > definito la politica reale dei livelli di rischio
