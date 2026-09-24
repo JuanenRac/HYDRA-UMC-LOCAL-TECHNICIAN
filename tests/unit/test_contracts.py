@@ -53,7 +53,7 @@ class ContractFixtureTests(unittest.TestCase):
             validate("ToolRequest", payload)
         self.assertIn("reason", str(ctx.exception))
 
-    # H020 regressions: the Python validator used to accept several
+    # regressions: the Python validator used to accept several
     # values its own normative contracts/*.schema.json already declares
     # invalid, because "type": "string"/format constraints on list items
     # and the "date-time" format were never actually enforced here.
