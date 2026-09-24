@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20von%206%20abgeschlossen-367BF5.svg" alt="Phasen 1, 3 und 4 von 6 abgeschlossen">
 </p>
 
-> **Status: v0.1.1, funktionsfähig - Phasen 1, 3 und 4 von 6
+> **Status: v0.1.2, funktionsfähig - Phasen 1, 3 und 4 von 6
 > abgeschlossen (abrufbares Wissen, Werkzeug-Orchestrator, Eskalation),
 > Phase 5 begonnen (eine echte lokale CLI).**
 > Phase 0 definierte die reale Risikostufen-Richtlinie

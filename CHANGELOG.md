@@ -9,6 +9,16 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.1.2] - Diagnosis-only mode and an outage-proof escalation queue
+
+- **`policy/execution_mode.py`:** `DIAGNOSIS_ONLY` is the default and refuses every action
+  above observe, approval or not. `ASSISTED` still refuses one unless a human approval
+  record names that exact action, names a person and carries a signature the caller
+  verified against the operator's policy. Model text never enters the decision.
+- **`escalation/outbox.py`:** escalations are written to disk first, marked sent only when
+  the receiver confirms, survive a restart and a network outage, are never sent twice and
+  are never duplicated by queueing the same id again. Eleven new tests.
+
 ## [0.1.1] - Fase 5's own first real slice: a real CLI over tool calls and escalation
 
 `cli.py` gains three new real command families, none of them a new
