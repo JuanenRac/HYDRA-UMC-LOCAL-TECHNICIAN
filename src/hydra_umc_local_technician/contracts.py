@@ -59,7 +59,7 @@ def _require_bool(payload: dict[str, Any], name: str) -> None:
 
 
 def _require_iso_timestamp(payload: dict[str, Any], name: str) -> None:
-    """H020: both `ToolResult.timestamp` and `EvidenceBundle.date`
+    """both `ToolResult.timestamp` and `EvidenceBundle.date`
     declare `"type": "string", "format": "date-time"` in their normative
     contracts/*.schema.json - but a JSON Schema validator does not
     enforce `format` by default (it requires an explicit format-checking
@@ -83,7 +83,7 @@ def _require_list(payload: dict[str, Any], name: str, *, min_items: int = 0) -> 
         raise ContractValidationError(f"{name} must be a list")
     if len(value) < min_items:
         raise ContractValidationError(f"{name} must have at least {min_items} item(s)")
-    # H020: this used to only check the container's own type/length,
+    # this used to only check the container's own type/length,
     # never a single element inside it - every one of this contract's
     # own list fields declares `"items": {"type": "string"}` in its
     # normative contracts/*.schema.json (no minLength on the item
@@ -120,7 +120,7 @@ def _validate_tool_result(payload: dict[str, Any]) -> None:
         raise ContractValidationError("evidence must be a string")
     _require_iso_timestamp(payload, "timestamp")
     duration = payload.get("durationMs")
-    # H020: `duration < 0` alone is not a finiteness check - NaN compares
+    # `duration < 0` alone is not a finiteness check - NaN compares
     # False against everything, so a NaN durationMs (Python's own
     # json.loads() accepts the bare "NaN"/"Infinity" tokens by default,
     # even though real JSON has no such literals) used to sail through

@@ -40,7 +40,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 # Same real accented-Latin + CJK-bigram tokenizer HYDRA-UMC-DOCS-QA's own
-# index.py already established and tested (QA-02) - this technician's
+# index.py already established and tested - this technician's
 # own docs are written in the same 7 languages as every other repo in
 # this ecosystem.
 _LATIN_TOKEN_RE = re.compile(r"[a-z0-9À-ɏ]+")
@@ -178,7 +178,7 @@ def _canonical_source(path: Path, root: Path) -> str:
 
 def _ingest_markdown_text(text: str, *, source: str) -> list[KnowledgeChunk]:
     """Same real heading-scoped chunking DOCS-QA's own
-    ingest_markdown_text uses (including the QA-01 fenced-code-block
+    ingest_markdown_text uses (including the fenced-code-block
     guard, so a `# comment` inside a ```sh block is never read as a
     real heading)."""
     chunks: list[KnowledgeChunk] = []
