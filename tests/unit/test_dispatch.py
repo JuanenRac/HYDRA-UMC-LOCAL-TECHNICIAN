@@ -356,11 +356,20 @@ class _FakeUpdaterVersion:
     comparison/str semantics, no dependency on the real optional package
     being installed to test the deterministic logic around it."""
 
-    def __init__(self, major: int, minor: int, patch: int):
-        self.major, self.minor, self.patch = major, minor, patch
+    def __init__(self, major: int, minor: int, patch: int, build: int = 0, has_build: bool = False):
+        self.major, self.minor, self.patch, self.build, self.has_build = major, minor, patch, build, has_build
+
+    @classmethod
+    def from_string(cls, text: str):
+        parts = [int(part) for part in text.split(".")]
+        if len(parts) == 3:
+            return cls(*parts)
+        if len(parts) == 4:
+            return cls(*parts, has_build=True)
+        raise ValueError(f"not a MAJOR.MINOR.PATCH[.BUILD] version: {text!r}")
 
     def _tuple(self):
-        return (self.major, self.minor, self.patch)
+        return (self.major, self.minor, self.patch, self.build)
 
     def __lt__(self, other):
         return self._tuple() < other._tuple()
@@ -369,7 +378,8 @@ class _FakeUpdaterVersion:
         return isinstance(other, _FakeUpdaterVersion) and self._tuple() == other._tuple()
 
     def __str__(self):
-        return f"{self.major}.{self.minor}.{self.patch}"
+        base = f"{self.major}.{self.minor}.{self.patch}"
+        return f"{base}.{self.build}" if self.has_build else base
 
 
 class _FakeUpdaterManifest:

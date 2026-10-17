@@ -4,7 +4,7 @@
 
 # 🤖 HYDRA-UMC-LOCAL-TECHNICIAN
 
-<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | 🇩🇪 <b>Deutsch</b> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
+<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | 🇩🇪 <b>Deutsch</b> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 🛡️ Lokaler KI-Techniker mit Richtlinien-Gesteuerten Berechtigungen
 
@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20von%206%20abgeschlossen-367BF5.svg" alt="Phasen 1, 3 und 4 von 6 abgeschlossen">
 </p>
 
-> **Status: v0.1.2, funktionsfähig - Phasen 1, 3 und 4 von 6
+> **Status: v0.1.3, funktionsfähig - Phasen 1, 3 und 4 von 6
 > abgeschlossen (abrufbares Wissen, Werkzeug-Orchestrator, Eskalation),
 > Phase 5 begonnen (eine echte lokale CLI).**
 > Phase 0 definierte die reale Risikostufen-Richtlinie
@@ -56,7 +56,7 @@
 
 ---
 
-**Ehrlichkeitscheck - was heute wirklich läuft:** die Risikostufen-Richtlinie (`policy/risk_levels.py`), die feste Werkzeug-Zulassungsliste (`policy/tool_matrix.py`), die fünf Vertragsvalidatoren (`contracts.py` + `contracts/*.schema.json`), die Injection-Abwehrgrenze (`knowledge/trust.py`, `knowledge/redaction.py`), der lokale TF-IDF-Wissensindex (`knowledge/index.py`, Phase 1), alle 10 deklarierten OBSERVE-Werkzeuge mit einem echten Handler (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), der echte Aufbau von `EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Phase 4), und eine echte CLI über alles davon (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, Phase 5's eigene erste Scheibe) sind getestet (164 bestandene Tests plus 30 Subtests über `tests/unit/` und `tests/adversarial/`) - Phase 1, Phase 3 und Phase 4 sind abgeschlossen, Phase 5 ist begonnen. `update.pending` benötigt die optionale Abhängigkeit `hydra-umc-updater` (Extra `update-check`), um GitHub wirklich zu prüfen, und degradiert ehrlich (`available: false`) ohne sie. Es gibt weiterhin keine Inferenz-Engine und keine HYDRA-UMC-SERVER-Integration irgendwo in diesem Repository, und nichts in diesem Code kann bisher auf ein `MaintenanceProposal` einwirken - Phase 2, und der Rest von Phase 5 (die mit HYDRA-UMC-SERVER integrierte API, und Sprache), in der Roadmap weiter unten bleiben vollständig angestrebte Zukunftsarbeit ohne jeglichen Code dahinter. Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
+**Ehrlichkeitscheck - was heute wirklich läuft:** die Risikostufen-Richtlinie (`policy/risk_levels.py`), die feste Werkzeug-Zulassungsliste (`policy/tool_matrix.py`), die fünf Vertragsvalidatoren (`contracts.py` + `contracts/*.schema.json`), die Injection-Abwehrgrenze (`knowledge/trust.py`, `knowledge/redaction.py`), der lokale TF-IDF-Wissensindex (`knowledge/index.py`, Phase 1), alle 10 deklarierten OBSERVE-Werkzeuge mit einem echten Handler (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), der echte Aufbau von `EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Phase 4), und eine echte CLI über alles davon (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, Phase 5's eigene erste Scheibe) sind getestet (197 bestandene Tests plus 30 Subtests über `tests/unit/` und `tests/adversarial/`) - Phase 1, Phase 3 und Phase 4 sind abgeschlossen, Phase 5 ist begonnen. `update.pending` benötigt die optionale Abhängigkeit `hydra-umc-updater` (Extra `update-check`), um GitHub wirklich zu prüfen, und degradiert ehrlich (`available: false`) ohne sie. Es gibt weiterhin keine Inferenz-Engine und keine HYDRA-UMC-SERVER-Integration irgendwo in diesem Repository, und nichts in diesem Code kann bisher auf ein `MaintenanceProposal` einwirken - Phase 2, und der Rest von Phase 5 (die mit HYDRA-UMC-SERVER integrierte API, und Sprache), in der Roadmap weiter unten bleiben vollständig angestrebte Zukunftsarbeit ohne jeglichen Code dahinter. Siehe `CHANGELOG.md` für das, was bisher genau ausgeliefert wurde.
 
 ---
 
@@ -128,6 +128,7 @@ Diese Lieferung bringt acht reale, unabhängig nützliche Bausteine:
    sodass der eigene Text eines vergifteten Dokuments niemals ein
    beliebiges reales Ziel benennen kann, sondern nur einen bereits auf
    der Positivliste stehenden Namen.
+   Was ein Handler zurückgibt, wird an der Grenze begrenzt und geschwärzt: die Befehlszeile eines Prozesses, ein Wissensauszug und die Logzeilen eines Evidenzpakets durchlaufen dieselbe Geheimnis-Schwärzung wie `logs.read`, `manifest.read` liefert nur vier kurze Zeichenketten, und `network.connectivity` meldet eine Weiterleitung, statt ihr zu folgen.
 6. **Abrufbarer Wissensindex** (`knowledge/index.py`, Phase 1) - eine
    reale, lokale TF-IDF-Suchmaschine (tokenize/build_index/search),
    unverändert portiert aus dem bereits getesteten `index.py` von
@@ -244,7 +245,8 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 ├── src/hydra_umc_local_technician/
 │   ├── policy/
 │   │   ├── risk_levels.py    # RiskLevel + RiskLevelPolicy: die sechs Stufen, reale Richtlinie pro Stufe
-│   │   └── tool_matrix.py    # TOOL_MATRIX: die feste, reale Werkzeug-Positivliste (10 OBSERVE-Namen)
+│   │   ├── tool_matrix.py    # TOOL_MATRIX: die feste, reale Werkzeug-Positivliste (10 OBSERVE-Namen)
+│   │   └── execution_mode.py # ExecutionMode + decide(): standardmäßig nur Diagnose; das Verlassen erfordert eine protokollierte, verifizierte menschliche Freigabe
 │   ├── knowledge/
 │   │   ├── redaction.py      # Reale Geheimnis-Schwärzung, portiert aus HYDRA-UMC-OPS-AGENT
 │   │   ├── trust.py          # UntrustedText + build_tool_request_from_model_output(): die Injection-Abwehrgrenze
@@ -254,7 +256,8 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   └── dispatch.py       # dispatch_tool_request(): führt einen validierten ToolRequest real aus, liefert ein reales ToolResult
 │   ├── escalation/            # Phase 4 - realer Aufbau von EvidenceBundle + Konstruktion von MaintenanceProposal, vollständig
 │   │   ├── evidence.py       # assemble_evidence_bundle(): echte ToolResults -> ein reales, vertragskonformes EvidenceBundle
-│   │   └── proposal.py       # propose_maintenance(): realer Konstruktor/Validator für MaintenanceProposal, niemals ein Generator
+│   │   ├── proposal.py       # propose_maintenance(): realer Konstruktor/Validator für MaintenanceProposal, niemals ein Generator
+│   │   └── outbox.py         # EscalationOutbox: dauerhafte lokale Warteschlange, die einen Netzausfall übersteht
 │   ├── contracts.py           # Realer, nur-stdlib Validator für die fünf Minimalverträge
 │   └── cli.py                 # Phase 5 - contracts validate, tools list/call, escalation evidence/propose, --version
 ├── contracts/                  # Normative JSON-Schema-Dateien (Draft 2020-12) für die fünf Verträge

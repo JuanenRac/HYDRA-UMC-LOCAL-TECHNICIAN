@@ -4,7 +4,7 @@
 
 # 🤖 HYDRA-UMC-LOCAL-TECHNICIAN
 
-<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | 🇯🇵 <b>日本語</b></p>
+<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | 🇯🇵 <b>日本語</b> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 🛡️ ポリシーで権限を制御されたローカルAI技術者
 
@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/フェーズ-1%2C%203%20%26%204%2F6%20完了-367BF5.svg" alt="全6フェーズ中フェーズ1・3・4完了">
 </p>
 
-> **状態: v0.1.1、機能実装済み - 全6フェーズ中フェーズ1・3・4完了
+> **状態: v0.1.3、機能実装済み - 全6フェーズ中フェーズ1・3・4完了
 > （検索可能な知識、ツールオーケストレーター、エスカレーション）、フェーズ5開始
 > （実際のローカルCLI）。** フェーズ0では、実際のリスクレベル・
 > ポリシー（`policy/risk_levels.py`）、固定のツール許可リスト
@@ -51,7 +51,7 @@
 
 ---
 
-**正直な現状確認 - 今日実際に動くもの:** リスクレベルポリシー(`policy/risk_levels.py`)、固定のツール許可リスト(`policy/tool_matrix.py`)、5 つの契約バリデーター(`contracts.py` + `contracts/*.schema.json`)、インジェクション防御境界(`knowledge/trust.py`、`knowledge/redaction.py`)、ローカルTF-IDF知識インデックス(`knowledge/index.py`、フェーズ1)、宣言済みの10個のOBSERVEツールすべてに実際のハンドラーがある(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)、実際の `EvidenceBundle`/`MaintenanceProposal` 構築(`escalation/evidence.py`、`escalation/proposal.py`、フェーズ4)、そしてそれらすべての上に実際のCLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`、フェーズ5自身の最初のスライス)はテスト済みである(`tests/unit/` と `tests/adversarial/` 全体で 164 件のテストと 30 件のサブテストが成功) - フェーズ1・フェーズ3・フェーズ4は完了し、フェーズ5は開始した。`update.pending` は実際にGitHubを確認するためにオプションの依存関係 `hydra-umc-updater`(`update-check` extra)を必要とし、それがない場合は正直に(`available: false`)劣化する。このリポジトリのどこにも推論エンジン、HYDRA-UMC-SERVER との統合はまだ存在せず、このコードのどこも `MaintenanceProposal` に対してまだ行動を起こせない——下記ロードマップのフェーズ 2、そしてフェーズ5の残り(HYDRA-UMC-SERVERと統合されたAPI、および音声)は依然として完全に願望であり、裏付けとなるコードは一切ない。これまでに何が実際に出荷されたかは `CHANGELOG.md` を参照。
+**正直な現状確認 - 今日実際に動くもの:** リスクレベルポリシー(`policy/risk_levels.py`)、固定のツール許可リスト(`policy/tool_matrix.py`)、5 つの契約バリデーター(`contracts.py` + `contracts/*.schema.json`)、インジェクション防御境界(`knowledge/trust.py`、`knowledge/redaction.py`)、ローカルTF-IDF知識インデックス(`knowledge/index.py`、フェーズ1)、宣言済みの10個のOBSERVEツールすべてに実際のハンドラーがある(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)、実際の `EvidenceBundle`/`MaintenanceProposal` 構築(`escalation/evidence.py`、`escalation/proposal.py`、フェーズ4)、そしてそれらすべての上に実際のCLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`、フェーズ5自身の最初のスライス)はテスト済みである(`tests/unit/` と `tests/adversarial/` 全体で 197 件のテストと 30 件のサブテストが成功) - フェーズ1・フェーズ3・フェーズ4は完了し、フェーズ5は開始した。`update.pending` は実際にGitHubを確認するためにオプションの依存関係 `hydra-umc-updater`(`update-check` extra)を必要とし、それがない場合は正直に(`available: false`)劣化する。このリポジトリのどこにも推論エンジン、HYDRA-UMC-SERVER との統合はまだ存在せず、このコードのどこも `MaintenanceProposal` に対してまだ行動を起こせない——下記ロードマップのフェーズ 2、そしてフェーズ5の残り(HYDRA-UMC-SERVERと統合されたAPI、および音声)は依然として完全に願望であり、裏付けとなるコードは一切ない。これまでに何が実際に出荷されたかは `CHANGELOG.md` を参照。
 
 ---
 
@@ -112,6 +112,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN は HYDRA-UMC エコシステム自身のための専
    `OrchestratorConfig` を通じて解決される短いシンボル名だけであり、
    毒された文書自身のテキストが任意の実在ターゲットを名指しすること
    は決してなく、すでに許可リストに載った名前だけです。
+   ハンドラが返すものは境界で上限が設けられ、秘密情報が伏せられます。プロセスのコマンドライン、知識の抜粋、証拠パッケージのログ行は `logs.read` と同じ秘密情報の伏せ字処理を通り、`manifest.read` は短い文字列を 4 つだけ返し、`network.connectivity` はリダイレクトに従わず報告します。
 6. **検索可能な知識インデックス**（`knowledge/index.py`、フェーズ1）
    - 実際のローカルTF-IDF検索エンジン(tokenize/build_index/search)で、
    HYDRA-UMC-DOCS-QA 自身のすでにテスト済みの `index.py` から変更なし
@@ -217,7 +218,8 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 ├── src/hydra_umc_local_technician/
 │   ├── policy/
 │   │   ├── risk_levels.py    # RiskLevel + RiskLevelPolicy: 6つのレベル、レベルごとの実際のポリシー
-│   │   └── tool_matrix.py    # TOOL_MATRIX: 固定かつ実在するツール許可リスト（10個の OBSERVE 名）
+│   │   ├── tool_matrix.py    # TOOL_MATRIX: 固定かつ実在するツール許可リスト（10個の OBSERVE 名）
+│   │   └── execution_mode.py # ExecutionMode + decide(): 既定は診断のみ。解除には記録され検証された人間の承認が必要
 │   ├── knowledge/
 │   │   ├── redaction.py      # 実際の機密情報マスキング、HYDRA-UMC-OPS-AGENT から移植
 │   │   ├── trust.py          # UntrustedText + build_tool_request_from_model_output(): インジェクション防御境界
@@ -227,7 +229,8 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   └── dispatch.py       # dispatch_tool_request(): 検証済みの ToolRequest を実際に実行し、実際の ToolResult を返す
 │   ├── escalation/            # フェーズ4 - 実際の EvidenceBundle 組み立て + MaintenanceProposal 構築、完了
 │   │   ├── evidence.py       # assemble_evidence_bundle(): 実際の ToolResult -> 契約に適合する実際の EvidenceBundle
-│   │   └── proposal.py       # propose_maintenance(): MaintenanceProposal の実際のコンストラクタ・バリデータ、生成器では決してない
+│   │   ├── proposal.py       # propose_maintenance(): MaintenanceProposal の実際のコンストラクタ・バリデータ、生成器では決してない
+│   │   └── outbox.py         # EscalationOutbox: ネットワーク停止を生き延びる永続的なローカルキュー
 │   ├── contracts.py           # 5つの最小契約のための実際の標準ライブラリのみのバリデータ
 │   └── cli.py                 # フェーズ5 - contracts validate、tools list/call、escalation evidence/propose、--version
 ├── contracts/                  # 5つの契約のための規範的な JSON Schema ファイル（draft 2020-12）

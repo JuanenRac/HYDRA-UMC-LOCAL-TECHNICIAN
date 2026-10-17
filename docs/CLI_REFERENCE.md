@@ -117,7 +117,9 @@ on the wire). Omitted, this defaults to `default_config()` - the real,
 documented CM5 defaults. There is no way to name a raw path/host/port on
 the command line itself: every symbolic name `tools call` can ever
 resolve still has to already be in this config, the exact same
-allow-list boundary every test already exercises.
+allow-list boundary every test already exercises. A config file that is
+missing, is not JSON or has the wrong shape is refused in one line
+(`REFUSED: invalid --config <path>: <reason>` to stderr, exit `1`).
 
 ### Example
 

@@ -67,7 +67,9 @@ this reason.
 """
 from __future__ import annotations
 
+import http.client
 import json
+import os
 import shutil
 import socket
 import subprocess
@@ -82,7 +84,7 @@ from typing import Any
 from .. import __version__
 from ..contracts import validate
 from ..knowledge import index as knowledge_index
-from ..knowledge.redaction import redact_lines
+from ..knowledge.redaction import redact_lines, redact_secrets
 from ..knowledge.trust import ToolRequest, UntrustedText
 from ..policy.tool_matrix import lookup_tool
 from .allowlist import OrchestratorConfig, UnknownAllowlistEntry
@@ -195,6 +197,19 @@ def _handle_network_port_status(config: OrchestratorConfig, arguments: dict[str,
 _SUPPORTED_HTTP_SCHEMES = ("http", "https")
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """The check is "does THIS allow-listed endpoint answer", so a redirect
+    is the answer, not an instruction to go somewhere else: following it
+    would let a misbehaving endpoint send this probe to a host (or an
+    `ftp:` URL) nobody put on the allow-list."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: D401 - stdlib hook
+        return None
+
+
+_NO_REDIRECT_OPENER = urllib.request.build_opener(_NoRedirect)
+
+
 def _handle_network_connectivity(config: OrchestratorConfig, arguments: dict[str, Any]) -> tuple[dict[str, Any], str]:
     # Distinct real check from network.port_status above: a real HTTP GET
     # against an allow-listed URL, reporting the endpoint's own real
@@ -215,7 +230,7 @@ def _handle_network_connectivity(config: OrchestratorConfig, arguments: dict[str
         return output, f"rejected {url!r} before ever calling urlopen() - unsupported scheme"
     timeout_s = 3.0
     try:
-        with urllib.request.urlopen(url, timeout=timeout_s) as response:  # noqa: S310 - scheme already restricted above
+        with _NO_REDIRECT_OPENER.open(url, timeout=timeout_s) as response:  # noqa: S310 - scheme already restricted above
             status_code = response.getcode()
         output = {"name": name, "url": url, "reachable": True, "status_code": status_code, "reason": None}
         return output, f"urlopen({url!r}, timeout={timeout_s}) -> HTTP {status_code}"
@@ -225,9 +240,15 @@ def _handle_network_connectivity(config: OrchestratorConfig, arguments: dict[str
         # never got a response at all (URLError below).
         output = {"name": name, "url": url, "reachable": True, "status_code": exc.code, "reason": f"HTTP {exc.code}"}
         return output, f"urlopen({url!r}, timeout={timeout_s}) -> HTTP {exc.code} (endpoint answered, with an error status)"
-    except urllib.error.URLError as exc:
-        output = {"name": name, "url": url, "reachable": False, "status_code": None, "reason": str(exc.reason)}
-        return output, f"urlopen({url!r}, timeout={timeout_s}) failed: {exc.reason}"
+    except (urllib.error.URLError, http.client.HTTPException, OSError, ValueError) as exc:
+        # A timeout while reading the status line or a connection reset
+        # surfaces as a bare OSError, and a malformed status line as an
+        # http.client.HTTPException - all of them mean "this endpoint did
+        # not answer properly", which is the honest result of this probe,
+        # not a tool failure.
+        reason = getattr(exc, "reason", None) or str(exc)
+        output = {"name": name, "url": url, "reachable": False, "status_code": None, "reason": str(reason)}
+        return output, f"urlopen({url!r}, timeout={timeout_s}) failed: {reason}"
 
 
 def _handle_system_temperature(config: OrchestratorConfig, arguments: dict[str, Any]) -> tuple[dict[str, Any], str]:
@@ -270,15 +291,34 @@ def _handle_service_status(config: OrchestratorConfig, arguments: dict[str, Any]
     return output, f"systemctl is-active {unit}: {detail}"
 
 
+# manifest.read returns four short descriptive fields, nothing else: a
+# manifest is a file in a repository checkout, so what it holds is data
+# this technician does not control - an oversized file or a field that is
+# not a short string is reported as absent instead of being copied into
+# a ToolResult that later becomes evidence.
+_MANIFEST_MAX_BYTES = 1_000_000
+_MANIFEST_FIELD_MAX_CHARS = 200
+
+
+def _short_text(value: Any) -> str | None:
+    if isinstance(value, str) and len(value) <= _MANIFEST_FIELD_MAX_CHARS:
+        return value
+    return None
+
+
 def _handle_manifest_read(config: OrchestratorConfig, arguments: dict[str, Any]) -> tuple[dict[str, Any], str]:
     project = arguments.get("project")
     if not isinstance(project, str) or not project:
         raise UnknownAllowlistEntry("manifest.read requires a non-empty 'project' argument")
     manifest_path = config.resolve_project_manifest_path(project)
     try:
+        if manifest_path.stat().st_size > _MANIFEST_MAX_BYTES:
+            output = {"project": project, "found": False, "reason": f"manifest is larger than {_MANIFEST_MAX_BYTES} bytes"}
+            return output, f"read {manifest_path}: refused, too large"
         raw = manifest_path.read_text(encoding="utf-8")
         manifest = json.loads(raw)
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError) as exc:
+        # ValueError covers both malformed JSON and bytes that are not UTF-8.
         output = {"project": project, "found": False, "reason": str(exc)}
         return output, f"read {manifest_path}: failed ({exc})"
     if not isinstance(manifest, dict):
@@ -287,10 +327,10 @@ def _handle_manifest_read(config: OrchestratorConfig, arguments: dict[str, Any])
     output = {
         "project": project,
         "found": True,
-        "name": manifest.get("name"),
-        "version": manifest.get("version"),
-        "maturity": manifest.get("maturity"),
-        "role": manifest.get("role"),
+        "name": _short_text(manifest.get("name")),
+        "version": _short_text(manifest.get("version")),
+        "maturity": _short_text(manifest.get("maturity")),
+        "role": _short_text(manifest.get("role")),
     }
     return output, f"read {manifest_path}"
 
@@ -301,6 +341,17 @@ def _handle_manifest_read(config: OrchestratorConfig, arguments: dict[str, Any])
 # already applies.
 _KNOWLEDGE_SEARCH_DEFAULT_TOP_K = 5
 _KNOWLEDGE_SEARCH_MAX_TOP_K = 20
+# One chunk can be a whole indexed file (up to 4 MiB of JSON), so each
+# returned excerpt is cut to this many characters - a search result is a
+# pointer to where to read, not a way to move a whole file into a ToolResult.
+_KNOWLEDGE_SEARCH_MAX_EXCERPT_CHARS = 4000
+
+
+def _excerpt(text: str) -> str:
+    """The indexed text as a bounded, secret-redacted excerpt, still typed
+    as untrusted: redaction narrows what leaves this module (the same
+    guarantee logs.read gives), it does not make the content trustworthy."""
+    return UntrustedText(text[:_KNOWLEDGE_SEARCH_MAX_EXCERPT_CHARS]).redacted()
 
 
 def _handle_knowledge_search(config: OrchestratorConfig, arguments: dict[str, Any]) -> tuple[dict[str, Any], str]:
@@ -341,7 +392,8 @@ def _handle_knowledge_search(config: OrchestratorConfig, arguments: dict[str, An
                 # output already only ever does so through
                 # build_tool_request_from_model_output(), which has no
                 # path that accepts this field at all.
-                "text": str(UntrustedText(result.chunk.text)),
+                "text": _excerpt(result.chunk.text),
+                "textTruncated": len(result.chunk.text) > _KNOWLEDGE_SEARCH_MAX_EXCERPT_CHARS,
             }
             for result in results
         ],
@@ -409,9 +461,10 @@ def _handle_logs_read(config: OrchestratorConfig, arguments: dict[str, Any]) -> 
 # unbounded count; a pattern that somehow matches more says something is
 # already wrong and is itself worth surfacing via `truncated`.
 _PROCESS_LIST_MAX_MATCHES = 20
+_PROCESS_CMDLINE_MAX_CHARS = 2000
 
 
-def _list_proc_matches(pattern: str) -> tuple[list[dict[str, Any]], bool]:
+def _list_proc_matches(pattern: str, proc_dir: Path | None = None) -> tuple[list[dict[str, Any]], bool]:
     """Real, read-only /proc enumeration - the same mechanism `ps` itself
     is built on, with no subprocess spawned. Each match is a real PID
     whose real cmdline (as the kernel itself reports it, never the
@@ -421,7 +474,8 @@ def _list_proc_matches(pattern: str) -> tuple[list[dict[str, Any]], bool]:
     never an error. Returns (matches, truncated)."""
     matches: list[dict[str, Any]] = []
     truncated = False
-    proc_dir = Path("/proc")
+    proc_dir = proc_dir if proc_dir is not None else Path("/proc")
+    own_pid = os.getpid()
     for entry in sorted(proc_dir.iterdir(), key=lambda p: p.name):
         if not entry.name.isdigit():
             continue
@@ -430,12 +484,14 @@ def _list_proc_matches(pattern: str) -> tuple[list[dict[str, Any]], bool]:
         except OSError:
             continue
         cmdline = raw.decode("utf-8", errors="replace").replace("\x00", " ").strip()
-        if pattern not in cmdline:
-            continue
+        if pattern not in cmdline or int(entry.name) == own_pid:
+            continue  # this technician's own command line names the pattern it was asked about
         if len(matches) >= _PROCESS_LIST_MAX_MATCHES:
             truncated = True
             break
-        matches.append({"pid": int(entry.name), "cmdline": cmdline})
+        # A command line is where `--token X` / `--password X` live, and
+        # unlike a log it is never reviewed by anyone before it is shown.
+        matches.append({"pid": int(entry.name), "cmdline": redact_secrets(cmdline)[:_PROCESS_CMDLINE_MAX_CHARS]})
     return matches, truncated
 
 
@@ -488,8 +544,13 @@ def _handle_update_pending(config: OrchestratorConfig, arguments: dict[str, Any]
         return output, f"could not read/parse {manifest_path}: {exc}"
 
     entry = _updater_entry_from_manifest(manifest)
-    local_major, local_minor, local_patch = (int(part) for part in manifest.version.split("."))
-    local_version = _UpdaterVersion(local_major, local_minor, local_patch)
+    try:
+        # The updater's own parser, so MAJOR.MINOR.PATCH and the four-part
+        # MAJOR.MINOR.PATCH.BUILD form (0.8.0.0) are both understood.
+        local_version = _UpdaterVersion.from_string(manifest.version)
+    except ValueError as exc:
+        output = {"project": project, "available": True, "found": False, "reason": str(exc), "pending": None}
+        return output, f"{manifest_path} has a version this check cannot read: {exc}"
 
     remote_results = _updater_fetch_all([entry])
     remote_status = remote_results.get(entry.name)

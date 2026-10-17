@@ -256,13 +256,23 @@ def ingest_source_directory(root: Path) -> IngestResult:
     indexed: list[str] = []
     skipped: list[str] = []
     for path in candidates:
-        source = _canonical_source(path, root)
+        try:
+            source = _canonical_source(path, root)
+        except (ValueError, OSError):
+            # A symlink inside the allow-listed root that points outside
+            # it: the allow-list is the root, so what it points at is not
+            # part of the knowledge source - skipped by name, never read,
+            # and never allowed to abort the whole search.
+            skipped.append(path.relative_to(root).as_posix())
+            continue
         try:
             if path.stat().st_size > MAX_DOCUMENT_BYTES:
                 skipped.append(source)
                 continue
             text = path.read_text(encoding="utf-8")
-        except OSError:
+        except (OSError, UnicodeDecodeError):
+            # One file that is not valid UTF-8 (a Latin-1 export, a binary
+            # saved as .md) must not take the other 499 down with it.
             skipped.append(source)
             continue
         if path.suffix == ".json":

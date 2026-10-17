@@ -33,6 +33,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from ..contracts import validate
+from ..knowledge.redaction import redact_lines
 
 # The real default this module falls back to when a caller has no local
 # validation of its own to report - an honest statement of scope, never a
@@ -121,6 +122,13 @@ def assemble_evidence_bundle(
             relevant_manifests.append(f"{output.get('project')}: {json.dumps(output, sort_keys=True, ensure_ascii=False)}")
         if item.tool == "logs.read" and isinstance(output.get("lines"), list):
             redacted_log_excerpts.extend(str(line) for line in output["lines"])
+
+    # The bundle leaves this process (it is what gets escalated), and the
+    # ToolResult files it is built from may have been stored, copied or
+    # edited since logs.read redacted them - so the guarantee is made
+    # again here, at the last step. Redaction is idempotent: lines that
+    # were already clean come out unchanged.
+    redacted_log_excerpts = redact_lines(redacted_log_excerpts)
 
     bundle = {
         "componentVersions": component_versions,

@@ -42,7 +42,7 @@ def _cmd_contracts_validate(args: argparse.Namespace) -> int:
     path = Path(args.payload_file)
     try:
         raw = path.read_text(encoding="utf-8")
-    except OSError as exc:
+    except (OSError, UnicodeDecodeError) as exc:
         print(f"INVALID: could not read {path}: {exc}", file=sys.stderr)
         return 1
     try:
@@ -105,7 +105,13 @@ def _parse_argument_value(raw: str) -> Any:
 
 
 def _cmd_tools_call(args: argparse.Namespace) -> int:
-    config = _load_config(args.config)
+    try:
+        config = _load_config(args.config)
+    except (OSError, ValueError, TypeError, KeyError, IndexError, AttributeError) as exc:
+        # A config file that is missing, not JSON, or shaped wrongly is an
+        # operator mistake to report in one line, not a traceback.
+        print(f"REFUSED: invalid --config {args.config}: {exc}", file=sys.stderr)
+        return 1
     arguments: dict[str, Any] = {}
     for spec in args.arg or ():
         name, sep, value = spec.partition("=")

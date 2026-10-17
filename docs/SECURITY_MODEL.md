@@ -115,6 +115,18 @@ marker:
   array, tracked with real bracket depth rather than a regex that
   cannot reliably match balanced structures.
 
+Redaction is applied where data leaves a handler or this process, not
+only to logs: the lines `logs.read` returns, the command line of every
+process `process.list` reports (that is where `--token X` lives), the
+excerpt of every `knowledge.search` match (each also cut to a bounded
+length), and the log excerpts of an `EvidenceBundle` when it is
+assembled, because the `ToolResult` files it is built from may have been
+stored or edited since they were produced. `manifest.read` never copies
+a manifest into its result: it returns four short strings and nothing
+else. `network.connectivity` reports a redirect as the endpoint's
+answer and never follows it, so an allow-listed endpoint cannot send
+the probe to a host nobody listed.
+
 This is a deliberately fixed, explicit list of real, well-known secret
 shapes - never a fuzzy "looks random enough" heuristic, which would
 invite both false positives (destroying real diagnostic value in an

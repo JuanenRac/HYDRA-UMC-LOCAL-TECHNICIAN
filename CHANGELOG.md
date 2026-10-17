@@ -9,6 +9,18 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.1.3] - Redaction and bounds at every boundary, durable outbox
+
+- `network.connectivity` no longer follows a redirect: it reports the redirect status as the endpoint's answer, so an allow-listed endpoint cannot send the probe to a host or an `ftp:` URL nobody listed. A connection reset or a malformed status line now reads as "unreachable" instead of a tool error.
+- `process.list` redacts secrets in each command line (that is where `--token X` and `--password X` live) and bounds its length, and no longer reports the technician's own process as a match.
+- `knowledge.search` redacts and bounds each returned excerpt (`textTruncated` says when it was cut), and the index no longer aborts when one file is not valid UTF-8 or a symlink under the root points outside it: those files are skipped and listed.
+- `manifest.read` refuses a manifest over 1 MB, treats one that is not UTF-8 as not found, and returns only short strings for its four fields.
+- `update.pending` understands four-component versions (0.8.0.0) by using the updater's own parser, and reports an unreadable local version instead of failing.
+- The escalation outbox writes each entry durably (flushed to disk before the rename), cleans up after a payload that cannot be serialised, and moves an unreadable or badly named entry to `corrupt/` instead of letting it block every escalation queued behind it.
+- An evidence bundle redacts its log excerpts again when it is assembled, because the tool results it is built from may have been stored or edited since `logs.read` redacted them.
+- The CLI reports an unreadable or malformed `--config`, and a payload that is not UTF-8, in one line instead of a traceback.
+- Added 23 tests for all of the above (197 in total); documented the redaction scope and the config error; added the Portuguese README and the execution-mode and outbox modules to the directory tree of every README.
+
 ## [0.1.2] - Diagnosis-only mode and an outage-proof escalation queue
 
 - **`policy/execution_mode.py`:** `DIAGNOSIS_ONLY` is the default and refuses every action
