@@ -1,7 +1,7 @@
 # =============================================================================
 # HYDRA-UMC-LOCAL-TECHNICIAN - src/hydra_umc_local_technician/policy/risk_levels.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The six risk levels this technician defines - the single
 non-negotiable principle behind all of them: the AI never gets authority

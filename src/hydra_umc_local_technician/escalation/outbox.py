@@ -1,7 +1,7 @@
 # =============================================================================
 # HYDRA-UMC-LOCAL-TECHNICIAN - src/hydra_umc_local_technician/escalation/outbox.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """A local queue of escalations that survives a network outage.
 

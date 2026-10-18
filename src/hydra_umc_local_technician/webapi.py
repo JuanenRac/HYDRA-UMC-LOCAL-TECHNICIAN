@@ -1,7 +1,7 @@
 # =============================================================================
 # HYDRA-UMC-LOCAL-TECHNICIAN - src/hydra_umc_local_technician/webapi.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Fase 5: a local, read-only HTTP API and a single-page web UI over what the
 technician has already produced.

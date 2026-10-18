@@ -9,13 +9,13 @@
 ### 🛡️ Técnico de manutenção com IA, local e regido por políticas
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="núcleo só com a biblioteca padrão">
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20of%206%20complete-367BF5.svg" alt="Fases 1, 3 e 4 de 6 concluídas">
 </p>
 
-> **Estado: v0.1.5, funcional - Fases 1, 3 e 4 de 6 concluídas
+> **Estado: v0.1.6, funcional - Fases 1, 3 e 4 de 6 concluídas
 > (conhecimento recuperável, orquestrador de ferramentas, escalonamento),
 > Fase 5 iniciada (uma CLI local real, uma API local só de leitura e uma página web).** A Fase 0
 > definiu a política real de níveis de risco (`policy/risk_levels.py`), uma
@@ -441,5 +441,5 @@ Este projeto faz parte do ecossistema de robótica HYDRA-UMC do mesmo autor (Jua
 
 ## 📜 LICENÇA
 
-GPL-3.0 (software) / CC BY-SA 4.0 (documentação) - veja [LICENSE.md](LICENSE.md).
+GPL-3.0-or-later (software) / CC BY-SA 4.0 (documentação) - veja [LICENSE.md](LICENSE.md).
 

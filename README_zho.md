@@ -9,13 +9,13 @@
 ### 🛡️ 由策略限权的本地 AI 技术员
 
 <p align="center">
-  <img src="https://img.shields.io/badge/许可证-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/许可证-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/语言-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/核心-仅标准库-brightgreen.svg" alt="仅标准库核心">
   <img src="https://img.shields.io/badge/阶段-1%2C%203%20%26%204%2F6%20已完成-367BF5.svg" alt="第 1、3、4 阶段（共 6 阶段）已完成">
 </p>
 
-> **状态：v0.1.5，功能可用 - 六阶段计划中的第 1、3、4 阶段已完成（可检索知识、
+> **状态：v0.1.6，功能可用 - 六阶段计划中的第 1、3、4 阶段已完成（可检索知识、
 > 工具编排器、升级上报），第 5 阶段已启动（一个真实的本地 CLI、一个只读的本地 API 和网页）。**
 > 第 0 阶段定义了真实的风险等级策略（`policy/risk_levels.py`）、一份固定的
 > 工具白名单（`policy/tool_matrix.py`）、未来每一次工具调用都必须校验通过的
@@ -390,4 +390,4 @@ CHANGELOG - 它并**不**运行测试套件；要运行完整的本地测试套�
 
 ## 📜 许可证
 
-GPL-3.0（软件）/ CC BY-SA 4.0（文档）- 详见 [LICENSE.md](LICENSE.md)。
+GPL-3.0-or-later（软件）/ CC BY-SA 4.0（文档）- 详见 [LICENSE.md](LICENSE.md)。

@@ -1,7 +1,7 @@
 # =============================================================================
 # HYDRA-UMC-LOCAL-TECHNICIAN - tests/adversarial/test_injection_defense.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Fase 0's own literal exit criterion: a test proves a malicious
 retrieved source can never trigger a tool execution or reveal a secret.

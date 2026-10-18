@@ -1,7 +1,7 @@
 # =============================================================================
 # HYDRA-UMC-LOCAL-TECHNICIAN - src/hydra_umc_local_technician/knowledge/trust.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Fase 0's own literal exit criterion: a real test proves a malicious
 retrieved source can never trigger command execution or reveal a secret.

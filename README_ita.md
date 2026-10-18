@@ -9,13 +9,13 @@
 ### 🛡️ Tecnico IA Locale con Permessi Controllati da Politica
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Licenza-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/Licenza-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Linguaggio-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Nucleo-solo%20stdlib-brightgreen.svg" alt="Nucleo solo stdlib">
   <img src="https://img.shields.io/badge/Fase-1%2C%203%20%26%204%20di%206%20complete-367BF5.svg" alt="Fasi 1, 3 e 4 di 6 complete">
 </p>
 
-> **Stato: v0.1.5, funzionale - Fasi 1, 3 e 4 di 6 complete (conoscenza
+> **Stato: v0.1.6, funzionale - Fasi 1, 3 e 4 di 6 complete (conoscenza
 > recuperabile, orchestratore di strumenti, escalation), Fase 5 avviata
 > (una vera CLI locale, un'API locale di sola lettura e una pagina web).** La Fase 0 ha
 > definito la politica reale dei livelli di rischio
@@ -451,4 +451,4 @@ Questo progetto fa parte dell'ecosistema robotico HYDRA-UMC dello stesso autore 
 
 ## 📜 LICENZA
 
-GPL-3.0 (software) / CC BY-SA 4.0 (documentazione) - vedi [LICENSE.md](LICENSE.md).
+GPL-3.0-or-later (software) / CC BY-SA 4.0 (documentazione) - vedi [LICENSE.md](LICENSE.md).

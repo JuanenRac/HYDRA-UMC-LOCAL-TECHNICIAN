@@ -1,7 +1,7 @@
 # =============================================================================
 # HYDRA-UMC-LOCAL-TECHNICIAN - tests/unit/test_proposal.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Fase 4's MaintenanceProposal half - grounding against real ToolResults,
 same real-not-mocked convention as test_dispatch.py/test_evidence.py."""

@@ -9,13 +9,13 @@
 ### 🛡️ Lokaler KI-Techniker mit Richtlinien-Gesteuerten Berechtigungen
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Lizenz-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/Lizenz-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Sprache-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Kern-nur%20stdlib-brightgreen.svg" alt="Nur-stdlib-Kern">
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20von%206%20abgeschlossen-367BF5.svg" alt="Phasen 1, 3 und 4 von 6 abgeschlossen">
 </p>
 
-> **Status: v0.1.5, funktionsfähig - Phasen 1, 3 und 4 von 6
+> **Status: v0.1.6, funktionsfähig - Phasen 1, 3 und 4 von 6
 > abgeschlossen (abrufbares Wissen, Werkzeug-Orchestrator, Eskalation),
 > Phase 5 begonnen (eine echte lokale CLI, eine schreibgeschützte lokale API und Webseite).**
 > Phase 0 definierte die reale Risikostufen-Richtlinie
@@ -470,4 +470,4 @@ Dieses Projekt ist Teil des HYDRA-UMC-Robotik-Ökosystems desselben Autors (Juan
 
 ## 📜 LIZENZ
 
-GPL-3.0 (Software) / CC BY-SA 4.0 (Dokumentation) - siehe [LICENSE.md](LICENSE.md).
+GPL-3.0-or-later (Software) / CC BY-SA 4.0 (Dokumentation) - siehe [LICENSE.md](LICENSE.md).

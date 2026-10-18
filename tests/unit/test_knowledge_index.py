@@ -1,7 +1,7 @@
 # =============================================================================
 # HYDRA-UMC-LOCAL-TECHNICIAN - tests/unit/test_knowledge_index.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Fase 1's own real deliverable: the TF-IDF retrieval kernel ported from
 HYDRA-UMC-DOCS-QA (tokenize/build_index/search, unchanged behavior) and

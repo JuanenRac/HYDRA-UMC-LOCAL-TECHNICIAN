@@ -9,13 +9,13 @@
 ### 🛡️ Local, Policy-Gated AI Maintenance Technician
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="stdlib-only core">
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20of%206%20complete-367BF5.svg" alt="Fases 1, 3 and 4 of 6 complete">
 </p>
 
-> **Status: v0.1.5, functional - Fases 1, 3 and 4 of 6 complete
+> **Status: v0.1.6, functional - Fases 1, 3 and 4 of 6 complete
 > (retrievable knowledge, tool orchestrator, escalation), Fase 5 started
 > (a real local CLI, a read-only local API and web page).** Fase 0
 > defined the real risk-level policy (`policy/risk_levels.py`), a fixed
@@ -430,4 +430,4 @@ This project is part of the HYDRA-UMC robotics ecosystem by the same author (Jua
 
 ## 📜 LICENSE
 
-GPL-3.0 (software) / CC BY-SA 4.0 (documentation) - see [LICENSE.md](LICENSE.md).
+GPL-3.0-or-later (software) / CC BY-SA 4.0 (documentation) - see [LICENSE.md](LICENSE.md).

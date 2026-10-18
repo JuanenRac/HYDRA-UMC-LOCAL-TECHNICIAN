@@ -9,6 +9,11 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.1.6]
+
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
+- The licence is written as GPL-3.0-or-later in every header and in the package metadata.
+
 ## [0.1.5] - A read-only local API and web page
 
 - **`serve`:** a local HTTP API and a single-page web UI over what the technician has already produced: the tool registry, the ToolResult, EvidenceBundle and MaintenanceProposal files of a data directory, the project manifests and the document index of the allow-listed knowledge sources. It answers GET only (every other method gets 405 and its body is never read), writes nothing, runs no tool and calls no model.

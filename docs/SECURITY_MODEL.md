@@ -1,7 +1,7 @@
 <!-- =============================================================================
 HYDRA-UMC-LOCAL-TECHNICIAN - docs/SECURITY_MODEL.md
 Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-GPL-3.0 - see LICENSE
+GPL-3.0-or-later - see LICENSE
 ============================================================================= -->
 
 # Security Model (Fase 0)

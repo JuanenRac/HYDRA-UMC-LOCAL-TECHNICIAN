@@ -1,7 +1,7 @@
 # =============================================================================
 # HYDRA-UMC-LOCAL-TECHNICIAN - tests/unit/test_hardening.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Behaviour at the edges of the OBSERVE tools, the knowledge index, the CLI
 and the escalation outbox: a redirect is not followed, a command line is

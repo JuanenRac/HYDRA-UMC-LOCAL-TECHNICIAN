@@ -1,7 +1,7 @@
 // =============================================================================
 // HYDRA-UMC-LOCAL-TECHNICIAN - webui/app.js
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-// GPL-3.0 - see LICENSE
+// GPL-3.0-or-later - see LICENSE
 // =============================================================================
 // A read-only page: it only ever issues GET requests to this same origin, takes
 // its strings from /i18n/<language>.json, and writes with textContent only.
