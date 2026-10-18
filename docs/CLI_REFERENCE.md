@@ -6,7 +6,7 @@ GPL-3.0 - see LICENSE
 
 # CLI Reference
 
-Three real command families: contract validation (Fase 0), real
+Four real command families: contract validation (Fase 0), real
 OBSERVE-level tool calls (`tools`, Fase 5's own first slice), and real
 `EvidenceBundle`/`MaintenanceProposal` construction (`escalation`, Fase
 4/5). There is still no inference engine and no HYDRA-UMC-SERVER
@@ -165,6 +165,18 @@ command lets you set - it is always exactly what
 in this codebase can act on a printed proposal yet; this command only
 ever builds and validates one.
 
+## `serve --data-dir DIR [--config FILE] [--host 127.0.0.1] [--port 8780] [--token-file FILE]`
+
+Fase 5's read-only local API and web page, described in
+[WEB_API.md](WEB_API.md). `--data-dir` holds `tool-results/`, `evidence/` and
+`proposals/` folders of the JSON the other commands printed; `--config` is the
+same `OrchestratorConfig` file `tools call` takes (the project manifests and
+the document index come from it). It answers GET only and binds to loopback;
+any other `--host` is refused unless a bearer token of at least 24 characters
+is given in `--token-file` or `HYDRA_UMC_LOCAL_TECHNICIAN_TOKEN` (there is no
+option to pass it on the command line). Exits `1` with a one-line `REFUSED` on
+a bad bind, token, port or config; runs until interrupted, then exits `0`.
+
 ## Roadmap: commands later phases will add
 
 Not implemented in this delivery:
@@ -173,5 +185,5 @@ Not implemented in this delivery:
   given contract name, once the schema files are also published as a
   standalone artifact.
 - A real API integrated into HYDRA-UMC-SERVER/Studio, and voice - the
-  rest of Fase 5's own scope beyond the `tools`/`escalation` commands
-  above.
+  rest of Fase 5's own scope beyond the `tools`/`escalation`/`serve`
+  commands above.

@@ -15,9 +15,9 @@
   <img src="https://img.shields.io/badge/フェーズ-1%2C%203%20%26%204%2F6%20完了-367BF5.svg" alt="全6フェーズ中フェーズ1・3・4完了">
 </p>
 
-> **状態: v0.1.4、機能実装済み - 全6フェーズ中フェーズ1・3・4完了
+> **状態: v0.1.5、機能実装済み - 全6フェーズ中フェーズ1・3・4完了
 > （検索可能な知識、ツールオーケストレーター、エスカレーション）、フェーズ5開始
-> （実際のローカルCLI）。** フェーズ0では、実際のリスクレベル・
+> （実際のローカルCLI、読み取り専用のローカルAPIとWebページ）。** フェーズ0では、実際のリスクレベル・
 > ポリシー（`policy/risk_levels.py`）、固定のツール許可リスト
 > （`policy/tool_matrix.py`）、将来のあらゆるツール呼び出しが検証される
 > べき5つの実在する最小契約（`contracts/*.schema.json` + `contracts.py`）、
@@ -51,7 +51,7 @@
 
 ---
 
-**正直な現状確認 - 今日実際に動くもの:** リスクレベルポリシー(`policy/risk_levels.py`)、固定のツール許可リスト(`policy/tool_matrix.py`)、5 つの契約バリデーター(`contracts.py` + `contracts/*.schema.json`)、インジェクション防御境界(`knowledge/trust.py`、`knowledge/redaction.py`)、ローカルTF-IDF知識インデックス(`knowledge/index.py`、フェーズ1)、宣言済みの10個のOBSERVEツールすべてに実際のハンドラーがある(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)、実際の `EvidenceBundle`/`MaintenanceProposal` 構築(`escalation/evidence.py`、`escalation/proposal.py`、フェーズ4)、そしてそれらすべての上に実際のCLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`、フェーズ5自身の最初のスライス)はテスト済みである(`tests/unit/` と `tests/adversarial/` 全体で 211 件のテストと 30 件のサブテストが成功) - フェーズ1・フェーズ3・フェーズ4は完了し、フェーズ5は開始した。`update.pending` は実際にGitHubを確認するためにオプションの依存関係 `hydra-umc-updater`(`update-check` extra)を必要とし、それがない場合は正直に(`available: false`)劣化する。このリポジトリのどこにも推論エンジン、HYDRA-UMC-SERVER との統合はまだ存在せず、このコードのどこも `MaintenanceProposal` に対してまだ行動を起こせない——下記ロードマップのフェーズ 2、そしてフェーズ5の残り(HYDRA-UMC-SERVERと統合されたAPI、および音声)は依然として完全に願望であり、裏付けとなるコードは一切ない。これまでに何が実際に出荷されたかは `CHANGELOG.md` を参照。
+**正直な現状確認 - 今日実際に動くもの:** リスクレベルポリシー(`policy/risk_levels.py`)、固定のツール許可リスト(`policy/tool_matrix.py`)、5 つの契約バリデーター(`contracts.py` + `contracts/*.schema.json`)、インジェクション防御境界(`knowledge/trust.py`、`knowledge/redaction.py`)、ローカルTF-IDF知識インデックス(`knowledge/index.py`、フェーズ1)、宣言済みの10個のOBSERVEツールすべてに実際のハンドラーがある(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)、実際の `EvidenceBundle`/`MaintenanceProposal` 構築(`escalation/evidence.py`、`escalation/proposal.py`、フェーズ4)、そしてそれらすべての上に実際のCLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`、フェーズ5自身の最初のスライス)はテスト済みである(`tests/unit/` と `tests/adversarial/` 全体で 255 件のテストと 30 件のサブテストが成功) - フェーズ1・フェーズ3・フェーズ4は完了し、フェーズ5は開始した。`update.pending` は実際にGitHubを確認するためにオプションの依存関係 `hydra-umc-updater`(`update-check` extra)を必要とし、それがない場合は正直に(`available: false`)劣化する。このリポジトリのどこにも推論エンジン、HYDRA-UMC-SERVER との統合はまだ存在せず、このコードのどこも `MaintenanceProposal` に対してまだ行動を起こせない——下記ロードマップのフェーズ 2、そしてフェーズ5の残り(HYDRA-UMC-SERVERと統合されたAPI、および音声)は依然として完全に願望であり、裏付けとなるコードは一切ない。これまでに何が実際に出荷されたかは `CHANGELOG.md` を参照。
 
 ---
 
@@ -232,7 +232,9 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   ├── proposal.py       # propose_maintenance(): MaintenanceProposal の実際のコンストラクタ・バリデータ、生成器では決してない
 │   │   └── outbox.py         # EscalationOutbox: ネットワーク停止を生き延びる永続的なローカルキュー
 │   ├── contracts.py           # 5つの最小契約のための実際の標準ライブラリのみのバリデータ
-│   └── cli.py                 # フェーズ5 - contracts validate、tools list/call、escalation evidence/propose、--version
+│   ├── cli.py                 # フェーズ5 - contracts validate、tools list/call、escalation evidence/propose、--version, serve
+│   ├── webapi.py              # 読み取り専用のローカルAPI：GET のみ、既定はループバック、ループバック以外はトークン必須、マスク済みで上限付き
+│   └── webui/                 # オフラインで動く単一ページUI：index.html、app.js、app.css、8言語の i18n/
 ├── contracts/                  # 5つの契約のための規範的な JSON Schema ファイル（draft 2020-12）
 ├── tests/
 │   ├── unit/                   # 上記各モジュールの実際のテスト
@@ -317,6 +319,8 @@ Windows の場合: `build.bat`、続いて `run.bat contracts validate ...` /
   します。意図的にこの1つのリポジトリ内にあるものだけに範囲を限定して
   います。HYDRA-UMC-SERVERと統合されたAPIおよび音声は、将来のリリース
   のための別個の、リポジトリをまたいだ作業のままです。
+
+- **フェーズ5 - 読み取り専用のローカルAPIとWebページ（第2弾）。** `serve`（`webapi.py`、`webui/`）は、技術者がすでに生成したもの（ツール一覧、データディレクトリにある ToolResult・EvidenceBundle・MaintenanceProposal の各ファイル、プロジェクトのマニフェスト、許可された知識ソースのドキュメント索引）を表示します。応答するのは GET のみ（他のメソッドは 405）、指定がなければ `127.0.0.1` で待ち受け、それ以外では 24 文字以上の Bearer トークンを必須とし、リクエストのパスを連結せずフォルダを列挙して項目を見つけ、CLI と同じ方法ですべての応答をマスクし、すべてのサイズに上限を設けます。単一ページはインターネットからの取得を一切必要とせず、英語・スペイン語・ドイツ語・フランス語・イタリア語・日本語・中国語・ポルトガル語（ポルトガル）で利用できます。[docs/WEB_API.md](docs/WEB_API.md) を参照してください。
 
 フェーズ2、そしてフェーズ5の残りはこのリポジトリにまだ存在しません - 残る各フェーズが
 明示的に含むもの・除外するものについては

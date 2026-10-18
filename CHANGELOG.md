@@ -9,6 +9,16 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.1.5] - A read-only local API and web page
+
+- **`serve`:** a local HTTP API and a single-page web UI over what the technician has already produced: the tool registry, the ToolResult, EvidenceBundle and MaintenanceProposal files of a data directory, the project manifests and the document index of the allow-listed knowledge sources. It answers GET only (every other method gets 405 and its body is never read), writes nothing, runs no tool and calls no model.
+- **Access:** it binds to `127.0.0.1`; any other address is refused unless a bearer token of at least 24 characters is set (from a file or the environment, never from the command line, compared in constant time); on loopback a Host header that is not a loopback name is refused.
+- **Contained:** items are found by listing their folder and matching the id, so `..`, encoded separators, absolute paths and links match nothing; a document is served only if the index listed it; a file over 1 MiB is refused, lists are paged and capped at 500 entries, and a document answer is cut at 200,000 characters and says so. Every answer goes through the same redaction as the CLI.
+- **The page:** it needs nothing from the internet and works offline (a Content-Security-Policy allows only its own origin), is keyboard and screen-reader friendly, adapts to narrow screens and to light and dark colours, and is available in English, Spanish, German, French, Italian, Japanese, Chinese and European Portuguese with the browser language as the first choice.
+- **Redaction was quadratic:** the patterns that start with an identifier-like run rescanned the rest of the run from every position, so a megabyte of letters in a log, document or result took days to redact. They now start only at the beginning of a run and the URL patterns bound each part (a password over 1024 characters inside a URL is the one thing left unredacted); a megabyte now takes under a second.
+- **Docs:** new `docs/WEB_API.md`; the README in eight languages, the CLI reference and the security model describe the new command and its limits.
+- 255 tests: every endpoint, refused methods, path traversal, oversized items and lists, redaction, the token and Host rules, the page's offline and accessibility guarantees and the eight language files.
+
 ## [0.1.4] - Secrets stay out of every output, proposals need real evidence
 
 - **Redaction:** a secret given as a separate command-line argument (`--token VALUE`, `-api-key VALUE`), which is the usual way, was not redacted although the changelog and a comment said it was. It is now, together with Basic authorization, cookies, GitHub/Slack/AWS/API-key shaped tokens and tokens used as a URL userinfo.

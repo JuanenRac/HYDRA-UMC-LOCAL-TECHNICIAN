@@ -47,8 +47,16 @@ _SECRET_KEY_NAMES = (
     "credential", "credentials",
     "ssh_key", "sshkey",
 )
+#
+# Every pattern that begins with an identifier-like run starts with a
+# lookbehind that forbids a character of that run right before it: without it
+# the engine tries every start inside a long run and rescans the rest of the
+# run each time, which is quadratic (a megabyte of letters took days).
+# The URL patterns also bound the length of each part, for the same reason (a
+# long run of `x://` pieces with no `@`): a password over 1024 characters in a
+# URL is the one thing this leaves unredacted.
 _KEY_VALUE_RE = re.compile(
-    r"(?P<key>[A-Za-z0-9_-]*(?:" + "|".join(_SECRET_KEY_NAMES) + r")[A-Za-z0-9_-]*\s*[:=]\s*)"
+    r"(?<![A-Za-z0-9_-])(?P<key>[A-Za-z0-9_-]*(?:" + "|".join(_SECRET_KEY_NAMES) + r")[A-Za-z0-9_-]*\s*[:=]\s*)"
     # Quoted value: anything up to the matching closing quote, so a real
     # quoted secret containing spaces is still captured whole. Unquoted
     # value: non-whitespace only, so an unquoted KEY=value token stops at
@@ -84,7 +92,7 @@ _BEARER_RE = re.compile(r"\bBearer\s+\S+", re.IGNORECASE)
 # human recognize which credential was in play); only the password half is
 # replaced.
 _URL_CREDENTIALS_RE = re.compile(
-    r"(?P<scheme>[A-Za-z][A-Za-z0-9+.-]*://)(?P<user>[^\s:/@]+):(?P<password>[^\s@]+)@"
+    r"(?<![A-Za-z0-9+.-])(?P<scheme>[A-Za-z][A-Za-z0-9+.-]{0,39}://)(?P<user>[^\s:/@]{1,256}):(?P<password>[^\s@]{1,1024})@"
 )
 
 # A real PEM-format private key block (SSH, TLS, GPG all share this real
@@ -122,7 +130,7 @@ _KNOWN_TOKEN_RE = re.compile(
 )
 
 # `scheme://TOKEN@host` - a token used as the whole userinfo (no password part).
-_URL_TOKEN_USERINFO_RE = re.compile(r"(?P<scheme>[A-Za-z][A-Za-z0-9+.-]*://)(?P<token>[^\s:/@]{16,})@")
+_URL_TOKEN_USERINFO_RE = re.compile(r"(?<![A-Za-z0-9+.-])(?P<scheme>[A-Za-z][A-Za-z0-9+.-]{0,39}://)(?P<token>[^\s:/@]{16,1024})@")
 
 # (P1, residual
 # outside this project's own three original examples): a secret-named key
@@ -138,7 +146,7 @@ _URL_TOKEN_USERINFO_RE = re.compile(r"(?P<scheme>[A-Za-z][A-Za-z0-9+.-]*://)(?P<
 # the simple-value patterns, which still own every non-nested case
 # unchanged.
 _SECRET_KEY_PATTERN = re.compile(
-    r'"?[A-Za-z0-9_-]*(?:' + "|".join(_SECRET_KEY_NAMES) + r')[A-Za-z0-9_-]*"?\s*[:=]\s*',
+    r'(?<![A-Za-z0-9_-])"?[A-Za-z0-9_-]*(?:' + "|".join(_SECRET_KEY_NAMES) + r')[A-Za-z0-9_-]*"?\s*[:=]\s*',
     re.IGNORECASE,
 )
 

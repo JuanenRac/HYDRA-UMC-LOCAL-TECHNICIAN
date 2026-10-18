@@ -15,9 +15,9 @@
   <img src="https://img.shields.io/badge/Fase-1%2C%203%20%26%204%20de%206%20completas-367BF5.svg" alt="Fases 1, 3 y 4 de 6 completas">
 </p>
 
-> **Estado: v0.1.4, funcional - Fases 1, 3 y 4 de 6 completas
+> **Estado: v0.1.5, funcional - Fases 1, 3 y 4 de 6 completas
 > (conocimiento recuperable, orquestador de herramientas, escalado),
-> Fase 5 iniciada (una CLI local real).** La
+> Fase 5 iniciada (una CLI local real, una API local de solo lectura y una página web).** La
 > Fase 0 definió la política real de niveles de riesgo
 > (`policy/risk_levels.py`), una lista blanca fija de herramientas
 > (`policy/tool_matrix.py`), los cinco contratos mínimos reales que toda
@@ -54,7 +54,7 @@
 
 ---
 
-**Comprobación de honestidad - qué funciona realmente hoy:** la política de niveles de riesgo (`policy/risk_levels.py`), la lista fija de herramientas permitidas (`policy/tool_matrix.py`), los cinco validadores de contrato (`contracts.py` + `contracts/*.schema.json`), el límite de defensa contra inyecciones (`knowledge/trust.py`, `knowledge/redaction.py`), el índice de conocimiento TF-IDF local (`knowledge/index.py`, Fase 1), las 10 herramientas OBSERVE declaradas con manejador real (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), la construcción real de `EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4), y una CLI real sobre todo lo anterior (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, primera porción de la Fase 5) están testeadas (211 tests más 30 subtests pasando entre `tests/unit/` y `tests/adversarial/`) - las Fases 1, 3 y 4 están completas, la Fase 5 está iniciada. `update.pending` necesita la dependencia opcional `hydra-umc-updater` (extra `update-check`) para consultar GitHub de verdad, y degrada honestamente (`available: false`) sin ella. Todavía no hay motor de inferencia ni integración con HYDRA-UMC-SERVER en ningún lugar de este repositorio, y nada en este código puede actuar sobre un `MaintenanceProposal` todavía - la Fase 2 y el resto de la Fase 5 (la API integrada con HYDRA-UMC-SERVER, y la voz) del Roadmap más abajo siguen siendo totalmente aspiracionales, sin ningún código detrás. Ver `CHANGELOG.md` para lo que se ha entregado exactamente hasta ahora.
+**Comprobación de honestidad - qué funciona realmente hoy:** la política de niveles de riesgo (`policy/risk_levels.py`), la lista fija de herramientas permitidas (`policy/tool_matrix.py`), los cinco validadores de contrato (`contracts.py` + `contracts/*.schema.json`), el límite de defensa contra inyecciones (`knowledge/trust.py`, `knowledge/redaction.py`), el índice de conocimiento TF-IDF local (`knowledge/index.py`, Fase 1), las 10 herramientas OBSERVE declaradas con manejador real (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), la construcción real de `EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4), y una CLI real sobre todo lo anterior (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, primera porción de la Fase 5) están testeadas (255 tests más 30 subtests pasando entre `tests/unit/` y `tests/adversarial/`) - las Fases 1, 3 y 4 están completas, la Fase 5 está iniciada. `update.pending` necesita la dependencia opcional `hydra-umc-updater` (extra `update-check`) para consultar GitHub de verdad, y degrada honestamente (`available: false`) sin ella. Todavía no hay motor de inferencia ni integración con HYDRA-UMC-SERVER en ningún lugar de este repositorio, y nada en este código puede actuar sobre un `MaintenanceProposal` todavía - la Fase 2 y el resto de la Fase 5 (la API integrada con HYDRA-UMC-SERVER, y la voz) del Roadmap más abajo siguen siendo totalmente aspiracionales, sin ningún código detrás. Ver `CHANGELOG.md` para lo que se ha entregado exactamente hasta ahora.
 
 ---
 
@@ -244,7 +244,9 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   ├── proposal.py       # propose_maintenance(): constructor/validador real de MaintenanceProposal, nunca un generador
 │   │   └── outbox.py         # EscalationOutbox: cola local durable que sobrevive a una caída de red
 │   ├── contracts.py           # Validador real solo-stdlib para los cinco contratos mínimos
-│   └── cli.py                 # Fase 5 - contracts validate, tools list/call, escalation evidence/propose, --version
+│   ├── cli.py                 # Fase 5 - contracts validate, tools list/call, escalation evidence/propose, --version, serve
+│   ├── webapi.py              # API local de solo lectura: solo GET, loopback por defecto, token fuera de loopback, redactada y acotada
+│   └── webui/                 # la interfaz de una sola página sin conexión: index.html, app.js, app.css e i18n/ en ocho idiomas
 ├── contracts/                  # Archivos JSON Schema normativos (draft 2020-12) para los cinco contratos
 ├── tests/
 │   ├── unit/                   # Pruebas reales de cada módulo anterior
@@ -330,6 +332,8 @@ Esta versión trae la Fase 0, la Fase 1, la Fase 3 y la Fase 4. Lo que queda, en
   forzado por política, deliberadamente acotado a lo que vive dentro de
   este mismo repositorio. La API integrada con HYDRA-UMC-SERVER y la voz
   siguen siendo trabajo aparte, entre repos, para una entrega futura.
+
+- **Fase 5 - API local de solo lectura y página web (segunda parte).** `serve` (`webapi.py`, `webui/`) muestra lo que el técnico ya ha producido: el registro de herramientas, los ficheros ToolResult, EvidenceBundle y MaintenanceProposal de un directorio de datos, los manifiestos de los proyectos y el índice de documentos de las fuentes de conocimiento permitidas. Solo responde a GET (cualquier otro método recibe 405), escucha en `127.0.0.1` salvo que se indique otra cosa y entonces exige un token bearer de al menos 24 caracteres, encuentra los elementos listando sus carpetas (nunca uniendo una ruta de la petición), redacta cada respuesta como lo hace la CLI y acota todos los tamaños. La página única no necesita nada de internet y está disponible en inglés, español, alemán, francés, italiano, japonés, chino y portugués de Portugal. Véase [docs/WEB_API.md](docs/WEB_API.md).
 
 La Fase 2 y el resto de la Fase 5 no existen todavía en este repositorio - ver
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) para lo que cada fase

@@ -34,6 +34,20 @@ def _request(tool: str, arguments: dict):
     )
 
 
+class RedactionCostTest(unittest.TestCase):
+    def test_a_huge_run_without_a_secret_is_redacted_in_linear_time(self) -> None:
+        import time
+        for payload in ("x" * 1_000_000, "a-" * 300_000, "http" + "p" * 300_000, "xxxx://" * 20_000):
+            started = time.monotonic()
+            self.assertEqual(redact_secrets(payload), payload)
+            self.assertLess(time.monotonic() - started, 10.0, payload[:6])
+
+    def test_the_bounded_url_patterns_still_redact_normal_credentials(self) -> None:
+        cleaned = redact_secrets("see https://admin:hunter2@host/x and https://abcdef0123456789abcdef@git/y")
+        self.assertNotIn("hunter2", cleaned)
+        self.assertNotIn("abcdef0123456789abcdef", cleaned)
+
+
 class RedactionShapesTest(unittest.TestCase):
     def test_a_secret_given_as_a_separate_command_line_argument_is_redacted(self) -> None:
         line = redact_secrets("streamer --token hunter2-token-value --password=swordfish --port 8080 -api-key abc123456")

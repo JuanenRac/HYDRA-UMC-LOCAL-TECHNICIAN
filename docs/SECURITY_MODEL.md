@@ -104,7 +104,12 @@ marker:
 
 - `KEY=VALUE` / `KEY: VALUE` shell-export and `.env` shapes.
 - The same shape inside a JSON string key (`"password": "..."`).
-- `Authorization: Bearer <token>` and bare `Bearer <token>`.
+- A secret given as a separate command-line argument (`--token VALUE`,
+  `-password VALUE`).
+- `Authorization: Bearer <token>`, bare `Bearer <token>` and `Basic <base64>`
+  credentials, and `Cookie` / `Set-Cookie` headers.
+- Tokens with a well-known shape of their own (GitHub, Slack, AWS, Anthropic
+  and OpenAI style keys) and a token used as the whole user part of a URL.
 - `scheme://user:password@host` credentials embedded in a URL (the
   username is kept - it rarely is the secret itself and helps a human
   recognize which credential was in play; only the password is
@@ -127,6 +132,12 @@ a manifest into its result: it returns four short strings and nothing
 else. `network.connectivity` reports a redirect as the endpoint's
 answer and never follows it, so an allow-listed endpoint cannot send
 the probe to a host nobody listed.
+
+Every pattern that starts with an identifier-like run forbids a character of
+that run right before its start, and the URL patterns bound the length of each
+part: without that the engine rescans a long run from every position, which
+took days on a megabyte of letters. A password over 1024 characters inside a URL
+is the one thing that leaves unredacted.
 
 This is a deliberately fixed, explicit list of real, well-known secret
 shapes - never a fuzzy "looks random enough" heuristic, which would
@@ -183,6 +194,21 @@ name is not in `TOOL_MATRIX` in the first place; the request
 builder's signature carries no risk-level parameter a caller could set;
 and `.redacted()` strips the embedded secrets while preserving the
 genuinely useful, non-secret content next to them.
+
+## The read-only API and web page
+
+`serve` (`webapi.py`, `webui/`, see [WEB_API.md](WEB_API.md)) adds a way to
+read what the technician produced, and nothing else. The invariants, each
+covered by a test: only GET is answered and the body of any other method is
+never read; the server binds to loopback unless a bearer token of at least 24
+characters is set (the token is never a command-line argument and is compared
+in constant time), and on loopback a foreign Host header is refused; items are
+found by listing a folder and matching an id, never by joining a request path,
+so traversal has nothing to match; every JSON answer and every document text
+passes through `knowledge/redaction.py`; every size is bounded; the page has no
+external resource, a Content-Security-Policy that allows only its own origin,
+and writes with `textContent` only. It runs no tool and calls no model, so it
+adds no authority: the risk-level policy is untouched.
 
 ## What is deliberately not implemented
 

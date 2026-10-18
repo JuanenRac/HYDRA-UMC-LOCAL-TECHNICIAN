@@ -15,8 +15,8 @@
   <img src="https://img.shields.io/badge/阶段-1%2C%203%20%26%204%2F6%20已完成-367BF5.svg" alt="第 1、3、4 阶段（共 6 阶段）已完成">
 </p>
 
-> **状态：v0.1.4，功能可用 - 六阶段计划中的第 1、3、4 阶段已完成（可检索知识、
-> 工具编排器、升级上报），第 5 阶段已启动（一个真实的本地 CLI）。**
+> **状态：v0.1.5，功能可用 - 六阶段计划中的第 1、3、4 阶段已完成（可检索知识、
+> 工具编排器、升级上报），第 5 阶段已启动（一个真实的本地 CLI、一个只读的本地 API 和网页）。**
 > 第 0 阶段定义了真实的风险等级策略（`policy/risk_levels.py`）、一份固定的
 > 工具白名单（`policy/tool_matrix.py`）、未来每一次工具调用都必须校验通过的
 > 五份真实最小合约（`contracts/*.schema.json` + `contracts.py`）、从
@@ -44,7 +44,9 @@
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)、本地 TF-IDF 知识索引(`knowledge/index.py`，第 1 阶段)、全部 10 个已声明的 OBSERVE 工具都有真实的处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)，真实的 `EvidenceBundle`/`MaintenanceProposal` 构建(`escalation/evidence.py`、`escalation/proposal.py`，第 4 阶段)，以及覆盖以上全部内容的真实 CLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`，第 5 阶段自身的第一个切片)，都经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 211 个测试外加 30 个子测试全部通过)——第 1、3、4 阶段均已完成，第 5 阶段已启动。`update.pending` 需要可选依赖 `hydra-umc-updater`(`update-check` extra)才能真正查询 GitHub，没有它时会诚实降级(`available: false`)。本仓库中任何地方仍不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成，本代码中也没有任何地方能对 `MaintenanceProposal` 采取行动——下方路线图中的第 2 阶段，以及第 5 阶段的其余部分（与 HYDRA-UMC-SERVER 集成的 API，以及语音）仍完全是愿景，背后没有任何代码。具体已交付的内容请见 `CHANGELOG.md`。
+- **第 5 阶段 - 只读本地 API 与网页（第二部分）。** `serve`（`webapi.py`、`webui/`）展示技术员已经产出的内容：工具注册表、数据目录中的 ToolResult、EvidenceBundle 和 MaintenanceProposal 文件、各项目的清单，以及已列入白名单的知识来源的文档索引。它只响应 GET（其他方法一律返回 405），除非另行指定否则只绑定 `127.0.0.1`，绑定到其他地址时要求至少 24 个字符的 Bearer 令牌；通过列出文件夹来查找条目（绝不拼接请求路径），像 CLI 一样对每个响应做脱敏，并限制所有大小。单页界面不需要任何来自互联网的资源，提供英语、西班牙语、德语、法语、意大利语、日语、中文和葡萄牙（欧洲）葡萄牙语。详见 [docs/WEB_API.md](docs/WEB_API.md)。
+
+**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)、本地 TF-IDF 知识索引(`knowledge/index.py`，第 1 阶段)、全部 10 个已声明的 OBSERVE 工具都有真实的处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)，真实的 `EvidenceBundle`/`MaintenanceProposal` 构建(`escalation/evidence.py`、`escalation/proposal.py`，第 4 阶段)，以及覆盖以上全部内容的真实 CLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`，第 5 阶段自身的第一个切片)，都经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 255 个测试外加 30 个子测试全部通过)——第 1、3、4 阶段均已完成，第 5 阶段已启动。`update.pending` 需要可选依赖 `hydra-umc-updater`(`update-check` extra)才能真正查询 GitHub，没有它时会诚实降级(`available: false`)。本仓库中任何地方仍不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成，本代码中也没有任何地方能对 `MaintenanceProposal` 采取行动——下方路线图中的第 2 阶段，以及第 5 阶段的其余部分（与 HYDRA-UMC-SERVER 集成的 API，以及语音）仍完全是愿景，背后没有任何代码。具体已交付的内容请见 `CHANGELOG.md`。
 
 ---
 
@@ -195,7 +197,9 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   ├── proposal.py       # propose_maintenance()：MaintenanceProposal 的真实构造器/校验器，绝不是生成器
 │   │   └── outbox.py         # EscalationOutbox：可在网络中断后保留的持久本地队列
 │   ├── contracts.py           # 五份最小合约的真实、仅标准库校验器
-│   └── cli.py                 # 第 5 阶段 - contracts validate、tools list/call、escalation evidence/propose、--version
+│   ├── cli.py                 # 第 5 阶段 - contracts validate、tools list/call、escalation evidence/propose、--version, serve
+│   ├── webapi.py              # 只读本地 API：仅 GET，默认回环地址，非回环需令牌，已脱敏并限制大小
+│   └── webui/                 # 可离线使用的单页界面：index.html、app.js、app.css 与八种语言的 i18n/
 ├── contracts/                  # 五份合约的规范性 JSON Schema 文件（draft 2020-12）
 ├── tests/
 │   ├── unit/                   # 上述每个模块的真实测试

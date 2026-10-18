@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import uuid
 from pathlib import Path
@@ -227,6 +228,29 @@ def _cmd_escalation_propose(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_serve(args: argparse.Namespace) -> int:
+    """Fase 5: the read-only local API and web page (webapi.py). It answers GET
+    only, binds to loopback unless told otherwise, and then needs a token."""
+    from .webapi import ApiConfigError, TechnicianServer, read_api_token
+
+    try:
+        config = _load_config(args.config)
+        token = read_api_token(args.token_file, dict(os.environ))
+        server = TechnicianServer((args.host, args.port), data_dir=Path(args.data_dir), config=config, token=token)
+    except (ApiConfigError, OSError, OverflowError, ValueError, TypeError, KeyError, IndexError, AttributeError) as exc:
+        print(f"REFUSED: cannot start the read-only API: {exc}", file=sys.stderr)
+        return 1
+    shown = f"[{args.host}]" if ":" in args.host else args.host
+    print(f"Read-only API and web page on http://{shown}:{server.server_address[1]}/ (GET only; token {'required' if token else 'not set'}).")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="hydra-umc-local-technician",
@@ -279,6 +303,14 @@ def build_parser() -> argparse.ArgumentParser:
     propose_cmd.add_argument("--expected-change", action="append", help="What should differ afterward (repeatable).")
     propose_cmd.add_argument("--explicit-limit", action="append", help="What this proposal explicitly does NOT cover (repeatable).")
     propose_cmd.set_defaults(func=_cmd_escalation_propose)
+
+    serve_cmd = subparsers.add_parser("serve", allow_abbrev=False, help="Fase 5: serve the read-only local API and web page (GET only; loopback unless a token is set).")
+    serve_cmd.add_argument("--host", default="127.0.0.1", help="Address to bind (default 127.0.0.1). Any non-loopback address requires a token.")
+    serve_cmd.add_argument("--port", type=int, default=8780, help="Port (default 8780; 0 picks a free one).")
+    serve_cmd.add_argument("--data-dir", required=True, help="Directory holding tool-results/, evidence/ and proposals/ (JSON files saved from the CLI's output).")
+    serve_cmd.add_argument("--config", help="Path to a JSON OrchestratorConfig file (manifests and knowledge sources); defaults to default_config().")
+    serve_cmd.add_argument("--token-file", help="File holding the bearer token (at least 24 characters); otherwise HYDRA_UMC_LOCAL_TECHNICIAN_TOKEN. Never taken from the command line.")
+    serve_cmd.set_defaults(func=_cmd_serve)
 
     return parser
 
