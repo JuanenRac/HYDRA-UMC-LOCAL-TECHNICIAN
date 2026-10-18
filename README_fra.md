@@ -59,6 +59,17 @@
 
 ---
 
+## 📋 En un coup d'œil
+
+| | |
+|---|---|
+| Version | `0.1.6` |
+| Maturité | Fonctionnel |
+| Tests | 255 |
+| Technologie | Python 3.11+ / JSON Schema / HailoRT GenAI (optional, later phase) / systemd (cm5 role, Linux only) |
+| Cible | Le Raspberry Pi CM5 d'une cellule HYDRA-UMC |
+| Sur matériel réel | Pas encore : aucune exécution sur du matériel réel n'est consignée pour cette version |
+
 ## 1. 🛠️ VUE D'ENSEMBLE TECHNIQUE
 
 HYDRA-UMC-LOCAL-TECHNICIAN est une IA locale spécialisée pour
