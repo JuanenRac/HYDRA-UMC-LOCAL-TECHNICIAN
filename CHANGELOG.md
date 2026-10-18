@@ -9,6 +9,17 @@ bumped manually only. See `bump_version.py`.
 
 (nothing yet)
 
+## [0.1.4] - Secrets stay out of every output, proposals need real evidence
+
+- **Redaction:** a secret given as a separate command-line argument (`--token VALUE`, `-api-key VALUE`), which is the usual way, was not redacted although the changelog and a comment said it was. It is now, together with Basic authorization, cookies, GitHub/Slack/AWS/API-key shaped tokens and tokens used as a URL userinfo.
+- **One exit point:** `output` and `evidence` of every ToolResult are redacted where the result is built (a credential in a configured target or in an exception message used to pass through), and every free-text field of an EvidenceBundle (reproduction steps, manifests, impact, actions, failed tests, validation result) is redacted before its checksum.
+- **Grounding:** `escalation propose` accepted any JSON with an `evidence` key as an observed result, so any claim could be "grounded". Every result in the pool must now be a valid ToolResult with status `ok`, and a malformed result file is a one-line refusal instead of a traceback.
+- **Untrusted text:** `UntrustedText` is a `str` subclass and could be passed as a tool name, reason or argument; building a ToolRequest now refuses it at run time.
+- **Knowledge index:** the walk prunes `.git`, `node_modules`, virtual environments and build folders, skips lock files, stops at 500 files or 64 MiB in total and no longer lists the whole tree before applying its limit.
+- **Configuration and arguments:** a `--config` file is validated (known keys, lists, absolute paths, ports 1-65535; a bare string for `systemdUnits` used to become a tuple of single letters), a boolean is no longer taken as a line or result count, a non-UTF-8 manifest is "not found" in `update.pending` like in `manifest.read`, and URTC projects are read from their own `urtc.project.json`.
+- **Contract wording:** `status: ok` means the tool ran (a closed port is a finding inside `output`) and is now documented that way; the proposal schema no longer claims a proposal is always PREPARE level or below.
+- **Scripts and docs:** `run.bat` keeps the real exit code and pauses only without arguments, the build compiles the whole package, and the manifest notes, SECURITY.md, SUPPORT.md, the architecture, security model, contracts, CLI reference and maturity documents describe what exists today (211 tests).
+
 ## [0.1.3] - Redaction and bounds at every boundary, durable outbox
 
 - `network.connectivity` no longer follows a redirect: it reports the redirect status as the endpoint's answer, so an allow-listed endpoint cannot send the probe to a host or an `ftp:` URL nobody listed. A connection reset or a malformed status line now reads as "unreachable" instead of a tool error.

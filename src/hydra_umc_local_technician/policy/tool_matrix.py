@@ -17,7 +17,7 @@ temperature, connectivity, pending updates, permitted logs). No tool at
 REVERSIBLE_OPERATION or above is registered yet - see risk_levels.py's
 own POLICIES for why (Fase 0 does not implement one).
 
-Fase 3 wires all 9 of these to a real handler in
+Fase 3 wires 9 of these (knowledge.search, from Fase 1, is the tenth) to a real handler in
 `orchestrator/dispatch.py` - `implemented=True` below reflects that.
 `update.pending` is the last one; it needs the optional
 `hydra-umc-updater` dependency (the `update-check` extra) to actually
@@ -76,7 +76,7 @@ TOOL_MATRIX: dict[str, ToolDescriptor] = {
     "system.temperature": ToolDescriptor(
         name="system.temperature",
         risk_level=RiskLevel.OBSERVE,
-        description="Reports the real CPU/board temperature, honestly degrading (never a guessed value) where the sensor isn't available - same convention as HYDRA-UMC-SERVER's own getSystemMetrics().",
+        description="Reports the real CPU/board temperature, honestly degrading (never a guessed value) where the sensor isn't available - reads the Linux thermal zone (HYDRA-UMC-SERVER uses vcgencmd, so values can differ slightly).",
         implemented=True,
     ),
     "network.connectivity": ToolDescriptor(

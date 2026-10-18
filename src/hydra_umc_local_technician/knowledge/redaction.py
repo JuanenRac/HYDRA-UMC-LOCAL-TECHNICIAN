@@ -98,6 +98,32 @@ _PEM_BLOCK_RE = re.compile(
 
 _REDACTED = "[REDACTED]"
 
+# A command line carries its secrets as `--token VALUE` / `-password VALUE`
+# (the value is a separate argument, so the KEY=VALUE shape above never sees
+# it). Only a flag whose name contains a secret word is matched, and only a
+# value that does not itself start with "-" is taken as the secret.
+_FLAG_VALUE_RE = re.compile(
+    r"(?P<flag>(?<![A-Za-z0-9_-])--?[A-Za-z0-9_-]*(?:" + "|".join(_SECRET_KEY_NAMES) + r")s?[A-Za-z0-9_-]*)"
+    r"(?P<sep>[ \t]+)(?!-)(?P<value>\S+)",
+    re.IGNORECASE,
+)
+
+# "Authorization: Basic <base64>" - the other common HTTP credential header.
+_BASIC_RE = re.compile(r"\bBasic\s+[A-Za-z0-9+/=_-]{8,}", re.IGNORECASE)
+
+# A cookie header carries session secrets as a whole.
+_COOKIE_RE = re.compile(r"(?P<header>\b(?:Set-)?Cookie\s*:\s*)[^\r\n]+", re.IGNORECASE)
+
+# Credentials with a well-known shape of their own: GitHub tokens, Slack
+# tokens, AWS access key ids, Anthropic/OpenAI style API keys.
+_KNOWN_TOKEN_RE = re.compile(
+    r"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|xox[abprs]-[A-Za-z0-9-]{10,}"
+    r"|AKIA[0-9A-Z]{16}|sk-ant-[A-Za-z0-9_-]{16,}|sk-[A-Za-z0-9]{24,})"
+)
+
+# `scheme://TOKEN@host` - a token used as the whole userinfo (no password part).
+_URL_TOKEN_USERINFO_RE = re.compile(r"(?P<scheme>[A-Za-z][A-Za-z0-9+.-]*://)(?P<token>[^\s:/@]{16,})@")
+
 # (P1, residual
 # outside this project's own three original examples): a secret-named key
 # whose value is itself a nested JSON object or array
@@ -175,11 +201,38 @@ def redact_secrets(text: str) -> str:
     result = re.sub(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----(?!.*-----END).*", _REDACTED, text, flags=re.DOTALL)
     result = _PEM_BLOCK_RE.sub(_REDACTED, result)
     result = _BEARER_RE.sub(f"Bearer {_REDACTED}", result)
+    result = _BASIC_RE.sub(f"Basic {_REDACTED}", result)
+    result = _COOKIE_RE.sub(lambda m: f"{m.group('header')}{_REDACTED}", result)
+    result = _KNOWN_TOKEN_RE.sub(_REDACTED, result)
+    result = _URL_TOKEN_USERINFO_RE.sub(lambda m: f"{m.group('scheme')}{_REDACTED}@", result)
     result = _URL_CREDENTIALS_RE.sub(lambda m: f"{m.group('scheme')}{m.group('user')}:{_REDACTED}@", result)
     result = _redact_nested_structured_values(result)
     result = _JSON_KEY_VALUE_RE.sub(lambda m: f"{m.group('key')}{_REDACTED}", result)
     result = _KEY_VALUE_RE.sub(lambda m: f"{m.group('key')}{_REDACTED}", result)
+    result = _FLAG_VALUE_RE.sub(lambda m: f"{m.group('flag')}{m.group('sep')}{_REDACTED}", result)
     return result
+
+
+def redact_json(value: object) -> object:
+    """redact_secrets() applied to every string inside a JSON-like value (and
+    the value of any key whose name is a secret word), so a structured tool
+    result is clean as a whole, not only the fields a handler remembered to
+    redact."""
+    if isinstance(value, str):
+        return redact_secrets(value)
+    if isinstance(value, list):
+        return [redact_json(item) for item in value]
+    if isinstance(value, tuple):
+        return [redact_json(item) for item in value]
+    if isinstance(value, dict):
+        cleaned: dict = {}
+        for key, item in value.items():
+            if isinstance(key, str) and _SECRET_KEY_PATTERN.fullmatch(key + ":") and isinstance(item, (str, int, float)) and not isinstance(item, bool):
+                cleaned[key] = _REDACTED
+            else:
+                cleaned[key] = redact_json(item)
+        return cleaned
+    return value
 
 
 def redact_lines(lines: list[str]) -> list[str]:

@@ -135,14 +135,15 @@ class OrchestratorConfig:
     def resolve_project_manifest_path(self, project: str) -> Path:
         """Real path-traversal defense in depth: PROJECT_NAME_PATTERN
         alone already rejects a `/`, `..`, or any character outside
-        `[A-Z0-9-]`, but this also confirms the resolved path is a DIRECT
-        child of `ecosystem_root` (never a symlink escape or an
-        unexpected nested layout) before ever returning it."""
+        `[A-Z0-9-]`, but this also confirms the resolved path stays below
+        `ecosystem_root` (never a symlink escape) before ever returning it."""
         if self.ecosystem_root is None:
             raise UnknownAllowlistEntry("no ecosystem_root configured - manifest.read is unavailable")
         if not PROJECT_NAME_PATTERN.fullmatch(project):
             raise UnknownAllowlistEntry(f"{project!r} is not a real HYDRA-UMC/URTC project name")
-        candidate = (self.ecosystem_root / project / "hydra-umc.project.json").resolve()
+        # URTC repositories describe themselves in urtc.project.json
+        manifest_name = "urtc.project.json" if project.startswith("URTC") else "hydra-umc.project.json"
+        candidate = (self.ecosystem_root / project / manifest_name).resolve()
         root = self.ecosystem_root.resolve()
         if root not in candidate.parents:
             raise UnknownAllowlistEntry(f"{project!r} does not resolve under the configured ecosystem root")

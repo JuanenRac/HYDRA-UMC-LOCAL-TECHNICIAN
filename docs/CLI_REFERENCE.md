@@ -125,7 +125,7 @@ missing, is not JSON or has the wrong shape is refused in one line
 
 ```bash
 hydra-umc-local-technician tools call service.status --arg name=hydra-umc-server
-# -> a real ToolResult JSON, e.g. {"requestId": "...", "status": "ok", "output": {"unitName": "hydra-umc-server", "active": true, ...}, ...}
+# -> a real ToolResult JSON, e.g. {"requestId": "...", "status": "ok", "output": {"unit": "hydra-umc-server", "active": true, ...}, ...}
 ```
 
 ## `escalation evidence`

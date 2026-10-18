@@ -72,6 +72,7 @@ def _load_config(config_path: str | None) -> OrchestratorConfig:
     if config_path is None:
         return default_config()
     raw = json.loads(Path(config_path).read_text(encoding="utf-8"))
+    _validate_config_shape(raw)
     return OrchestratorConfig(
         storage_paths={name: Path(value) for name, value in raw.get("storagePaths", {}).items()},
         ports={name: (value[0], value[1]) for name, value in raw.get("ports", {}).items()},
@@ -82,6 +83,50 @@ def _load_config(config_path: str | None) -> OrchestratorConfig:
         process_patterns=dict(raw.get("processPatterns", {})),
         knowledge_sources={name: Path(value) for name, value in raw.get("knowledgeSources", {}).items()},
     )
+
+
+_CONFIG_KEYS = {
+    "storagePaths", "ports", "connectivityTargets", "systemdUnits", "ecosystemRoot",
+    "logSources", "processPatterns", "knowledgeSources",
+}
+
+
+def _validate_config_shape(raw: object) -> None:
+    """A --config file must have the documented shape: known keys, string lists
+    where lists are expected, absolute paths, ports 1-65535. A typo or a bare
+    string ("systemdUnits": "hydra-umc-server" used to become a tuple of single
+    letters) is a one-line error, never a silently different allow-list."""
+    if not isinstance(raw, dict):
+        raise ValueError("the config must be a JSON object")
+    unknown = sorted(set(raw) - _CONFIG_KEYS)
+    if unknown:
+        raise ValueError(f"unknown config key(s): {', '.join(unknown)}")
+    units = raw.get("systemdUnits", [])
+    if not isinstance(units, list) or not all(isinstance(unit, str) and unit for unit in units):
+        raise ValueError('"systemdUnits" must be a list of unit names')
+    for key in ("storagePaths", "logSources", "knowledgeSources"):
+        mapping = raw.get(key, {})
+        if not isinstance(mapping, dict):
+            raise ValueError(f'"{key}" must be an object of name -> absolute path')
+        for name, value in mapping.items():
+            if not isinstance(value, str) or not Path(value).is_absolute():
+                raise ValueError(f'"{key}.{name}" must be an absolute path')
+    root = raw.get("ecosystemRoot")
+    if root is not None and (not isinstance(root, str) or not Path(root).is_absolute()):
+        raise ValueError('"ecosystemRoot" must be an absolute path')
+    ports = raw.get("ports", {})
+    if not isinstance(ports, dict):
+        raise ValueError('"ports" must be an object of name -> [host, port]')
+    for name, value in ports.items():
+        if (
+            not isinstance(value, list) or len(value) != 2 or not isinstance(value[0], str)
+            or isinstance(value[1], bool) or not isinstance(value[1], int) or not 1 <= value[1] <= 65535
+        ):
+            raise ValueError(f'"ports.{name}" must be [host, port] with a port from 1 to 65535')
+    for key in ("connectivityTargets", "processPatterns"):
+        mapping = raw.get(key, {})
+        if not isinstance(mapping, dict) or not all(isinstance(v, str) for v in mapping.values()):
+            raise ValueError(f'"{key}" must be an object of name -> string')
 
 
 def _cmd_tools_list(args: argparse.Namespace) -> int:
@@ -158,7 +203,7 @@ def _cmd_escalation_evidence(args: argparse.Namespace) -> int:
             observed, impact=args.impact, local_validation_result=args.local_validation,
             actions_attempted=args.action_attempted or None, failed_tests=args.failed_test or None,
         )
-    except (ValueError, OSError, json.JSONDecodeError, EvidenceAssemblyError, ContractValidationError) as exc:
+    except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError, EvidenceAssemblyError, ContractValidationError) as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 1
     print(json.dumps(bundle, indent=2, ensure_ascii=False))
@@ -175,7 +220,7 @@ def _cmd_escalation_propose(args: argparse.Namespace) -> int:
             pre_checks=args.pre_check or None, expected_changes=args.expected_change or None,
             explicit_limits=args.explicit_limit or None,
         )
-    except (ValueError, OSError, json.JSONDecodeError, ProposalError, ContractValidationError) as exc:
+    except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError, ProposalError, ContractValidationError) as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 1
     print(json.dumps(proposal, indent=2, ensure_ascii=False))

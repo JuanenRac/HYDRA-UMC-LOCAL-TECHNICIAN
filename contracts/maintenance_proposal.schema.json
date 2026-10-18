@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/JuanenRac/HYDRA-UMC-LOCAL-TECHNICIAN/contracts/maintenance_proposal.schema.json",
   "title": "MaintenanceProposal",
-  "description": "A proposal is never executable on its own - it can never contain a raw command, only a description of steps a human must authorize. See risk_levels.py: a proposal is always PREPARE level or below.",
+  "description": "A proposal is never executable on its own - it can never contain a raw command, only a description of steps a human must authorize. The risk field says how risky the described action would be; an action at a level without an implemented policy still needs explicit human approval.",
   "type": "object",
   "required": [
     "diagnosis", "citedEvidence", "scope", "risk", "steps", "preChecks",

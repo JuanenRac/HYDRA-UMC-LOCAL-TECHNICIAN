@@ -50,15 +50,17 @@ only real way any future orchestrator may ever invoke a tool.
 
 ## ToolResult
 
-The real outcome of one `ToolRequest`, once a future phase implements a
-handler for it. Not produced by anything in this delivery yet.
+The real outcome of one `ToolRequest`, produced by the dispatcher for each of
+the implemented tools. `status` is `ok` when the tool ran (a closed port or a
+missing sensor is a finding inside `output`) and `error` when the handler
+itself raised.
 
 | Field | Type | Notes |
 | --- | --- | --- |
 | `requestId` | string | Matches the originating `ToolRequest.requestId`. |
 | `status` | string | One of `"ok"`, `"error"`, `"denied"`. |
 | `output` | object | The tool's own real output - shape is tool-specific. |
-| `evidence` | string | Freeform supporting text - already redacted before this object is ever built. |
+| `evidence` | string | Freeform supporting text - redacted where the object is built. |
 | `timestamp` | string | Real, non-empty timestamp. |
 | `durationMs` | number | Non-negative. |
 | `toolVersion` | string | Which version of the tool handler produced this result. |

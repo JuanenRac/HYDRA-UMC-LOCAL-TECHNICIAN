@@ -4,13 +4,14 @@ Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 GPL-3.0 - see LICENSE
 ============================================================================= -->
 
-# Architecture (Fase 0)
+# Architecture
 
 This document describes this project's purpose and target design across
-all six phases - this repository, at Fase 0, only implements the
-risk-level policy, the tool matrix, the real contracts, secret redaction
-and the injection-defense boundary described in the README. Everything
-else here is a documented target, not a claim about what runs today.
+all six phases. The repository implements the risk-level policy, the tool
+matrix, the contracts, secret redaction, the injection-defense boundary, the
+ten read-only tool handlers, the local knowledge index and the evidence and
+proposal builders described in the README. Everything else here is a
+documented target, not a claim about what runs today.
 
 ## Purpose
 
@@ -114,7 +115,7 @@ schema-validated object first (see `contracts.py` and
   integrated read-only at first. Physical control actions stay blocked
   until real hardware, proven interlocks, explicit permissions and
   physical-safety validation exist.
-- **HYDRA-UMC-DEV-SERVER (future project)** - the programming server on
+- **HYDRA-UMC-DEV-SERVER** - the programming server on
   an RP5/CM5 with NVMe, VS Code and authorized external assistants. This
   local technician sends an evidence package; DEV-SERVER studies, tests
   and prepares a patch. There must never be a direct automatic-patch

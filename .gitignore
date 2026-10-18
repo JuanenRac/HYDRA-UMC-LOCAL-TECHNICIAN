@@ -13,3 +13,4 @@ dist/
 # index - these directories are real per-machine state, never committed.
 knowledge-index/
 secrets/
+.vscode/

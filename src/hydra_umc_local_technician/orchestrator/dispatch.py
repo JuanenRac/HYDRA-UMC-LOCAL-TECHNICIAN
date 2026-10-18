@@ -84,7 +84,7 @@ from typing import Any
 from .. import __version__
 from ..contracts import validate
 from ..knowledge import index as knowledge_index
-from ..knowledge.redaction import redact_lines, redact_secrets
+from ..knowledge.redaction import redact_json, redact_lines, redact_secrets
 from ..knowledge.trust import ToolRequest, UntrustedText
 from ..policy.tool_matrix import lookup_tool
 from .allowlist import OrchestratorConfig, UnknownAllowlistEntry
@@ -137,11 +137,14 @@ def _tool_result(
     started_at: float,
     error_code: str | None = None,
 ) -> dict[str, Any]:
+    # The single exit point of a tool result: whatever a handler (or an
+    # exception message) put in `output` or `evidence` is redacted here, so the
+    # contract's promise that a ToolResult is already redacted holds for every tool.
     payload = {
         "requestId": request_id,
         "status": status,
-        "output": output,
-        "evidence": evidence,
+        "output": redact_json(output),
+        "evidence": redact_secrets(evidence),
         "timestamp": _now_iso(),
         "durationMs": max(0.0, (time.monotonic() - started_at) * 1000.0),
         "toolVersion": __version__,
@@ -252,9 +255,9 @@ def _handle_network_connectivity(config: OrchestratorConfig, arguments: dict[str
 
 
 def _handle_system_temperature(config: OrchestratorConfig, arguments: dict[str, Any]) -> tuple[dict[str, Any], str]:
-    # Same real Linux thermal-zone path HYDRA-UMC-SERVER's own
-    # getSystemMetrics() reads (see policy.tool_matrix's own docstring for
-    # this tool) - millidegrees Celsius as a plain integer text file. No
+    # The Linux thermal zone (millidegrees Celsius as a plain integer text
+    # file). HYDRA-UMC-SERVER reads `vcgencmd measure_temp` instead, so the two
+    # readings can differ slightly. No
     # fallback to a guessed value on any other platform or if the sensor
     # is simply absent; report the real, honest reason instead.
     thermal_path = "/sys/class/thermal/thermal_zone0/temp"
@@ -364,7 +367,7 @@ def _handle_knowledge_search(config: OrchestratorConfig, arguments: dict[str, An
     root = config.resolve_knowledge_source(source)
 
     requested = arguments.get("topK", _KNOWLEDGE_SEARCH_DEFAULT_TOP_K)
-    if not isinstance(requested, int) or requested <= 0:
+    if isinstance(requested, bool) or not isinstance(requested, int) or requested <= 0:
         requested = _KNOWLEDGE_SEARCH_DEFAULT_TOP_K
     top_k = min(requested, _KNOWLEDGE_SEARCH_MAX_TOP_K)
 
@@ -439,7 +442,7 @@ def _handle_logs_read(config: OrchestratorConfig, arguments: dict[str, Any]) -> 
         raise UnknownAllowlistEntry("logs.read requires a non-empty 'name' argument")
     path = config.resolve_log_source(name)
     requested = arguments.get("lines", _LOGS_READ_DEFAULT_LINES)
-    if not isinstance(requested, int) or requested <= 0:
+    if isinstance(requested, bool) or not isinstance(requested, int) or requested <= 0:
         requested = _LOGS_READ_DEFAULT_LINES
     max_lines = min(requested, _LOGS_READ_MAX_LINES)
     if not path.is_file():
@@ -539,7 +542,7 @@ def _handle_update_pending(config: OrchestratorConfig, arguments: dict[str, Any]
     try:
         raw = manifest_path.read_text(encoding="utf-8")
         manifest = _updater_parse_manifest(raw, expected_name=project)
-    except (OSError, _UpdaterManifestValidationError) as exc:
+    except (OSError, ValueError, _UpdaterManifestValidationError) as exc:
         output = {"project": project, "available": True, "found": False, "reason": str(exc), "pending": None}
         return output, f"could not read/parse {manifest_path}: {exc}"
 
@@ -597,10 +600,12 @@ def dispatch_tool_request(request: ToolRequest, config: OrchestratorConfig) -> d
     an internal type the caller would need to know how to serialize).
 
     Never raises for a tool that IS implemented and simply fails at
-    runtime (a missing sensor, an unreachable port, a systemd-less host,
-    a malformed manifest) - those become a real `status: "error"`
-    ToolResult with a `reason` in `output`, since that failure is itself
-    genuine diagnostic evidence. Raises ToolDispatchError only when the
+    runtime. The meaning of `status` is: "ok" = the tool ran and reports
+    what it found (a missing sensor, a closed port, a host without systemd or
+    a malformed manifest are FINDINGS, reported inside `output` as
+    available/listening/reachable/found = false); "error" = the handler
+    itself raised unexpectedly, with a `reason` in `output`. A consumer that
+    wants "service down" must read `output`, not only `status`. Raises ToolDispatchError only when the
     request can't be routed at all: an unregistered tool, one that is
     registered but not implemented (redundant with
     `build_tool_request_from_model_output()`'s own refusal, but this

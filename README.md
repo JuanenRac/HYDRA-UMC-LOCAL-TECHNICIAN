@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20of%206%20complete-367BF5.svg" alt="Fases 1, 3 and 4 of 6 complete">
 </p>
 
-> **Status: v0.1.3, functional - Fases 1, 3 and 4 of 6 complete
+> **Status: v0.1.4, functional - Fases 1, 3 and 4 of 6 complete
 > (retrievable knowledge, tool orchestrator, escalation), Fase 5 started
 > (a real local CLI).** Fase 0
 > defined the real risk-level policy (`policy/risk_levels.py`), a fixed
@@ -25,7 +25,7 @@
 > ported from HYDRA-UMC-OPS-AGENT's own already-tested
 > `log_redaction.py`, and Fase 0's own literal exit criterion: a real
 > adversarial test proving a malicious retrieved document can never
-> trigger a tool call or leak a secret. Fase 3 wires 9 of the declared
+> trigger a tool call or leak a secret. Fase 3 wires 9 of the 10 declared
 > OBSERVE-level tools to a real handler (`orchestrator/dispatch.py`):
 > `service.status`, `storage.usage`, `network.port_status`,
 > `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list` and `update.pending` - each resolving only a short,
@@ -50,7 +50,7 @@
 
 ---
 
-**Honesty check - what actually runs today:** the risk-level policy (`policy/risk_levels.py`), the fixed tool allowlist (`policy/tool_matrix.py`), the five contract validators (`contracts.py` + `contracts/*.schema.json`), the injection-defense boundary (`knowledge/trust.py`, `knowledge/redaction.py`), the local TF-IDF knowledge index (`knowledge/index.py`, Fase 1), all 10 declared OBSERVE-level tool handlers (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), real `EvidenceBundle`/`MaintenanceProposal` construction (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4), and a real CLI over all of it (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, Fase 5's own first slice) are real and tested (197 tests plus 30 subtests passing across `tests/unit/` and `tests/adversarial/`) - Fases 1, 3 and 4 are complete, Fase 5 is started. `update.pending` needs the optional `hydra-umc-updater` dependency (the `update-check` extra) to actually check GitHub, and degrades honestly (`available: false`) without it. There is still no inference engine and no HYDRA-UMC-SERVER integration anywhere in this repository, and nothing in this codebase can act on a `MaintenanceProposal` yet - Fase 2, and the rest of Fase 5 (the HYDRA-UMC-SERVER-integrated API, and voice) in the Roadmap below remain entirely aspirational, with zero code behind them. See `CHANGELOG.md` for exactly what has shipped so far.
+**Honesty check - what actually runs today:** the risk-level policy (`policy/risk_levels.py`), the fixed tool allowlist (`policy/tool_matrix.py`), the five contract validators (`contracts.py` + `contracts/*.schema.json`), the injection-defense boundary (`knowledge/trust.py`, `knowledge/redaction.py`), the local TF-IDF knowledge index (`knowledge/index.py`, Fase 1), all 10 declared OBSERVE-level tool handlers (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), real `EvidenceBundle`/`MaintenanceProposal` construction (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4), and a real CLI over all of it (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, Fase 5's own first slice) are real and tested (211 tests plus 30 subtests passing across `tests/unit/` and `tests/adversarial/`) - Fases 1, 3 and 4 are complete, Fase 5 is started. `update.pending` needs the optional `hydra-umc-updater` dependency (the `update-check` extra) to actually check GitHub, and degrades honestly (`available: false`) without it. There is still no inference engine and no HYDRA-UMC-SERVER integration anywhere in this repository, and nothing in this codebase can act on a `MaintenanceProposal` yet - Fase 2, and the rest of Fase 5 (the HYDRA-UMC-SERVER-integrated API, and voice) in the Roadmap below remain entirely aspirational, with zero code behind them. See `CHANGELOG.md` for exactly what has shipped so far.
 
 ---
 
@@ -262,7 +262,7 @@ On Windows: `build.bat`, then `run.bat contracts validate ...` /
 non-mutating Python-syntax compile check this project's own CI workflow
 performs, without touching the project version or CHANGELOG - it does
 NOT run the test suite itself; run `./build.sh`/`build.bat` (or
-`pytest tests/` directly) for the full local test suite.
+`PYTHONPATH=src python -m pytest tests` directly, or `python -m unittest discover -s tests/unit -t .` without pytest) for the full local test suite.
 
 **Troubleshooting**
 
@@ -288,7 +288,7 @@ This version ships Fase 0, Fase 1, Fase 3 and Fase 4. What remains, in phase ord
   Hailo-10H (candidates: Qwen2.5-1.5B-Instruct, Qwen2.5-Coder-1.5B,
   Qwen3-1.7B-Instruct), chosen only once real Hailo compatibility,
   latency, language quality, power draw and license are verified.
-- **Fase 3 - Tool orchestrator (complete: 9 of 9 declared tools).**
+- **Fase 3 - Tool orchestrator (complete: 9 of 9 Fase 3 tools, plus knowledge.search from Fase 1).**
   Deterministic code wiring every real `OBSERVE`-level tool handler to
   `TOOL_MATRIX`, with policy enforcement on every call. `service.status`,
   `storage.usage`, `network.port_status`, `network.connectivity`,

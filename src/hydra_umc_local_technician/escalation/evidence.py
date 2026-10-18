@@ -33,7 +33,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from ..contracts import validate
-from ..knowledge.redaction import redact_lines
+from ..knowledge.redaction import redact_lines, redact_secrets
 
 # The real default this module falls back to when a caller has no local
 # validation of its own to report - an honest statement of scope, never a
@@ -106,7 +106,7 @@ def assemble_evidence_bundle(
     # already produced - the same real "what command, on what target"
     # record HYDRA-UMC-OPS-AGENT's own incident.py keeps as evidence_refs
     # (e.g. "systemctl is-active <unit>"), never a step this module infers.
-    reproduction_steps = [item.result["evidence"] for item in observed]
+    reproduction_steps = [redact_secrets(str(item.result["evidence"])) for item in observed]
 
     component_versions: dict[str, str] = {}
     relevant_manifests: list[str] = []
@@ -119,7 +119,9 @@ def assemble_evidence_bundle(
             version = output.get("version")
             if isinstance(version, str):
                 component_versions[output["name"]] = version
-            relevant_manifests.append(f"{output.get('project')}: {json.dumps(output, sort_keys=True, ensure_ascii=False)}")
+            relevant_manifests.append(
+                redact_secrets(f"{output.get('project')}: {json.dumps(output, sort_keys=True, ensure_ascii=False)}")
+            )
         if item.tool == "logs.read" and isinstance(output.get("lines"), list):
             redacted_log_excerpts.extend(str(line) for line in output["lines"])
 
@@ -135,10 +137,11 @@ def assemble_evidence_bundle(
         "relevantManifests": relevant_manifests,
         "redactedLogExcerpts": redacted_log_excerpts,
         "reproductionSteps": reproduction_steps,
-        "failedTests": list(failed_tests) if failed_tests else [],
-        "impact": impact,
-        "actionsAttempted": list(actions_attempted) if actions_attempted else [],
-        "localValidationResult": local_validation_result if local_validation_result else _NO_LOCAL_VALIDATION,
+        # every free-text field is redacted too: the bundle is what leaves the node
+        "failedTests": redact_lines(list(failed_tests)) if failed_tests else [],
+        "impact": redact_secrets(impact),
+        "actionsAttempted": redact_lines(list(actions_attempted)) if actions_attempted else [],
+        "localValidationResult": redact_secrets(local_validation_result) if local_validation_result else _NO_LOCAL_VALIDATION,
         "date": _utc_now_iso(),
     }
     bundle["checksum"] = _checksum(bundle)

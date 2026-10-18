@@ -80,6 +80,16 @@ class ToolRequest:
         }
 
 
+def _contains_untrusted(value: object) -> bool:
+    if isinstance(value, UntrustedText):
+        return True
+    if isinstance(value, dict):
+        return any(_contains_untrusted(k) or _contains_untrusted(v) for k, v in value.items())
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return any(_contains_untrusted(item) for item in value)
+    return False
+
+
 def build_tool_request_from_model_output(
     *,
     request_id: str,
@@ -99,6 +109,11 @@ def build_tool_request_from_model_output(
     before any ToolRequest object ever exists, not filtered out later by
     whatever eventually dispatches one.
     """
+    # UntrustedText is a str subclass, so the type system alone would let it
+    # through as a tool name, reason, actor or argument: refuse it at run time.
+    for label, value in (("tool", tool), ("actor", actor), ("reason", reason), ("arguments", arguments)):
+        if _contains_untrusted(value):
+            raise ToolCallRefused(f"{label} contains text taken from an untrusted source - refusing to build a ToolRequest from it")
     descriptor = lookup_tool(tool)
     if descriptor is None:
         raise ToolCallRefused(f"'{tool}' is not a registered tool - refusing, not guessing a risk level for it")

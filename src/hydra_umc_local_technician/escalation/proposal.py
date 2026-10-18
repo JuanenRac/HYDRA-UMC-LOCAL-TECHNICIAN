@@ -41,7 +41,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..contracts import validate
+from ..contracts import ContractValidationError, validate
 from ..policy.risk_levels import POLICIES, RiskLevel
 from .evidence import ObservedResult
 
@@ -92,6 +92,16 @@ def propose_maintenance(
     if not isinstance(risk, RiskLevel):
         raise ProposalError(f"risk must be a real RiskLevel, got {type(risk).__name__}")
 
+    # The pool is checked like the evidence bundle checks its results: an object that
+    # merely has an "evidence" key is not an observed tool result, and a failed
+    # tool call grounds nothing.
+    for item in evidence_pool:
+        try:
+            validate("ToolResult", item.result)
+        except ContractValidationError as exc:
+            raise ProposalError(f"a result for {item.tool!r} is not a valid ToolResult: {exc}") from exc
+        if item.result.get("status") != "ok":
+            raise ProposalError(f"the result for {item.tool!r} has status {item.result.get('status')!r}; only status 'ok' results can ground a proposal")
     real_evidence_strings = {item.result["evidence"] for item in evidence_pool}
     ungrounded = [entry for entry in cited_evidence if entry not in real_evidence_strings]
     if ungrounded:

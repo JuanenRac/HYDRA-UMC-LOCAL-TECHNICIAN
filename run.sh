@@ -32,8 +32,7 @@ printf '\n'
 #                                                        the shipped example
 #                                                        ToolRequest fixture
 #   ./run.sh contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
-# This delivery (Fase 0) is CLI-only (no GUI, no inference, no real tool
-# execution yet) - see cli.py's own header comment.
+# This is a CLI-only delivery (no GUI, no inference) - see cli.py's own header comment.
 set -uo pipefail  # no -e: we need to reach the trap below even if the process exits non-zero
 cd "$(dirname "$0")"
 

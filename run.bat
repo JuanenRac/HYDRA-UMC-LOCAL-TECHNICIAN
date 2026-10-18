@@ -33,8 +33,7 @@ REM   run.bat                                        - real demo: validates
 REM                                                     the shipped example
 REM                                                     ToolRequest fixture
 REM   run.bat contracts validate tests\fixtures\tool_request.valid.json --contract ToolRequest
-REM This delivery (Fase 0) is CLI-only (no GUI, no inference, no real tool
-REM execution yet) - see cli.py's own header comment.
+REM This is a CLI-only delivery (no GUI, no inference) - see cli.py's own header comment.
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
@@ -52,4 +51,6 @@ if "%~1"=="" (
 )
 
 :done
-pause
+set "HYDRA_UMC_RC=!ERRORLEVEL!"
+if not defined HYDRA_UMC_CI if "%~1"=="" pause
+exit /b !HYDRA_UMC_RC!

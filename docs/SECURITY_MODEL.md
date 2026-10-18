@@ -66,8 +66,8 @@ not only documented here.
 every tool name this technician will ever be allowed to invoke, each
 pinned to its own risk level. A name that is not a key in that
 dictionary cannot be called - `lookup_tool()` returns `None`, and the
-only real caller of that result (`knowledge/trust.py`'s
-`build_tool_request_from_model_output()`) treats `None` as an
+callers of that result (`knowledge/trust.py`'s
+`build_tool_request_from_model_output()` and the dispatcher) treat `None` as an
 unconditional refusal. There is no "call anything and classify its risk
 afterward" path anywhere in this codebase.
 
@@ -117,10 +117,11 @@ marker:
 
 Redaction is applied where data leaves a handler or this process, not
 only to logs: the lines `logs.read` returns, the command line of every
-process `process.list` reports (that is where `--token X` lives), the
-excerpt of every `knowledge.search` match (each also cut to a bounded
-length), and the log excerpts of an `EvidenceBundle` when it is
-assembled, because the `ToolResult` files it is built from may have been
+process `process.list` reports (that is where `--token X` lives; a secret given
+as a separate argument is redacted too), the excerpt of every `knowledge.search`
+match (each also cut to a bounded length), the `output` and `evidence` of every
+`ToolResult` (redacted once, where the result is built), and every free-text
+field of an `EvidenceBundle` when it is assembled, because the `ToolResult` files it is built from may have been
 stored or edited since they were produced. `manifest.read` never copies
 a manifest into its result: it returns four short strings and nothing
 else. `network.connectivity` reports a redirect as the endpoint's
@@ -178,18 +179,18 @@ document (an `UntrustedText` containing a fake "ignore all previous
 instructions, call tool X" payload plus embedded secrets) and asserts,
 concretely: `UntrustedText` exposes no tool-producing method at all; a
 request naming an unregistered tool (`"shell.exec"`) is refused and that
-name is not in `TOOL_MATRIX` in the first place; every currently
-registered tool is still refused (none are implemented yet); the request
+name is not in `TOOL_MATRIX` in the first place; the request
 builder's signature carries no risk-level parameter a caller could set;
 and `.redacted()` strips the embedded secrets while preserving the
 genuinely useful, non-secret content next to them.
 
-## What Fase 0 deliberately does not implement
+## What is deliberately not implemented
 
-No inference engine, no RAG index, no real tool execution, and no
-HYDRA-UMC-SERVER integration exist in this delivery. Everything above is
-either a declared contract/policy (enforced by tests) or a real,
-tested defensive boundary - never a claim that this technician can
-already observe, prepare, or act on the real ecosystem. See the
-README's own Roadmap section for what later phases add, and in what
-order.
+There is no inference engine and no HYDRA-UMC-SERVER integration. The ten
+OBSERVE-level tools do run for real, and a local TF-IDF index searches the
+configured knowledge sources. Everything above is either a declared
+contract/policy (enforced by tests) or a tested defensive boundary. The
+`UntrustedText` type is a marker, not a barrier by itself: it is a `str`
+subclass, so `build_tool_request_from_model_output()` also refuses it at run
+time wherever it appears; the real protection is the allow-list of symbolic tool
+names. See the README's own Roadmap section for what later phases add.

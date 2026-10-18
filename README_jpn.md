@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/フェーズ-1%2C%203%20%26%204%2F6%20完了-367BF5.svg" alt="全6フェーズ中フェーズ1・3・4完了">
 </p>
 
-> **状態: v0.1.3、機能実装済み - 全6フェーズ中フェーズ1・3・4完了
+> **状態: v0.1.4、機能実装済み - 全6フェーズ中フェーズ1・3・4完了
 > （検索可能な知識、ツールオーケストレーター、エスカレーション）、フェーズ5開始
 > （実際のローカルCLI）。** フェーズ0では、実際のリスクレベル・
 > ポリシー（`policy/risk_levels.py`）、固定のツール許可リスト
@@ -51,7 +51,7 @@
 
 ---
 
-**正直な現状確認 - 今日実際に動くもの:** リスクレベルポリシー(`policy/risk_levels.py`)、固定のツール許可リスト(`policy/tool_matrix.py`)、5 つの契約バリデーター(`contracts.py` + `contracts/*.schema.json`)、インジェクション防御境界(`knowledge/trust.py`、`knowledge/redaction.py`)、ローカルTF-IDF知識インデックス(`knowledge/index.py`、フェーズ1)、宣言済みの10個のOBSERVEツールすべてに実際のハンドラーがある(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)、実際の `EvidenceBundle`/`MaintenanceProposal` 構築(`escalation/evidence.py`、`escalation/proposal.py`、フェーズ4)、そしてそれらすべての上に実際のCLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`、フェーズ5自身の最初のスライス)はテスト済みである(`tests/unit/` と `tests/adversarial/` 全体で 197 件のテストと 30 件のサブテストが成功) - フェーズ1・フェーズ3・フェーズ4は完了し、フェーズ5は開始した。`update.pending` は実際にGitHubを確認するためにオプションの依存関係 `hydra-umc-updater`(`update-check` extra)を必要とし、それがない場合は正直に(`available: false`)劣化する。このリポジトリのどこにも推論エンジン、HYDRA-UMC-SERVER との統合はまだ存在せず、このコードのどこも `MaintenanceProposal` に対してまだ行動を起こせない——下記ロードマップのフェーズ 2、そしてフェーズ5の残り(HYDRA-UMC-SERVERと統合されたAPI、および音声)は依然として完全に願望であり、裏付けとなるコードは一切ない。これまでに何が実際に出荷されたかは `CHANGELOG.md` を参照。
+**正直な現状確認 - 今日実際に動くもの:** リスクレベルポリシー(`policy/risk_levels.py`)、固定のツール許可リスト(`policy/tool_matrix.py`)、5 つの契約バリデーター(`contracts.py` + `contracts/*.schema.json`)、インジェクション防御境界(`knowledge/trust.py`、`knowledge/redaction.py`)、ローカルTF-IDF知識インデックス(`knowledge/index.py`、フェーズ1)、宣言済みの10個のOBSERVEツールすべてに実際のハンドラーがある(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)、実際の `EvidenceBundle`/`MaintenanceProposal` 構築(`escalation/evidence.py`、`escalation/proposal.py`、フェーズ4)、そしてそれらすべての上に実際のCLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`、フェーズ5自身の最初のスライス)はテスト済みである(`tests/unit/` と `tests/adversarial/` 全体で 211 件のテストと 30 件のサブテストが成功) - フェーズ1・フェーズ3・フェーズ4は完了し、フェーズ5は開始した。`update.pending` は実際にGitHubを確認するためにオプションの依存関係 `hydra-umc-updater`(`update-check` extra)を必要とし、それがない場合は正直に(`available: false`)劣化する。このリポジトリのどこにも推論エンジン、HYDRA-UMC-SERVER との統合はまだ存在せず、このコードのどこも `MaintenanceProposal` に対してまだ行動を起こせない——下記ロードマップのフェーズ 2、そしてフェーズ5の残り(HYDRA-UMC-SERVERと統合されたAPI、および音声)は依然として完全に願望であり、裏付けとなるコードは一切ない。これまでに何が実際に出荷されたかは `CHANGELOG.md` を参照。
 
 ---
 

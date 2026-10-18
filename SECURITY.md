@@ -41,12 +41,14 @@ action. If you discover a vulnerability affecting:
   `contracts validate` command execute, evaluate, or otherwise treat
   payload content as anything other than inert JSON data.
 
-**Not yet applicable** - Fase 1 and later (a real inference engine, a RAG
-index, real tool execution, HYDRA-UMC-SERVER integration,
-`REVERSIBLE_OPERATION` and above) do not exist yet in this delivery.
-There is no network-facing service, no model running, and no tool with a
-real handler anywhere in this repository yet, so there is nothing there
-to have a vulnerability in.
+**Surface that exists today** - the read-only tool handlers of
+`orchestrator/dispatch.py` (files, processes, ports, `systemctl`, an optional
+update check that contacts GitHub), the `--config` and `--result` files the CLI
+reads, the knowledge index, and the escalation outbox directory. Report anything
+that lets a secret leave the node or lets text act as a command.
+**Not yet applicable**: a real inference engine, HYDRA-UMC-SERVER integration and
+`REVERSIBLE_OPERATION` and above do not exist yet; there is no network-facing
+service and no model running.
 
 Please report responsibly:
 

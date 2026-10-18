@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
 from collections import Counter
 from dataclasses import dataclass
@@ -148,7 +149,7 @@ def search(index: TfidfIndex, query: str, *, top_k: int = 5) -> list[SearchResul
 
     results = [
         SearchResult(chunk=chunk, score=_cosine_similarity(query_vector, vector))
-        for chunk, vector in zip(index.chunks, index.chunk_vectors)
+        for chunk, vector in zip(index.chunks, index.chunk_vectors, strict=True)
     ]
     results = [result for result in results if result.score > 0.0]
     results.sort(key=lambda result: result.score, reverse=True)
@@ -169,7 +170,42 @@ MAX_DOCUMENT_BYTES = 4 * 1024 * 1024
 # `ingest_source_directory` reports how many it actually indexed.
 MAX_INDEXED_FILES = 500
 
+# Directories never worth indexing (and often enormous), pruned during the walk,
+# and files that are generated data rather than documentation.
+EXCLUDED_DIR_NAMES = frozenset({".git", "node_modules", ".venv", "venv", "__pycache__", "dist", "build", ".tox"})
+EXCLUDED_FILE_NAMES = frozenset({"package-lock.json", "yarn.lock", "pnpm-lock.yaml", "composer.lock"})
+# Total size of the files one search may read; the per-file limit alone allowed ~2 GiB.
+MAX_TOTAL_BYTES = 64 * 1024 * 1024
+
 _FENCE_RE = re.compile(r"^(`{3,}|~{3,})")
+
+
+def _bounded_candidates(root: Path) -> tuple[list[Path], bool]:
+    """The files to index, in deterministic order, found WITHOUT walking the
+    whole tree first: excluded directories are pruned, symbolic links to
+    directories are not followed, and the walk stops once the file-count or
+    total-size bound is exceeded (reported as truncated)."""
+    found: list[Path] = []
+    total_bytes = 0
+    truncated = False
+    for current, dirnames, filenames in os.walk(root, followlinks=False):
+        dirnames[:] = sorted(d for d in dirnames if d not in EXCLUDED_DIR_NAMES)
+        for name in sorted(filenames):
+            path = Path(current, name)
+            if name in EXCLUDED_FILE_NAMES or path.suffix not in ALLOWED_SUFFIXES or not path.is_file():
+                continue
+            try:
+                size = path.stat().st_size
+            except OSError:
+                continue
+            if len(found) >= MAX_INDEXED_FILES or total_bytes + min(size, MAX_DOCUMENT_BYTES) > MAX_TOTAL_BYTES:
+                truncated = True
+                break
+            found.append(path)
+            total_bytes += min(size, MAX_DOCUMENT_BYTES)
+        if truncated:
+            break
+    return sorted(found, key=lambda p: p.as_posix()), truncated
 
 
 def _canonical_source(path: Path, root: Path) -> str:
@@ -245,12 +281,7 @@ def ingest_source_directory(root: Path) -> IngestResult:
     if not root.is_dir():
         return IngestResult(chunks=(), indexed_sources=(), skipped_sources=(), truncated=False)
 
-    candidates = sorted(
-        (path for path in root.rglob("*") if path.is_file() and path.suffix in ALLOWED_SUFFIXES),
-        key=lambda p: p.as_posix(),
-    )
-    truncated = len(candidates) > MAX_INDEXED_FILES
-    candidates = candidates[:MAX_INDEXED_FILES]
+    candidates, truncated = _bounded_candidates(root)
 
     all_chunks: list[KnowledgeChunk] = []
     indexed: list[str] = []

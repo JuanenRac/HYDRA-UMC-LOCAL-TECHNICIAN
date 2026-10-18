@@ -27,9 +27,9 @@ any real secret redacted first), and its full, real output.
 
 ## ❌ What is NOT support?
 
-- This is Fase 0 (inventory and security baseline) of a six-phase plan -
-  it cannot yet run an inference engine, retrieve indexed knowledge,
-  execute a real tool, or integrate with HYDRA-UMC-SERVER. Please do not
+- This is a read-only diagnostic CLI at an early stage of a six-phase plan -
+  it cannot yet run an inference engine, send an escalation anywhere, act on
+  the system, or integrate with HYDRA-UMC-SERVER. Please do not
   open an Issue asking it to observe, diagnose, or act on a real
   ecosystem component; see the README's own Roadmap section for what is
   planned and when.
