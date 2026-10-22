@@ -227,7 +227,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 ├── build.sh / build.bat        # 虚拟环境 + 可编辑安装 + 编译检查 + 测试
 ├── build-test.sh / .bat        # 仅不产生变更的构建校验
 ├── run.sh / run.bat            # 转发一条真实的 CLI 命令
-├── bump_version.py             # 整个生态系统的"里程表式"版本递增（pyproject.toml + __init__.py）
+├── bump_version.py             # 里程表式版本递增（仅由显式 `bump` 命令运行）
 └── bump_manifest_version.py    # 将 hydra-umc.project.json 的版本与原生版本同步（--sync）
 ```
 

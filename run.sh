@@ -42,20 +42,21 @@ cd "$(dirname "$0")"
 # CI/piped/non-interactive runs).
 trap '[ -t 0 ] && read -r -p "Press Enter to close..." _' EXIT
 
-if [ -f .venv/bin/activate ]; then
-    # shellcheck disable=SC1091
-    source .venv/bin/activate
-elif [ -f .venv/Scripts/activate ]; then
-    # shellcheck disable=SC1091
-    source .venv/Scripts/activate
+# The python of the venv is used directly (no activate script); without a venv the python on the PATH is used.
+if [ -x .venv/bin/python ]; then
+    VPY=".venv/bin/python"
+elif [ -x .venv/Scripts/python.exe ]; then
+    VPY=".venv/Scripts/python.exe"
+else
+    VPY="python3"
 fi
 
 if [ "$#" -eq 0 ]; then
     printf '%s\n' "No arguments given - running a real demo: validating the shipped example ToolRequest fixture."
-    python -m hydra_umc_local_technician.cli contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
+    "$VPY" -m hydra_umc_local_technician.cli contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
     status=$?
 else
-    python -m hydra_umc_local_technician.cli "$@"
+    "$VPY" -m hydra_umc_local_technician.cli "$@"
     status=$?
 fi
 exit "$status"

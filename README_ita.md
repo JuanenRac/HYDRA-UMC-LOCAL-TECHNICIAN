@@ -275,7 +275,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 ├── build.sh / build.bat        # venv + installazione editabile + verifica + test
 ├── build-test.sh / .bat        # Solo validazione di build non mutante
 ├── run.sh / run.bat            # Inoltra un comando CLI reale
-├── bump_version.py             # Incremento "contachilometri" di tutto l'ecosistema (pyproject.toml + __init__.py)
+├── bump_version.py             # Incremento di versione stile contachilometri (eseguito solo dal comando `bump` esplicito)
 └── bump_manifest_version.py    # Sincronizza la versione di hydra-umc.project.json con quella nativa (--sync)
 ```
 
