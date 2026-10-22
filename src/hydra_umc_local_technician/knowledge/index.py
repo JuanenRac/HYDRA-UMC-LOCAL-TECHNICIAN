@@ -42,7 +42,7 @@ from pathlib import Path
 
 # Same real accented-Latin + CJK-bigram tokenizer HYDRA-UMC-DOCS-QA's own
 # index.py already established and tested - this technician's
-# own docs are written in the same 7 languages as every other repo in
+# own docs are written in the same 8 languages as every other repo in
 # this ecosystem.
 _LATIN_TOKEN_RE = re.compile(r"[a-z0-9À-ɏ]+")
 _CJK_RUN_RE = re.compile(r"[぀-ヿ㐀-䶿一-鿿豈-﫿]+")
