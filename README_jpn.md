@@ -383,6 +383,7 @@ HYDRA-UMC ロボティクス・エコシステムの一部です。リクエス�
 - **[URTC-FLASHER](https://github.com/JuanenRac/URTC-FLASHER)** — URTC 基板をフラッシュするデスクトップ GUI ツール、CAN-OTA に加えてフルチップ SWD/JTAG。
 - **[URTC-TESTER](https://github.com/JuanenRac/URTC-TESTER)** — URTC 基板向けデスクトップ・ライブ CAN バス診断ツール、ツールプロファイルごとに1パネル。
 - **[URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — Web Serial API 経由の、ローカルインストール不要な URTC-TESTER のブラウザ版代替。
+- **[URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY)** — URTC の CAN バスの前に置くゲートウェイ：許可する識別子のリスト、レート制限、セッション鍵。コンピューター上でテスト済みで、実際のバスではまだ試していません。
 
 *視覚AIノード（Hailo-8）*
 - **[HYDRA-UMC-VISION-NODE](https://github.com/JuanenRac/HYDRA-UMC-VISION-NODE)** — 実際の段階別ハードウェア準備状況チェックを備えた Hailo-8 視覚パイプラインの統合ハブ。
