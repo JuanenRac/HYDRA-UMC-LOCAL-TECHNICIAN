@@ -70,6 +70,7 @@ from __future__ import annotations
 import http.client
 import json
 import os
+import re
 import shutil
 import socket
 import subprocess
@@ -86,6 +87,7 @@ from ..contracts import validate
 from ..knowledge import index as knowledge_index
 from ..knowledge.redaction import redact_json, redact_lines, redact_secrets
 from ..knowledge.trust import ToolRequest, UntrustedText
+from ..policy.execution_mode import decide
 from ..policy.tool_matrix import lookup_tool
 from .allowlist import OrchestratorConfig, UnknownAllowlistEntry
 from .audit import AuditWriteError
@@ -286,13 +288,46 @@ def _handle_service_status(config: OrchestratorConfig, arguments: dict[str, Any]
         # this as itself, never a guessed "inactive".
         output = {"unit": unit, "active": False, "available": False, "reason": "systemctl not found on PATH - not a real systemd host"}
         return output, "shutil.which('systemctl') returned None - honest degradation, no guessed status"
+    # `show` says more than `is-active` (the sub-state, how the last run ended, how often systemd restarted
+    # it, the exit status of the main process); `--` keeps a unit name from being read as an option
+    shown = subprocess.run(
+        [systemctl, "show", "-p", "ActiveState,SubState,Result,NRestarts,ExecMainStatus", "--", unit],
+        capture_output=True, text=True, timeout=5.0, check=False,
+    )
+    properties = _parse_systemctl_show(shown.stdout) if shown.returncode == 0 else {}
+    if "ActiveState" in properties:
+        active_state = properties["ActiveState"]
+        output = {
+            "unit": unit, "active": active_state == "active", "available": True, "reason": active_state,
+            "activeState": active_state, "subState": properties.get("SubState"), "result": properties.get("Result"),
+            "restarts": _small_int(properties.get("NRestarts")), "mainExitStatus": _small_int(properties.get("ExecMainStatus")),
+        }
+        return output, f"systemctl show {unit}: {active_state}/{properties.get('SubState', '?')}, result {properties.get('Result', '?')}"
+    # an older systemctl, or a unit it cannot show: the plain answer, as before
     result = subprocess.run(
-        [systemctl, "is-active", unit],
+        [systemctl, "is-active", "--", unit],
         capture_output=True, text=True, timeout=5.0, check=False,
     )
     detail = (result.stdout or result.stderr or "").strip() or f"exit code {result.returncode}"
     output = {"unit": unit, "active": result.returncode == 0, "available": True, "reason": detail}
     return output, f"systemctl is-active {unit}: {detail}"
+
+
+def _parse_systemctl_show(text: str) -> dict[str, str]:
+    """`Key=Value` lines of `systemctl show`; a value is short text, never trusted as more."""
+    properties: dict[str, str] = {}
+    for line in text.splitlines():
+        key, separator, value = line.partition("=")
+        if separator and key.isalnum():
+            properties[key] = value.strip()[:80]
+    return properties
+
+
+def _small_int(value: str | None) -> int | None:
+    """A counter or an exit status from `systemctl show`; None when it is absent or not a plain number."""
+    if value is None or not value.isdigit() or len(value) > 9:
+        return None
+    return int(value)
 
 
 # manifest.read returns four short descriptive fields, nothing else: a
@@ -468,11 +503,38 @@ _PROCESS_LIST_MAX_MATCHES = 20
 _PROCESS_CMDLINE_MAX_CHARS = 2000
 
 
+_INTERPRETERS = re.compile(r"^(python[0-9.]*|pypy[0-9.]*|node(js)?|bash|sh|dash|ruby|perl|java)$")
+
+
+def _names_the_program(arguments: list[str], pattern: str) -> bool:
+    """Whether a process IS the program `pattern` names, judged by what it runs and not by every word on its
+    command line: `pattern` must be in argv[0] (the program), or, when argv[0] is an interpreter (python, node,
+    a shell...), in the script or module it was given (the first argument that is not an option, or the one after
+    `-m`). So `grep PATTERN`, `journalctl -u PATTERN`, `tail -f PATTERN.log` or an editor with the file open are
+    not the program, which a substring over the whole line used to take them for."""
+    if not arguments:
+        return False
+    if pattern in arguments[0]:
+        return True
+    if not _INTERPRETERS.match(os.path.basename(arguments[0])):
+        return False
+    rest = arguments[1:4]
+    for index, argument in enumerate(rest):
+        if argument == "-m" and index + 1 < len(rest):
+            return pattern in rest[index + 1]
+        if argument == "-c":
+            return False  # code given on the command line is not a program that carries a name
+        if not argument.startswith("-"):
+            return pattern in argument
+    return False
+
+
 def _list_proc_matches(pattern: str, proc_dir: Path | None = None) -> tuple[list[dict[str, Any]], bool]:
     """Real, read-only /proc enumeration - the same mechanism `ps` itself
     is built on, with no subprocess spawned. Each match is a real PID
-    whose real cmdline (as the kernel itself reports it, never the
-    process's own possibly-spoofed argv[0] alone) contains `pattern`. A
+    that IS the program `pattern` names (see `_names_the_program`: argv[0],
+    or the script an interpreter runs - not any process that merely
+    mentions the name, such as a `grep` or a `tail`). A
     PID that exits between `iterdir()` and reading its own `cmdline` is a
     real, benign race (the process is simply no longer there) - skipped,
     never an error. Returns (matches, truncated)."""
@@ -487,8 +549,9 @@ def _list_proc_matches(pattern: str, proc_dir: Path | None = None) -> tuple[list
             raw = (entry / "cmdline").read_bytes()
         except OSError:
             continue
-        cmdline = raw.decode("utf-8", errors="replace").replace("\x00", " ").strip()
-        if pattern not in cmdline or int(entry.name) == own_pid:
+        arguments = [part for part in raw.decode("utf-8", errors="replace").split("\x00") if part]
+        cmdline = " ".join(arguments)
+        if int(entry.name) == own_pid or not _names_the_program(arguments, pattern):
             continue  # this technician's own command line names the pattern it was asked about
         if len(matches) >= _PROCESS_LIST_MAX_MATCHES:
             truncated = True
@@ -621,6 +684,11 @@ def _dispatch(request: ToolRequest, config: OrchestratorConfig) -> dict[str, Any
         raise ToolDispatchError(f"'{request.tool}' is not a registered tool")
     if not descriptor.implemented:
         raise ToolDispatchError(f"'{request.tool}' is registered but not implemented")
+    # The execution policy is on the real path from the start, even though every tool registered today is
+    # read-only: a tool added later above OBSERVE is refused here unless the mode and an approval allow it.
+    decision = decide(config.execution_mode, descriptor.risk_level, request.tool)
+    if not decision.allowed:
+        raise ToolDispatchError(f"refused by the execution policy: {decision.reason}")
     handler = _HANDLERS.get(request.tool)
     if handler is None:
         # descriptor.implemented=True but no handler wired here would be a

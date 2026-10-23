@@ -27,6 +27,8 @@ from typing import Any
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from ..policy.execution_mode import DEFAULT_MODE, ExecutionMode
+
 
 class UnknownAllowlistEntry(ValueError):
     """Raised for a symbolic name this config does not recognize - a real,
@@ -83,6 +85,9 @@ class OrchestratorConfig:
     # and never a pattern a caller supplies directly: only ever one an
     # operator already put here for exactly this purpose.
     process_patterns: dict[str, str] = field(default_factory=dict)
+    # What this technician may do at all (policy/execution_mode.py). Every tool registered today is read-only, so the
+    # default, diagnosis-only, refuses nothing that exists; it stands in front of any tool added later above OBSERVE.
+    execution_mode: ExecutionMode = DEFAULT_MODE
     # symbolic name -> a real, fixed directory `knowledge.search` (Fase 1)
     # may index - never a raw path a caller supplies, and never "the
     # whole disk": an operator decides up front exactly which real

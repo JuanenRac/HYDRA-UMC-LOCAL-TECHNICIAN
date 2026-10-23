@@ -240,8 +240,15 @@ class ProcessListTests(unittest.TestCase):
         import sys
         import time
 
+        import tempfile
+
+        # the process is the program the pattern names: an interpreter running a script of that name
         marker = "hydra-umc-local-technician-test-marker-4f3a9c"
-        proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(5)", marker])
+        scripts = tempfile.TemporaryDirectory()
+        self.addCleanup(scripts.cleanup)
+        script = Path(scripts.name) / f"{marker}.py"
+        script.write_text("import time; time.sleep(5)\n", encoding="utf-8")
+        proc = subprocess.Popen([sys.executable, str(script)])
         try:
             deadline = time.monotonic() + 3
             matches: list = []
