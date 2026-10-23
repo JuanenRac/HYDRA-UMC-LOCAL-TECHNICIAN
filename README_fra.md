@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20sur%206%20compl%C3%A8tes-367BF5.svg" alt="Phases 1, 3 et 4 sur 6 complètes">
 </p>
 
-> **Statut : v0.1.5, fonctionnel - Phases 1, 3 et 4 sur 6 complètes
+> **Statut : v0.1.6, fonctionnel - Phases 1, 3 et 4 sur 6 complètes
 > (connaissance récupérable, orchestrateur d'outils, escalade), Phase 5
 > démarrée (une vraie CLI locale, une API locale en lecture seule et une page web).** La
 > Phase 0 a défini la politique réelle de niveaux de risque
