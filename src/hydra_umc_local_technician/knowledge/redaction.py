@@ -1,23 +1,21 @@
 # =============================================================================
-# HYDRA-UMC-LOCAL-TECHNICIAN - src/hydra_umc_local_technician/knowledge/redaction.py
+# HYDRA-UMC-SDK - tools/canonical/redaction.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
-"""Real, pure log/text sanitization - this project's own non-negotiable
-security limit: never sends secrets, tokens, SSH keys, .env files or
-un-sanitized logs to the control-plane or an AI provider.
+"""One shared, pure redaction of secrets for text and JSON-like values.
 
-Deliberately a fixed, explicit list of REAL, well-known secret shapes, never
-a fuzzy "looks random enough" heuristic - a heuristic invites both false
-positives (redacting an innocuous long identifier, destroying real diagnostic
-value) and false negatives (a genuine secret shaped just differently enough
-to dodge a vague pattern). Every pattern here corresponds to one real,
-concrete leak this project's own contract explicitly calls out.
+This file has a single canonical copy (`tools/canonical/redaction.py` of HYDRA-UMC-SDK) that is vendored,
+byte for byte, into the Python projects that send text out of their process (the ops agent and the local
+technician); `tools/sync_repo_tools.py` keeps the copies identical. The cases every implementation has to
+pass, in any language, are in `contracts/redaction/vectors.json`.
 
-This module never decides WHAT to collect - inventory.py does that. It only
-ever narrows what a caller already gathered, so the same real function
-guards every path data leaves this process on (a saved snapshot file, a
-future network transport, a future AI-provider request).
+Deliberately a fixed, explicit list of real, well-known secret shapes, never a fuzzy "looks random enough"
+heuristic: a heuristic invites both false positives (redacting an innocuous long identifier) and false
+negatives (a genuine secret shaped just differently enough to dodge a vague pattern).
+
+The module never decides what to collect; it only narrows what a caller already gathered, so the same
+function guards every path data leaves a process on (a saved snapshot, a network transport, an AI request).
 """
 from __future__ import annotations
 
@@ -106,34 +104,49 @@ _PEM_BLOCK_RE = re.compile(
 
 _REDACTED = "[REDACTED]"
 
+# Credentials that carry no label at all - a token pasted bare into a log line
+# or an error message. Every shape here is a real, published format (GitHub
+# personal/OAuth/app tokens, Anthropic and OpenAI keys, AWS access key ids,
+# Slack tokens, JWTs). The generic `sk-` shape also requires a digit so an
+# ordinary hyphenated phrase that happens to start with those letters stays
+# readable.
+TOKEN_SHAPES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"\bgh[pousr]_[A-Za-z0-9]{30,}\b"),
+    re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}\b"),
+    re.compile(r"\bsk-(?:ant-|proj-)?(?=[A-Za-z0-9_-]*\d)[A-Za-z0-9_-]{20,}"),
+    re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b"),
+    re.compile(r"\bxox[abprs]-[A-Za-z0-9-]{10,}"),
+    re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}"),
+)
+
+# `Authorization: Basic dXNlcjpwYXNz` - only in its header form, so the word
+# "Basic" in ordinary prose is left alone.
+_BASIC_AUTH_RE = re.compile(r"(?i)\b((?:proxy-)?authorization\s*[:=]\s*)basic\s+[A-Za-z0-9+/=]{6,}")
+
 # A command line carries its secrets as `--token VALUE` / `-password VALUE`
-# (the value is a separate argument, so the KEY=VALUE shape above never sees
-# it). Only a flag whose name contains a secret word is matched, and only a
-# value that does not itself start with "-" is taken as the secret.
+# (the value is a separate argument, so the KEY=VALUE shape never sees it).
+# Only a flag whose name contains a secret word is matched, and only a value
+# that does not itself start with "-" is taken as the secret.
 _FLAG_VALUE_RE = re.compile(
     r"(?P<flag>(?<![A-Za-z0-9_-])--?[A-Za-z0-9_-]*(?:" + "|".join(_SECRET_KEY_NAMES) + r")s?[A-Za-z0-9_-]*)"
     r"(?P<sep>[ \t]+)(?!-)(?P<value>\S+)",
     re.IGNORECASE,
 )
 
-# "Authorization: Basic <base64>" - the other common HTTP credential header.
-_BASIC_RE = re.compile(r"\bBasic\s+[A-Za-z0-9+/=_-]{8,}", re.IGNORECASE)
+# A bare `Basic <base64>` (a header pasted without its name, or a log line that
+# prints only the scheme and the credential). The credential must look like
+# base64 data (a digit or one of `+/=` in it) so the word "Basic" in prose
+# ("Basic configuration") is left alone.
+_BASIC_BARE_RE = re.compile(r"\bBasic\s+(?=[A-Za-z0-9+/=_-]*[0-9+/=])[A-Za-z0-9+/=_-]{8,}")
 
 # A cookie header carries session secrets as a whole.
 _COOKIE_RE = re.compile(r"(?P<header>\b(?:Set-)?Cookie\s*:\s*)[^\r\n]+", re.IGNORECASE)
 
-# Credentials with a well-known shape of their own: GitHub tokens, Slack
-# tokens, AWS access key ids, Anthropic/OpenAI style API keys.
-_KNOWN_TOKEN_RE = re.compile(
-    r"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|xox[abprs]-[A-Za-z0-9-]{10,}"
-    r"|AKIA[0-9A-Z]{16}|sk-ant-[A-Za-z0-9_-]{16,}|sk-[A-Za-z0-9]{24,})"
-)
-
 # `scheme://TOKEN@host` - a token used as the whole userinfo (no password part).
 _URL_TOKEN_USERINFO_RE = re.compile(r"(?<![A-Za-z0-9+.-])(?P<scheme>[A-Za-z][A-Za-z0-9+.-]{0,39}://)(?P<token>[^\s:/@]{16,1024})@")
 
-# (P1, residual
-# outside this project's own three original examples): a secret-named key
+# A residual outside a few earlier known examples: a
+# secret-named key
 # whose value is itself a nested JSON object or array
 # (`"password": {"value": "FAKE"}`, `"api_key": ["FAKE"]`) matches
 # neither _JSON_KEY_VALUE_RE's nor _KEY_VALUE_RE's own value
@@ -199,7 +212,7 @@ def redact_secrets(text: str) -> str:
     a fixed [REDACTED] marker."""
     if not text:
         return text
-    # a truncated PEM block (a real BEGIN marker with no
+    # A truncated PEM block (a real BEGIN marker with no
     # matching END - a log excerpt cut off mid-key) used to leave the
     # ENTIRE block, key material included, completely unredacted,
     # because _PEM_BLOCK_RE's own DOTALL match requires both markers.
@@ -209,9 +222,11 @@ def redact_secrets(text: str) -> str:
     result = re.sub(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----(?!.*-----END).*", _REDACTED, text, flags=re.DOTALL)
     result = _PEM_BLOCK_RE.sub(_REDACTED, result)
     result = _BEARER_RE.sub(f"Bearer {_REDACTED}", result)
-    result = _BASIC_RE.sub(f"Basic {_REDACTED}", result)
+    result = _BASIC_AUTH_RE.sub(lambda m: f"{m.group(1)}Basic {_REDACTED}", result)
+    result = _BASIC_BARE_RE.sub(f"Basic {_REDACTED}", result)
     result = _COOKIE_RE.sub(lambda m: f"{m.group('header')}{_REDACTED}", result)
-    result = _KNOWN_TOKEN_RE.sub(_REDACTED, result)
+    for shape in TOKEN_SHAPES:
+        result = shape.sub(_REDACTED, result)
     result = _URL_TOKEN_USERINFO_RE.sub(lambda m: f"{m.group('scheme')}{_REDACTED}@", result)
     result = _URL_CREDENTIALS_RE.sub(lambda m: f"{m.group('scheme')}{m.group('user')}:{_REDACTED}@", result)
     result = _redact_nested_structured_values(result)
@@ -222,23 +237,25 @@ def redact_secrets(text: str) -> str:
 
 
 def redact_json(value: object) -> object:
-    """redact_secrets() applied to every string inside a JSON-like value (and
-    the value of any key whose name is a secret word), so a structured tool
-    result is clean as a whole, not only the fields a handler remembered to
-    redact."""
+    """redact_secrets() applied to every string inside a JSON-like value, and
+    to the value of any key whose name is a secret word, so a structured
+    result is clean as a whole and not only in the fields somebody remembered
+    to redact. This is the single point the CLI, the evidence files and the
+    audit journal go through."""
     if isinstance(value, str):
         return redact_secrets(value)
-    if isinstance(value, list):
-        return [redact_json(item) for item in value]
-    if isinstance(value, tuple):
+    if isinstance(value, (list, tuple)):
         return [redact_json(item) for item in value]
     if isinstance(value, dict):
         cleaned: dict = {}
         for key, item in value.items():
-            if isinstance(key, str) and _SECRET_KEY_PATTERN.fullmatch(key + ":") and isinstance(item, (str, int, float)) and not isinstance(item, bool):
-                cleaned[key] = _REDACTED
+            if (
+                isinstance(key, str) and _SECRET_KEY_PATTERN.fullmatch(key + ":")
+                and isinstance(item, (str, int, float)) and not isinstance(item, bool)
+            ):
+                cleaned[str(key)] = _REDACTED
             else:
-                cleaned[key] = redact_json(item)
+                cleaned[str(key)] = redact_json(item)
         return cleaned
     return value
 
