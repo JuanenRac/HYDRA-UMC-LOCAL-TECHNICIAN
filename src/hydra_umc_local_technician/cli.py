@@ -21,6 +21,7 @@ integration exist yet - see README's own ROADMAP.
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import os
 import sys
@@ -34,6 +35,7 @@ from .escalation.evidence import EvidenceAssemblyError, ObservedResult, assemble
 from .escalation.proposal import ProposalError, propose_maintenance
 from .knowledge.trust import ToolCallRefused, build_tool_request_from_model_output
 from .orchestrator.allowlist import OrchestratorConfig, default_config
+from .orchestrator.audit import DEFAULT_BACKUPS, DEFAULT_MAX_BYTES, AuditLog, audit_log_from
 from .orchestrator.dispatch import ToolDispatchError, dispatch_tool_request
 from .policy.risk_levels import RiskLevel
 from .policy.tool_matrix import TOOL_MATRIX
@@ -83,12 +85,34 @@ def _load_config(config_path: str | None) -> OrchestratorConfig:
         log_sources={name: Path(value) for name, value in raw.get("logSources", {}).items()},
         process_patterns=dict(raw.get("processPatterns", {})),
         knowledge_sources={name: Path(value) for name, value in raw.get("knowledgeSources", {}).items()},
+        audit_log=_audit_from_config(raw.get("auditLog")),
     )
+
+
+def _with_audit(config: OrchestratorConfig, path: str | None) -> OrchestratorConfig:
+    """The journal named by --audit-log or the environment, unless the configuration file already set one."""
+    if config.audit_log is not None:
+        return config
+    journal = audit_log_from(path, dict(os.environ))
+    return config if journal is None else dataclasses.replace(config, audit_log=journal)
+
+
+def _cmd_audit_verify(args: argparse.Namespace) -> int:
+    ok, summary = AuditLog(args.path).verify()
+    print(("AUDIT_CHAIN=PASS " if ok else "AUDIT_CHAIN=FAIL ") + summary)
+    return 0 if ok else 1
+
+
+def _audit_from_config(section: object) -> AuditLog | None:
+    """`"auditLog": {"path": "/var/lib/.../audit.jsonl", "maxBytes": 5242880, "backups": 5}`; absent means off."""
+    if section is None:
+        return None
+    return AuditLog(section["path"], max_bytes=section.get("maxBytes", DEFAULT_MAX_BYTES), backups=section.get("backups", DEFAULT_BACKUPS))
 
 
 _CONFIG_KEYS = {
     "storagePaths", "ports", "connectivityTargets", "systemdUnits", "ecosystemRoot",
-    "logSources", "processPatterns", "knowledgeSources",
+    "logSources", "processPatterns", "knowledgeSources", "auditLog",
 }
 
 
@@ -102,6 +126,13 @@ def _validate_config_shape(raw: object) -> None:
     unknown = sorted(set(raw) - _CONFIG_KEYS)
     if unknown:
         raise ValueError(f"unknown config key(s): {', '.join(unknown)}")
+    audit = raw.get("auditLog")
+    if audit is not None:
+        if not isinstance(audit, dict) or not isinstance(audit.get("path"), str) or not audit["path"]:
+            raise ValueError('"auditLog" must be an object with a "path"')
+        unknown_audit = sorted(set(audit) - {"path", "maxBytes", "backups"})
+        if unknown_audit:
+            raise ValueError(f"unknown auditLog key(s): {', '.join(unknown_audit)}")
     units = raw.get("systemdUnits", [])
     if not isinstance(units, list) or not all(isinstance(unit, str) and unit for unit in units):
         raise ValueError('"systemdUnits" must be a list of unit names')
@@ -152,7 +183,7 @@ def _parse_argument_value(raw: str) -> Any:
 
 def _cmd_tools_call(args: argparse.Namespace) -> int:
     try:
-        config = _load_config(args.config)
+        config = _with_audit(_load_config(args.config), args.audit_log)
     except (OSError, ValueError, TypeError, KeyError, IndexError, AttributeError) as exc:
         # A config file that is missing, not JSON, or shaped wrongly is an
         # operator mistake to report in one line, not a traceback.
@@ -234,7 +265,7 @@ def _cmd_serve(args: argparse.Namespace) -> int:
     from .webapi import ApiConfigError, TechnicianServer, read_api_token
 
     try:
-        config = _load_config(args.config)
+        config = _with_audit(_load_config(args.config), args.audit_log)
         token = read_api_token(args.token_file, dict(os.environ))
         server = TechnicianServer((args.host, args.port), data_dir=Path(args.data_dir), config=config, token=token)
     except (ApiConfigError, OSError, OverflowError, ValueError, TypeError, KeyError, IndexError, AttributeError) as exc:
@@ -278,6 +309,7 @@ def build_parser() -> argparse.ArgumentParser:
     call_cmd.add_argument("--actor", default="cli", help="Who is making this call - recorded on the real ToolRequest.")
     call_cmd.add_argument("--reason", default="manual CLI call", help="Why - recorded on the real ToolRequest.")
     call_cmd.add_argument("--config", help="Path to a JSON OrchestratorConfig file; defaults to default_config() (the documented CM5 defaults) when omitted.")
+    call_cmd.add_argument("--audit-log", help="Append-only JSONL journal of every request and its outcome (or HYDRA_UMC_LOCAL_TECHNICIAN_AUDIT_LOG, or auditLog in --config). When on, a request that cannot be recorded is not run.")
     call_cmd.set_defaults(func=_cmd_tools_call)
 
     escalation = subparsers.add_parser("escalation", help="Fase 4/5: real EvidenceBundle assembly and MaintenanceProposal construction.")
@@ -310,7 +342,12 @@ def build_parser() -> argparse.ArgumentParser:
     serve_cmd.add_argument("--data-dir", required=True, help="Directory holding tool-results/, evidence/ and proposals/ (JSON files saved from the CLI's output).")
     serve_cmd.add_argument("--config", help="Path to a JSON OrchestratorConfig file (manifests and knowledge sources); defaults to default_config().")
     serve_cmd.add_argument("--token-file", help="File holding the bearer token (at least 24 characters); otherwise HYDRA_UMC_LOCAL_TECHNICIAN_TOKEN. Never taken from the command line.")
+    serve_cmd.add_argument("--audit-log", help="Append-only JSONL journal of the tool requests the API makes (or HYDRA_UMC_LOCAL_TECHNICIAN_AUDIT_LOG).")
     serve_cmd.set_defaults(func=_cmd_serve)
+
+    audit_cmd = subparsers.add_parser("audit-verify", allow_abbrev=False, help="Check that the hash chain of an audit journal (and its rotated files) is unbroken.")
+    audit_cmd.add_argument("path", help="The audit journal, e.g. /var/lib/hydra-umc/local-technician/audit.jsonl.")
+    audit_cmd.set_defaults(func=_cmd_audit_verify)
 
     return parser
 

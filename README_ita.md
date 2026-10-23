@@ -216,11 +216,8 @@ per la superficie di comandi reale e completa.
   `contracts/*.schema.json`, campo per campo, seguendo la stessa
   convenzione di `validation.py` di HYDRA-UMC-SDK - non una seconda
   fonte di verità indipendente.
-- **La redazione dei segreti riutilizza codice già testato.**
-  `knowledge/redaction.py` è un porting byte per byte (cambia solo il
-  commento di intestazione) del già testato `log_redaction.py` di
-  HYDRA-UMC-OPS-AGENT - il problema di fondo (riconoscere forme reali e
-  ben note di segreto senza un'euristica vaga) è identico qui.
+- **L'oscuramento dei segreti è una copia condivisa.** `knowledge/redaction.py` è l'oscuramento mantenuto da HYDRA-UMC-SDK (`tools/canonical/redaction.py`), identico a quello dell'agente operativo e verificato con gli stessi casi comuni (`tests/redaction_vectors.json`).
+- **Ogni richiesta di strumento può essere verificata.** Con `--audit-log PERCORSO` (o `HYDRA_UMC_LOCAL_TECHNICIAN_AUDIT_LOG`, o `auditLog` nel file di configurazione) ogni richiesta viene scritta in un giornale JSONL di sola aggiunta prima dell'esecuzione e il suo esito dopo, oscurato, ogni riga concatenata alla precedente con il suo SHA-256 e ruotata per dimensione. Una richiesta che non si può registrare non viene eseguita; `audit-verify PERCORSO` controlla la catena. Disattivato per impostazione predefinita.
 - **`PRIVILEGED_CHANGE` e `PHYSICAL_ACTION` restano non implementati.**
   Una porta deliberata e permanente finché non esistano un design
   dedicato, un percorso di autorizzazione separato e, per l'azione
@@ -252,6 +249,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   └── index.py          # Fase 1 - vera ricerca TF-IDF + ingestione limitata Markdown/JSON, portata da HYDRA-UMC-DOCS-QA
 │   ├── orchestrator/          # Fase 3 + Fase 1 - tutti i 10 gestori reali di strumenti OBSERVE, completo
 │   │   ├── allowlist.py      # OrchestratorConfig: whitelist di nomi simbolici che un gestore risolve, mai un percorso/host/porta grezzo
+│   │   ├── audit.py          # Giornale di audit JSONL di sola aggiunta, concatenato con hash
 │   │   └── dispatch.py       # dispatch_tool_request(): esegue davvero un ToolRequest validato, restituisce un vero ToolResult
 │   ├── escalation/            # Fase 4 - vero assemblaggio di EvidenceBundle + costruzione di MaintenanceProposal, completo
 │   │   ├── evidence.py       # assemble_evidence_bundle(): veri ToolResult -> un EvidenceBundle reale e valido secondo il contratto

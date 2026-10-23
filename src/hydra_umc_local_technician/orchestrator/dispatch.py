@@ -88,6 +88,7 @@ from ..knowledge.redaction import redact_json, redact_lines, redact_secrets
 from ..knowledge.trust import ToolRequest, UntrustedText
 from ..policy.tool_matrix import lookup_tool
 from .allowlist import OrchestratorConfig, UnknownAllowlistEntry
+from .audit import AuditWriteError
 
 # update.pending's own real integration boundary - see this module's own
 # docstring above for why this is lazy/optional rather than a hard
@@ -594,7 +595,7 @@ _HANDLERS = {
 }
 
 
-def dispatch_tool_request(request: ToolRequest, config: OrchestratorConfig) -> dict[str, Any]:
+def _dispatch(request: ToolRequest, config: OrchestratorConfig) -> dict[str, Any]:
     """Runs `request` for real and returns a validated ToolResult payload
     (a dict already matching contracts.py's own ToolResult shape - never
     an internal type the caller would need to know how to serialize).
@@ -637,3 +638,27 @@ def dispatch_tool_request(request: ToolRequest, config: OrchestratorConfig) -> d
             started_at, error_code=type(exc).__name__,
         )
     return _tool_result(request.request_id, "ok", output, evidence, started_at)
+
+
+def dispatch_tool_request(request: ToolRequest, config: OrchestratorConfig) -> dict[str, Any]:
+    """`_dispatch` with the audit journal around it when the configuration has one.
+
+    The request line is written first and is a condition: if it cannot be written, nothing runs
+    (`ToolDispatchError`). The closing line (result, or refusal) is best effort, so a full disk can never hide
+    a result that already exists."""
+    journal = config.audit_log
+    if journal is None:
+        return _dispatch(request, config)
+    try:
+        journal.record_request(request)
+    except AuditWriteError as exc:
+        raise ToolDispatchError(f"refused: {exc}") from exc
+    try:
+        result = _dispatch(request, config)
+    except ToolDispatchError as exc:
+        journal.record_outcome(request, "refused", reason=str(exc))
+        raise
+    journal.record_outcome(
+        request, "result", status=result["status"], errorCode=result.get("errorCode"), durationMs=result["durationMs"],
+    )
+    return result

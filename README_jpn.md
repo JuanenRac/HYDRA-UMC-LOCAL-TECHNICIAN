@@ -204,11 +204,8 @@ INVALID: tests/fixtures/tool_request.invalid.json (ToolRequest): ...
   `validation.py` と同じ規約に従い、`contracts/*.schema.json` からフィー
   ルド単位でコピーされています - 独立した2つ目の真実の情報源ではありませ
   ん。
-- **機密情報マスキングはすでにテスト済みのコードを再利用します。**
-  `knowledge/redaction.py` は HYDRA-UMC-OPS-AGENT 自身のすでにテスト済み
-  の `log_redaction.py` のバイト単位の移植です(ヘッダーコメントのみが
-  異なります) - 根底にある問題(あいまいなヒューリスティックなしに、実際
-  のよく知られた機密情報の形を認識すること)はここでも同一です。
+- **秘密情報のマスキングは共有コピーです。** `knowledge/redaction.py` は HYDRA-UMC-SDK が管理するマスキング(`tools/canonical/redaction.py`)で、運用エージェントのものと同一であり、同じ共通ケース(`tests/redaction_vectors.json`)で検証されます。
+- **すべてのツール要求を監査できます。** `--audit-log パス`(または `HYDRA_UMC_LOCAL_TECHNICIAN_AUDIT_LOG`、設定ファイルの `auditLog`)を指定すると、各要求は実行前に、結果は実行後に、マスキングされた上で追記専用の JSONL ジャーナルへ書かれ、各行は前の行の SHA-256 で連鎖し、サイズでローテーションされます。記録できない要求は実行されません。`audit-verify パス` で連鎖を検査します。既定ではオフです。
 - **`PRIVILEGED_CHANGE` と `PHYSICAL_ACTION` は未実装のままです。**
   専用の設計、別個の認可経路、そして物理的行動については実際のインター
   ロックが存在するまでの、意図的かつ恒久的な関門です - 後で完成させる
@@ -239,6 +236,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   └── index.py          # フェーズ1 - 実際のTF-IDF検索 + 範囲限定のMarkdown/JSON取り込み、HYDRA-UMC-DOCS-QA から移植
 │   ├── orchestrator/          # フェーズ3 + フェーズ1 - 10個すべての実際のOBSERVEツールハンドラー、完了
 │   │   ├── allowlist.py      # OrchestratorConfig: ハンドラーが解決するシンボル名の許可リスト、生のパス・ホスト・ポートは決して使わない
+│   │   ├── audit.py          # 追記専用・ハッシュ連鎖の JSONL 監査ジャーナル
 │   │   └── dispatch.py       # dispatch_tool_request(): 検証済みの ToolRequest を実際に実行し、実際の ToolResult を返す
 │   ├── escalation/            # フェーズ4 - 実際の EvidenceBundle 組み立て + MaintenanceProposal 構築、完了
 │   │   ├── evidence.py       # assemble_evidence_bundle(): 実際の ToolResult -> 契約に適合する実際の EvidenceBundle

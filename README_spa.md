@@ -215,11 +215,8 @@ superficie de comandos real y completa.
   `contracts/*.schema.json`, campo a campo, siguiendo la misma
   convención que `validation.py` de HYDRA-UMC-SDK - no una segunda
   fuente de verdad independiente.
-- **El saneamiento de secretos reutiliza código ya probado.**
-  `knowledge/redaction.py` es un port byte a byte (solo cambia el
-  comentario de cabecera) del ya probado `log_redaction.py` de
-  HYDRA-UMC-OPS-AGENT - el problema de fondo (reconocer formas reales y
-  bien conocidas de secreto sin una heurística difusa) es idéntico aquí.
+- **La redacción de secretos es una copia compartida.** `knowledge/redaction.py` es la redacción que mantiene HYDRA-UMC-SDK (`tools/canonical/redaction.py`), idéntica a la del agente de operaciones y comprobada con los mismos casos comunes (`tests/redaction_vectors.json`).
+- **Cada petición de herramienta puede auditarse.** Con `--audit-log RUTA` (o `HYDRA_UMC_LOCAL_TECHNICIAN_AUDIT_LOG`, o `auditLog` en el fichero de configuración) cada petición se escribe en un diario JSONL solo de añadir antes de ejecutarse y su resultado después, saneado, cada línea encadenada a la anterior por su SHA-256 y rotado por tamaño. Una petición que no se puede registrar no se ejecuta; `audit-verify RUTA` comprueba la cadena. Desactivado por defecto.
 - **`PRIVILEGED_CHANGE` y `PHYSICAL_ACTION` siguen sin implementarse.**
   Una puerta deliberada y permanente hasta que exista un diseño
   dedicado, un camino de autorización separado y, para la acción física,
@@ -251,6 +248,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   └── index.py          # Fase 1 - búsqueda TF-IDF real + ingesta acotada de Markdown/JSON, portado de HYDRA-UMC-DOCS-QA
 │   ├── orchestrator/          # Fase 3 + Fase 1 - los 10 manejadores reales de herramienta OBSERVE, completo
 │   │   ├── allowlist.py      # OrchestratorConfig: lista blanca de nombres simbólicos que resuelve un manejador, nunca una ruta/host/puerto en bruto
+│   │   ├── audit.py          # Diario de auditoría JSONL solo de añadir, encadenado por hash
 │   │   └── dispatch.py       # dispatch_tool_request(): ejecuta de verdad un ToolRequest validado, devuelve un ToolResult real
 │   ├── escalation/            # Fase 4 - ensamblado real de EvidenceBundle + construcción de MaintenanceProposal, completo
 │   │   ├── evidence.py       # assemble_evidence_bundle(): ToolResults reales -> un EvidenceBundle real y válido según contrato

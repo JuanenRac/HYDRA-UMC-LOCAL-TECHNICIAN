@@ -23,6 +23,7 @@ already applies to tool names themselves.
 from __future__ import annotations
 
 import re
+from typing import Any
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -90,6 +91,9 @@ class OrchestratorConfig:
     # (allowed suffixes, size cap, file-count cap) - this allow-list is
     # the outer boundary, not the only one.
     knowledge_sources: dict[str, Path] = field(default_factory=dict)
+    # the append-only audit journal of every tool request (orchestrator/audit.py), or None when the deployment
+    # did not turn it on. When it is set, a request whose first line cannot be written is not run.
+    audit_log: Any = None
 
     def resolve_storage_path(self, name: str) -> Path:
         try:

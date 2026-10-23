@@ -221,12 +221,8 @@ commandes réelle et complète.
   `contracts/*.schema.json`, champ par champ, suivant la même convention
   que `validation.py` de HYDRA-UMC-SDK - pas une seconde source de
   vérité indépendante.
-- **L'occultation de secrets réutilise du code déjà testé.**
-  `knowledge/redaction.py` est un portage octet par octet (seul le
-  commentaire d'en-tête change) du `log_redaction.py` déjà testé de
-  HYDRA-UMC-OPS-AGENT - le problème sous-jacent (reconnaître des formes
-  de secrets réelles et bien connues sans heuristique floue) y est
-  identique.
+- **La rédaction des secrets est une copie partagée.** `knowledge/redaction.py` est la rédaction tenue par HYDRA-UMC-SDK (`tools/canonical/redaction.py`), identique à celle de l'agent d'exploitation et vérifiée avec les mêmes cas communs (`tests/redaction_vectors.json`).
+- **Chaque requête d'outil peut être auditée.** Avec `--audit-log CHEMIN` (ou `HYDRA_UMC_LOCAL_TECHNICIAN_AUDIT_LOG`, ou `auditLog` dans le fichier de configuration), chaque requête est écrite dans un journal JSONL en ajout seul avant son exécution et son résultat après, expurgé, chaque ligne chaînée à la précédente par son SHA-256 et tournée selon la taille. Une requête qui ne peut pas être enregistrée n'est pas exécutée ; `audit-verify CHEMIN` vérifie la chaîne. Désactivé par défaut.
 - **`PRIVILEGED_CHANGE` et `PHYSICAL_ACTION` restent non implémentés.**
   Une porte délibérée et permanente jusqu'à ce qu'existent une
   conception dédiée, un chemin d'autorisation séparé et, pour l'action
@@ -258,6 +254,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   └── index.py          # Phase 1 - vraie recherche TF-IDF + ingestion bornée Markdown/JSON, portée depuis HYDRA-UMC-DOCS-QA
 │   ├── orchestrator/          # Phase 3 + Phase 1 - les 10 vrais gestionnaires d'outils OBSERVE, complet
 │   │   ├── allowlist.py      # OrchestratorConfig : liste blanche de noms symboliques qu'un gestionnaire résout, jamais un chemin/hôte/port brut
+│   │   ├── audit.py          # Journal d'audit JSONL en ajout seul, chaîné par hachage
 │   │   └── dispatch.py       # dispatch_tool_request() : exécute réellement un ToolRequest validé, retourne un vrai ToolResult
 │   ├── escalation/            # Phase 4 - assemblage réel d'EvidenceBundle + construction de MaintenanceProposal, complet
 │   │   ├── evidence.py       # assemble_evidence_bundle() : de vrais ToolResult -> un EvidenceBundle réel et valide selon le contrat

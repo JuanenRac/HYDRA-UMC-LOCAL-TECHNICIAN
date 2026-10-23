@@ -203,11 +203,8 @@ surface.
   `contracts/*.schema.json`, field-for-field, mirroring HYDRA-UMC-SDK's
   own `validation.py` convention - not a second, independent source of
   truth.
-- **Secret redaction reuses already-tested code.**
-  `knowledge/redaction.py` is a byte-for-byte port (only the header
-  comment differs) of HYDRA-UMC-OPS-AGENT's own already-tested
-  `log_redaction.py` - the underlying problem (recognize real, well-known
-  secret shapes without a fuzzy heuristic) is identical here.
+- **Secret redaction is one shared copy.** `knowledge/redaction.py` is the redaction kept by HYDRA-UMC-SDK (`tools/canonical/redaction.py`), identical to the one of the ops agent and checked against the same shared cases (`tests/redaction_vectors.json`).
+- **Every tool request can be audited.** With `--audit-log PATH` (or `HYDRA_UMC_LOCAL_TECHNICIAN_AUDIT_LOG`, or `auditLog` in the configuration file) each request is written to an append-only JSONL journal before it runs and its outcome after, redacted, each line chained to the previous one by its SHA-256, rotated by size. A request that cannot be recorded is not run; `audit-verify PATH` checks the chain. Off by default.
 - **`PRIVILEGED_CHANGE` and `PHYSICAL_ACTION` stay unimplemented.** A
   deliberate, permanent gate until a dedicated design, a separate
   authorization path and, for physical action, real interlocks exist -
@@ -238,6 +235,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   └── index.py          # Fase 1 - real TF-IDF search + bounded Markdown/JSON ingestion, ported from HYDRA-UMC-DOCS-QA
 │   ├── orchestrator/          # Fase 3 + Fase 1 - all 10 real OBSERVE-level tool handlers, complete
 │   │   ├── allowlist.py      # OrchestratorConfig: symbolic-name allow-list a handler resolves against, never a raw path/host/port
+│   │   ├── audit.py          # Append-only, hash-chained JSONL audit journal
 │   │   └── dispatch.py       # dispatch_tool_request(): runs a validated ToolRequest for real, returns a real ToolResult
 │   ├── escalation/            # Fase 4 - real EvidenceBundle assembly + MaintenanceProposal construction, complete
 │   │   ├── evidence.py       # assemble_evidence_bundle(): real ToolResults -> a real, contract-valid EvidenceBundle

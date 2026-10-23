@@ -173,10 +173,8 @@ INVALID: tests/fixtures/tool_request.invalid.json (ToolRequest): ...
   清单与校验器都是逐字段从 `contracts/*.schema.json` 复制而来，遵循与
   HYDRA-UMC-SDK 自身 `validation.py` 相同的约定 - 而不是第二个独立的真相
   来源。
-- **密钥脱敏复用了已经测试过的代码。** `knowledge/redaction.py` 是对
-  HYDRA-UMC-OPS-AGENT 自身已测试的 `log_redaction.py` 逐字节移植的结果
-  （只有头部注释不同）- 这里的底层问题（在不使用模糊启发式规则的前提下识
-  别真实的、常见的密钥形态）与那边完全相同。
+- **机密信息脱敏是一份共享副本。** `knowledge/redaction.py` 是 HYDRA-UMC-SDK 维护的脱敏实现(`tools/canonical/redaction.py`),与运维代理的完全一致,并用同一组共享用例(`tests/redaction_vectors.json`)检验。
+- **每个工具请求都可以审计。** 使用 `--audit-log 路径`(或 `HYDRA_UMC_LOCAL_TECHNICIAN_AUDIT_LOG`,或配置文件中的 `auditLog`)后,每个请求在执行前、其结果在执行后都会经脱敏写入只追加的 JSONL 日志,每行用 SHA-256 与上一行链接,并按大小轮转。无法记录的请求不会被执行;`audit-verify 路径` 用于检查链。默认关闭。
 - **`PRIVILEGED_CHANGE` 和 `PHYSICAL_ACTION` 仍未实现。** 这是一道刻意且
   永久的关卡，直到出现专门的设计、独立的授权路径,以及对于物理动作而言的
   真实联锁装置为止 - 这不是留待日后补上的疏漏。
@@ -204,6 +202,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   └── index.py          # 第 1 阶段 - 真实的 TF-IDF 搜索 + 有限的 Markdown/JSON 摄取，移植自 HYDRA-UMC-DOCS-QA
 │   ├── orchestrator/          # 第 3 阶段 + 第 1 阶段 - 全部 10 个真实的 OBSERVE 工具处理程序，已完成
 │   │   ├── allowlist.py      # OrchestratorConfig：处理程序解析的符号化名称白名单，绝不使用原始路径/主机/端口
+│   │   ├── audit.py          # 只追加、哈希链接的 JSONL 审计日志
 │   │   └── dispatch.py       # dispatch_tool_request()：真实执行一个已校验的 ToolRequest，返回一个真实的 ToolResult
 │   ├── escalation/            # 第 4 阶段 - 真实的 EvidenceBundle 组装 + MaintenanceProposal 构建，已完成
 │   │   ├── evidence.py       # assemble_evidence_bundle()：真实 ToolResult -> 一份符合契约的真实 EvidenceBundle

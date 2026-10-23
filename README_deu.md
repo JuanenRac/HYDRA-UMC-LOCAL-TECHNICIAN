@@ -230,12 +230,8 @@ reale Befehlsoberfläche.
   aus `contracts/*.schema.json` kopiert, nach derselben Konvention wie
   `validation.py` von HYDRA-UMC-SDK - keine zweite, unabhängige
   Wahrheitsquelle.
-- **Die Geheimnis-Schwärzung nutzt bereits getesteten Code wieder.**
-  `knowledge/redaction.py` ist eine Byte-für-Byte-Portierung (nur der
-  Kopfkommentar unterscheidet sich) des bereits getesteten
-  `log_redaction.py` von HYDRA-UMC-OPS-AGENT - das zugrunde liegende
-  Problem (reale, wohlbekannte Geheimnisformen ohne eine unscharfe
-  Heuristik erkennen) ist hier identisch.
+- **Die Schwärzung von Geheimnissen ist eine gemeinsame Kopie.** `knowledge/redaction.py` ist die von HYDRA-UMC-SDK gepflegte Schwärzung (`tools/canonical/redaction.py`), identisch mit der des Ops-Agenten und gegen dieselben gemeinsamen Fälle geprüft (`tests/redaction_vectors.json`).
+- **Jede Tool-Anfrage lässt sich auditieren.** Mit `--audit-log PFAD` (oder `HYDRA_UMC_LOCAL_TECHNICIAN_AUDIT_LOG`, oder `auditLog` in der Konfigurationsdatei) wird jede Anfrage vor der Ausführung in ein nur anfügbares JSONL-Journal geschrieben und ihr Ergebnis danach, geschwärzt, jede Zeile per SHA-256 mit der vorigen verkettet, nach Größe rotiert. Eine Anfrage, die sich nicht aufzeichnen lässt, wird nicht ausgeführt; `audit-verify PFAD` prüft die Kette. Standardmäßig aus.
 - **`PRIVILEGED_CHANGE` und `PHYSICAL_ACTION` bleiben nicht
   implementiert.** Ein bewusstes, dauerhaftes Tor, bis ein dediziertes
   Design, ein separater Autorisierungspfad und, für physische Aktion,
@@ -268,6 +264,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   │   └── index.py          # Phase 1 - reale TF-IDF-Suche + begrenzte Markdown-/JSON-Aufnahme, portiert aus HYDRA-UMC-DOCS-QA
 │   ├── orchestrator/          # Phase 3 + Phase 1 - alle 10 realen OBSERVE-Werkzeug-Handler, vollständig
 │   │   ├── allowlist.py      # OrchestratorConfig: Positivliste symbolischer Namen, die ein Handler auflöst, niemals ein roher Pfad/Host/Port
+│   │   ├── audit.py          # Nur anfügbares, per Hash verkettetes JSONL-Audit-Journal
 │   │   └── dispatch.py       # dispatch_tool_request(): führt einen validierten ToolRequest real aus, liefert ein reales ToolResult
 │   ├── escalation/            # Phase 4 - realer Aufbau von EvidenceBundle + Konstruktion von MaintenanceProposal, vollständig
 │   │   ├── evidence.py       # assemble_evidence_bundle(): echte ToolResults -> ein reales, vertragskonformes EvidenceBundle
