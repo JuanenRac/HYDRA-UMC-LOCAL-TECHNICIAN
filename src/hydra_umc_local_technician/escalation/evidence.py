@@ -34,6 +34,7 @@ from typing import Any
 
 from ..contracts import validate
 from ..knowledge.redaction import redact_lines, redact_secrets
+from ..orchestrator import result_signing
 
 # The real default this module falls back to when a caller has no local
 # validation of its own to report - an honest statement of scope, never a
@@ -96,11 +97,25 @@ def assemble_evidence_bundle(
     if not impact or not impact.strip():
         raise EvidenceAssemblyError("impact must be a non-empty, real, honest description - never invented by this module")
 
+    try:
+        key = result_signing.result_key()
+    except result_signing.SignatureError as error:
+        raise EvidenceAssemblyError(str(error)) from error
     for item in observed:
         # Re-validates rather than trusting the caller's own labeling -
         # this bundle's whole point is to be grounded in real, already-
         # checked data, not in whatever shape a caller happens to pass.
         validate("ToolResult", item.result)
+        # A result that names its tool must be the one it is presented for; with a local key configured every result must also be signed
+        # by this host (a stored or copied file with the right shape is not enough).
+        declared = item.result.get("tool")
+        if declared is not None and declared != item.tool:
+            raise EvidenceAssemblyError(f"the ToolResult says it is from {declared!r} but is presented as {item.tool!r}")
+        if key is not None:
+            try:
+                result_signing.verify(item.result, key, expected_tool=item.tool)
+            except result_signing.SignatureError as error:
+                raise EvidenceAssemblyError(str(error)) from error
 
     # reproductionSteps: the literal `evidence` string each real tool call
     # already produced - the same real "what command, on what target"

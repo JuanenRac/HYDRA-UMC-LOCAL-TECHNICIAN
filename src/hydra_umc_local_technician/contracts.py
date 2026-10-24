@@ -48,6 +48,11 @@ REQUIRED: dict[str, tuple[str, ...]] = {
 }
 
 
+# Fields a contract may carry without requiring them: a ToolResult names its `tool` and, when a key is configured, is `signature`d
+# (orchestrator/result_signing.py).
+OPTIONAL: dict[str, tuple[str, ...]] = {"ToolResult": ("tool", "signature")}
+
+
 def _require_string(payload: dict[str, Any], name: str) -> None:
     if not isinstance(payload.get(name), str) or not payload[name]:
         raise ContractValidationError(f"{name} must be a non-empty string")
@@ -131,6 +136,12 @@ def _validate_tool_result(payload: dict[str, Any]) -> None:
     error_code = payload.get("errorCode")
     if error_code is not None and not isinstance(error_code, str):
         raise ContractValidationError("errorCode must be a string or null")
+    if "tool" in payload:
+        _require_string(payload, "tool")
+    if "signature" in payload:
+        signature = payload["signature"]
+        if not isinstance(signature, str) or len(signature) != 64 or any(c not in "0123456789abcdef" for c in signature):
+            raise ContractValidationError("signature must be a 64-digit lowercase hexadecimal HMAC-SHA256")
 
 
 def _validate_maintenance_proposal(payload: dict[str, Any]) -> None:
@@ -197,7 +208,7 @@ def validate(contract_name: str, payload: dict[str, Any]) -> None:
     missing = [key for key in REQUIRED[contract_name] if key not in payload]
     if missing:
         raise ContractValidationError(f"{contract_name} is missing required field(s): {', '.join(missing)}")
-    extra = [key for key in payload if key not in REQUIRED[contract_name]]
+    extra = [key for key in payload if key not in REQUIRED[contract_name] and key not in OPTIONAL.get(contract_name, ())]
     if extra:
         raise ContractValidationError(f"{contract_name} has unexpected field(s): {', '.join(extra)}")
     _VALIDATORS[contract_name](payload)

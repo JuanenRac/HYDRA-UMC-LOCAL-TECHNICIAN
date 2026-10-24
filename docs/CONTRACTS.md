@@ -65,6 +65,8 @@ itself raised.
 | `durationMs` | number | Non-negative. |
 | `toolVersion` | string | Which version of the tool handler produced this result. |
 | `errorCode` | string or null | Present only when `status` is `"error"` or `"denied"`. |
+| `tool` | string, optional | The tool that made this result. An evidence bundle refuses a result presented for another tool. |
+| `signature` | string, optional | 64 lowercase hexadecimal digits: HMAC-SHA256 over the canonical JSON (sorted keys, no spaces, UTF-8) of every other field, under the local key `HYDRA_UMC_LOCAL_TECHNICIAN_RESULT_KEY` (or `..._FILE`). Present when a key is configured; with a key an evidence bundle refuses an unsigned or forged result. |
 
 ## MaintenanceProposal
 

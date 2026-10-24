@@ -91,6 +91,7 @@ from ..policy.execution_mode import decide
 from ..policy.tool_matrix import lookup_tool
 from .allowlist import OrchestratorConfig, UnknownAllowlistEntry
 from .audit import AuditWriteError
+from . import result_signing
 
 # update.pending's own real integration boundary - see this module's own
 # docstring above for why this is lazy/optional rather than a hard
@@ -139,6 +140,7 @@ def _tool_result(
     evidence: str,
     started_at: float,
     error_code: str | None = None,
+    tool: str | None = None,
 ) -> dict[str, Any]:
     # The single exit point of a tool result: whatever a handler (or an
     # exception message) put in `output` or `evidence` is redacted here, so the
@@ -153,6 +155,12 @@ def _tool_result(
         "toolVersion": __version__,
         "errorCode": error_code,
     }
+    if tool is not None:
+        payload["tool"] = tool
+    # With a local key configured the result is signed (orchestrator/result_signing.py): it says which tool made it and that this host did.
+    key = result_signing.result_key()
+    if key is not None:
+        payload["signature"] = result_signing.sign(payload, key)
     # A ToolResult this module itself cannot construct validly is a real
     # bug in this dispatcher, not a case to smuggle out silently - let it
     # raise ContractValidationError rather than returning a payload no
@@ -703,9 +711,9 @@ def _dispatch(request: ToolRequest, config: OrchestratorConfig) -> dict[str, Any
     except Exception as exc:  # noqa: BLE001 - a real, unexpected handler failure is genuine evidence, not a crash
         return _tool_result(
             request.request_id, "error", {"reason": str(exc)}, f"{request.tool} raised {type(exc).__name__}: {exc}",
-            started_at, error_code=type(exc).__name__,
+            started_at, error_code=type(exc).__name__, tool=request.tool,
         )
-    return _tool_result(request.request_id, "ok", output, evidence, started_at)
+    return _tool_result(request.request_id, "ok", output, evidence, started_at, tool=request.tool)
 
 
 def dispatch_tool_request(request: ToolRequest, config: OrchestratorConfig) -> dict[str, Any]:

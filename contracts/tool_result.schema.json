@@ -19,6 +19,16 @@
     "errorCode": {
       "type": ["string", "null"],
       "description": "A stable, named error code, or null when status is ok."
+    },
+    "tool": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The tool that made this result (policy/tool_matrix.py name). Optional for results made before it existed."
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "HMAC-SHA256 over the canonical JSON of every other field, under a local key (orchestrator/result_signing.py). Present when a key is configured."
     }
   }
 }
