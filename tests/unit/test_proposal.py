@@ -5,7 +5,6 @@
 # =============================================================================
 """Fase 4's MaintenanceProposal half - grounding against real ToolResults,
 same real-not-mocked convention as test_dispatch.py/test_evidence.py."""
-import json
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory

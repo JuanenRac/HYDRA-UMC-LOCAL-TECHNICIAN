@@ -19,7 +19,7 @@ import unittest.mock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from hydra_umc_local_technician.contracts import ContractValidationError, validate
+from hydra_umc_local_technician.contracts import validate
 from hydra_umc_local_technician.knowledge.trust import build_tool_request_from_model_output
 from hydra_umc_local_technician.orchestrator import dispatch as dispatch_module
 from hydra_umc_local_technician.orchestrator.allowlist import OrchestratorConfig

@@ -66,7 +66,7 @@ def propose_maintenance(
     *,
     diagnosis: str,
     cited_evidence: list[str],
-    evidence_pool: list[ObservedResult],
+    evidence_pool: list[ObservedResult] | None = None,
     scope: str,
     risk: RiskLevel,
     steps: list[str],
@@ -74,6 +74,7 @@ def propose_maintenance(
     pre_checks: list[str] | None = None,
     expected_changes: list[str] | None = None,
     explicit_limits: list[str] | None = None,
+    bundle_evidence: list[str] | None = None,
 ) -> dict[str, Any]:
     """Builds and returns a real, `contracts.validate("MaintenanceProposal", ...)`-
     passing proposal. Never executes anything - a proposal this function
@@ -95,6 +96,9 @@ def propose_maintenance(
     # The pool is checked like the evidence bundle checks its results: an object that
     # merely has an "evidence" key is not an observed tool result, and a failed
     # tool call grounds nothing.
+    evidence_pool = list(evidence_pool or ())
+    if not evidence_pool and not bundle_evidence:
+        raise ProposalError("a proposal needs the tool results it cites (evidence_pool) or the evidence of a verified bundle (bundle_evidence)")
     for item in evidence_pool:
         try:
             validate("ToolResult", item.result)
@@ -102,7 +106,8 @@ def propose_maintenance(
             raise ProposalError(f"a result for {item.tool!r} is not a valid ToolResult: {exc}") from exc
         if item.result.get("status") != "ok":
             raise ProposalError(f"the result for {item.tool!r} has status {item.result.get('status')!r}; only status 'ok' results can ground a proposal")
-    real_evidence_strings = {item.result["evidence"] for item in evidence_pool}
+    # `bundle_evidence` comes from escalation.evidence.verify_bundle(): the redacted evidence of tool results a bundle was assembled from.
+    real_evidence_strings = {item.result["evidence"] for item in evidence_pool} | set(bundle_evidence or ())
     ungrounded = [entry for entry in cited_evidence if entry not in real_evidence_strings]
     if ungrounded:
         raise UngroundedEvidenceError(

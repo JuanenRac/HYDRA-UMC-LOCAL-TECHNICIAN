@@ -50,15 +50,15 @@ class ToolsCallTests(unittest.TestCase):
 
     def test_refuses_an_unregistered_tool(self):
         exit_code, output = _run(["tools", "call", "shell.exec"])
-        self.assertEqual(exit_code, 1)
+        self.assertEqual(exit_code, 2)
 
     def test_refuses_a_name_not_on_the_default_allow_list(self):
         exit_code, output = _run(["tools", "call", "storage.usage", "--arg", "name=not-configured"])
-        self.assertEqual(exit_code, 1)
+        self.assertEqual(exit_code, 2)
 
     def test_refuses_a_malformed_arg(self):
         exit_code, output = _run(["tools", "call", "storage.usage", "--arg", "not-a-key-value-pair"])
-        self.assertEqual(exit_code, 1)
+        self.assertEqual(exit_code, 2)
 
 
 class EscalationEvidenceCommandTests(unittest.TestCase):
@@ -94,11 +94,11 @@ class EscalationEvidenceCommandTests(unittest.TestCase):
             result_path = Path(tmp) / "does-not-matter.json"
             result_path.write_text("{}", encoding="utf-8")
             exit_code, _ = _run(["escalation", "evidence", "--result", f"x={result_path}", "--impact", ""])
-            self.assertEqual(exit_code, 1)
+            self.assertEqual(exit_code, 2)
 
     def test_refuses_a_malformed_result_spec(self):
         exit_code, _ = _run(["escalation", "evidence", "--result", "not-a-key-value-pair", "--impact", "x"])
-        self.assertEqual(exit_code, 1)
+        self.assertEqual(exit_code, 2)
 
 
 class EscalationProposeCommandTests(unittest.TestCase):
@@ -149,7 +149,7 @@ class EscalationProposeCommandTests(unittest.TestCase):
                 "--scope", "x", "--risk", "prepare", "--step", "x", "--rollback", "x",
             ])
 
-            self.assertEqual(exit_code, 1)
+            self.assertEqual(exit_code, 2)
 
     def test_refuses_an_unknown_risk_level(self):
         # argparse's own --choices rejection calls sys.exit() directly (a

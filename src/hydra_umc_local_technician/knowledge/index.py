@@ -25,10 +25,9 @@ own `resolve_knowledge_source` - the same "symbolic name, not a raw
 path a caller supplies" boundary every other OBSERVE tool already
 uses), and the walk itself is bounded (file count, total bytes) so even
 a legitimately allow-listed root cannot turn into an unbounded read.
-The index is built fresh on every real call, same as `manifest.read`
-re-reads its own JSON fresh every time - there is no long-running
-process yet to usefully cache it in (a later phase's own concern, not
-invented here without one).
+Nothing is trusted to a cache that could be stale: a file is read and chunked again whenever its modification time or size changed,
+and the index is rebuilt whenever any file of the root appeared, vanished or changed (`cached_index`). The cache lives in this
+process only (the read-only API keeps one, a one-shot command starts empty) and holds at most `MAX_CACHED_FILES` files.
 """
 from __future__ import annotations
 
@@ -36,6 +35,7 @@ import json
 import math
 import os
 import re
+import threading
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -268,6 +268,22 @@ class IngestResult:
     indexed_sources: tuple[str, ...]
     skipped_sources: tuple[str, ...]  # too large, disallowed extension, or unreadable
     truncated: bool  # True if MAX_INDEXED_FILES cut the walk short
+    # What the walk saw: (source, modification time in ns, size) of every candidate, and the truncation. Equal fingerprints mean the
+    # same files in the same state, so an index built from them is still the index of the root.
+    fingerprint: tuple[object, ...] = ()
+
+
+# Files already read and chunked, by (resolved root, source): (mtime_ns, size, chunks or None when the file gave nothing / was skipped, why).
+MAX_CACHED_FILES = 4096
+_CACHE_LOCK = threading.Lock()
+_FILE_CACHE: dict[tuple[str, str], tuple[int, int, tuple[KnowledgeChunk, ...], str]] = {}
+_INDEX_CACHE: dict[str, tuple[tuple[object, ...], IngestResult, TfidfIndex]] = {}
+
+
+def clear_caches() -> None:
+    with _CACHE_LOCK:
+        _FILE_CACHE.clear()
+        _INDEX_CACHE.clear()
 
 
 def ingest_source_directory(root: Path) -> IngestResult:
@@ -282,10 +298,12 @@ def ingest_source_directory(root: Path) -> IngestResult:
         return IngestResult(chunks=(), indexed_sources=(), skipped_sources=(), truncated=False)
 
     candidates, truncated = _bounded_candidates(root)
+    root_key = str(root.resolve())
 
     all_chunks: list[KnowledgeChunk] = []
     indexed: list[str] = []
     skipped: list[str] = []
+    fingerprint: list[object] = []
     for path in candidates:
         try:
             source = _canonical_source(path, root)
@@ -297,19 +315,35 @@ def ingest_source_directory(root: Path) -> IngestResult:
             skipped.append(path.relative_to(root).as_posix())
             continue
         try:
-            if path.stat().st_size > MAX_DOCUMENT_BYTES:
-                skipped.append(source)
-                continue
-            text = path.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError):
-            # One file that is not valid UTF-8 (a Latin-1 export, a binary
-            # saved as .md) must not take the other 499 down with it.
+            stat = path.stat()
+        except OSError:
             skipped.append(source)
             continue
-        if path.suffix == ".json":
-            chunks = _ingest_json_text(text, source=source)
+        signature = (stat.st_mtime_ns, stat.st_size)
+        fingerprint.append((source, *signature))
+        with _CACHE_LOCK:
+            cached = _FILE_CACHE.get((root_key, source))
+        if cached is not None and (cached[0], cached[1]) == signature:
+            chunks = cached[2]
         else:
-            chunks = _ingest_markdown_text(text, source=source)
+            try:
+                if stat.st_size > MAX_DOCUMENT_BYTES:
+                    skipped.append(source)
+                    continue
+                text = path.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                # One file that is not valid UTF-8 (a Latin-1 export, a binary
+                # saved as .md) must not take the other 499 down with it.
+                skipped.append(source)
+                continue
+            if path.suffix == ".json":
+                chunks = tuple(_ingest_json_text(text, source=source))
+            else:
+                chunks = tuple(_ingest_markdown_text(text, source=source))
+            with _CACHE_LOCK:
+                if len(_FILE_CACHE) >= MAX_CACHED_FILES and (root_key, source) not in _FILE_CACHE:
+                    _FILE_CACHE.pop(next(iter(_FILE_CACHE)))  # the oldest entry goes
+                _FILE_CACHE[(root_key, source)] = (signature[0], signature[1], chunks, "")
         if chunks:
             all_chunks.extend(chunks)
             indexed.append(source)
@@ -321,4 +355,24 @@ def ingest_source_directory(root: Path) -> IngestResult:
         indexed_sources=tuple(indexed),
         skipped_sources=tuple(skipped),
         truncated=truncated,
+        fingerprint=(*fingerprint, truncated),
     )
+
+
+def cached_index(root: Path) -> tuple[IngestResult, TfidfIndex]:
+    """What a search needs: the ingested root and its index. The index of a root whose files are all as they were at the last call
+    is returned as it is; any file that appeared, vanished or changed makes it new."""
+    ingested = ingest_source_directory(root)
+    if not ingested.fingerprint:
+        return ingested, build_index(list(ingested.chunks))
+    key = str(root.resolve())
+    with _CACHE_LOCK:
+        held = _INDEX_CACHE.get(key)
+    if held is not None and held[0] == ingested.fingerprint:
+        return held[1], held[2]
+    index = build_index(list(ingested.chunks))
+    with _CACHE_LOCK:
+        if len(_INDEX_CACHE) >= 64 and key not in _INDEX_CACHE:
+            _INDEX_CACHE.pop(next(iter(_INDEX_CACHE)))
+        _INDEX_CACHE[key] = (ingested.fingerprint, ingested, index)
+    return ingested, index

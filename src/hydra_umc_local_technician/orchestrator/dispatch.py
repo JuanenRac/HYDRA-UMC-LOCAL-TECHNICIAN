@@ -415,8 +415,7 @@ def _handle_knowledge_search(config: OrchestratorConfig, arguments: dict[str, An
         requested = _KNOWLEDGE_SEARCH_DEFAULT_TOP_K
     top_k = min(requested, _KNOWLEDGE_SEARCH_MAX_TOP_K)
 
-    ingest_result = knowledge_index.ingest_source_directory(root)
-    index = knowledge_index.build_index(list(ingest_result.chunks))
+    ingest_result, index = knowledge_index.cached_index(root)
     results = knowledge_index.search(index, query, top_k=top_k)
 
     output = {

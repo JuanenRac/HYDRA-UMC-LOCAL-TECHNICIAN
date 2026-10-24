@@ -90,10 +90,6 @@ class ToolResultAndBundleAreCleanTest(unittest.TestCase):
         self.assertNotIn("hunter2", json.dumps(result))
 
     def test_every_free_text_field_of_the_bundle_is_redacted(self) -> None:
-        config = OrchestratorConfig(
-            storage_paths={}, ports={}, connectivity_targets={}, systemd_units=(), ecosystem_root=None,
-            log_sources={}, process_patterns={}, knowledge_sources={},
-        )
         result = {
             "requestId": "r1", "status": "ok", "output": {}, "evidence": "ran with --token hunter2-secret",
             "timestamp": "2026-01-01T00:00:00Z", "durationMs": 1.0, "toolVersion": "0", "errorCode": None,
@@ -137,7 +133,7 @@ class ProposalGroundingTest(unittest.TestCase):
                     "escalation", "propose", "--diagnosis", "d", "--cited-evidence", "x", "--result", f"logs.read={bad}",
                     "--scope", "s", "--risk", "inform", "--step", "look", "--rollback", "none",
                 ])
-            self.assertEqual(code, 1)
+            self.assertEqual(code, 2)
             self.assertTrue(err.getvalue().startswith("REFUSED:"))
 
 

@@ -3,12 +3,13 @@
 All notable changes to this project are documented here.
 
 ## [Unreleased]
+
+- **The knowledge index is kept between searches of a process.** A file is read and chunked again only when its modification time or size changed, and the index of a root is rebuilt when any file appeared, vanished or changed (`knowledge.index.cached_index`); the read-only API stops re-reading the whole root on every query. Bounded to 4096 files; in memory only (a persisted, versioned index is not done). Pruned directories and the total byte limit were already there.
+
+- **Chaining the commands without carrying files by hand.** `tools call --output FILE` (and the same for `escalation evidence` and `escalation propose`) writes the result to a file that is replaced whole, and `escalation propose --from-bundle FILE` cites the evidence of an assembled bundle after verifying its checksum, so the tool result files are not needed again. A refusal exits `2` and a tool that answers with an error exits `1`.
+- The CI runs the suite on Python 3.11, 3.12 and 3.13 (the package claims `>=3.11`), lints the sources with ruff (unused imports and variables, `zip` without `strict`, fixed in the tests), and the step that ran the tests is named for what it does.
 - Building no longer changes the version; raising it is the explicit `bump` command (`python tools/hydra_project_tool.py bump`). The build scripts only report the version they built, and CI fails if a build script runs a bump.
 - The build and run scripts use the Python of the `.venv` directly instead of an activate script, and create the venv with the `py` launcher when there is one; CI fails if a script activates a venv.
-(nothing yet)
-
-## [Unreleased]
-
 - **A ToolResult names its tool and can be signed.** The result has the optional fields `tool` and `signature`; with a local key (`HYDRA_UMC_LOCAL_TECHNICIAN_RESULT_KEY` or `..._FILE`, outside the repository) the dispatcher signs every result with HMAC-SHA256 over its canonical JSON, and building an evidence bundle refuses a result that is unsigned, forged or presented for another tool. Without a key nothing changes; a result that names a tool different from the one it is presented for is refused either way.
 - **`process.list` judges what a process runs, not every word on its command line**: a process matches when the pattern is in argv[0], or, when argv[0] is an interpreter (python, node, a shell...), in the script or module it was given. A `grep`, `journalctl -u`, `tail -f ...log` or an editor that merely mentions the name no longer reports the program as running.
 - **`service.status` says more**: it reads `systemctl show` (active state, sub-state, how the last run ended, how many times systemd restarted the unit, the exit status of the main process) with `--` before the unit name, and falls back to the plain `is-active` when `show` cannot answer. `active` and `reason` keep their meaning.

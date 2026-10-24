@@ -32,7 +32,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 
-from ..contracts import validate
+from ..contracts import ContractValidationError, validate
 from ..knowledge.redaction import redact_lines, redact_secrets
 from ..orchestrator import result_signing
 
@@ -75,6 +75,20 @@ def _checksum(payload: dict[str, Any]) -> str:
     relies on."""
     canonical = json.dumps(payload, sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def verify_bundle(bundle: Any) -> list[str]:
+    """The evidence a stored EvidenceBundle can ground a proposal with: its `reproductionSteps`, the redacted `evidence` text of every
+    tool call it was made from. The bundle must be a valid EvidenceBundle and its checksum must still be the one of its content, so
+    a file that was edited after it was assembled is refused instead of trusted because it has the right shape."""
+    try:
+        validate("EvidenceBundle", bundle)
+    except ContractValidationError as error:
+        raise EvidenceAssemblyError(f"the bundle is not a valid EvidenceBundle: {error}") from error
+    content = {key: value for key, value in bundle.items() if key != "checksum"}
+    if _checksum(content) != bundle["checksum"]:
+        raise EvidenceAssemblyError("the checksum of the bundle is not that of its content: it was changed after it was assembled")
+    return list(bundle["reproductionSteps"])
 
 
 def assemble_evidence_bundle(

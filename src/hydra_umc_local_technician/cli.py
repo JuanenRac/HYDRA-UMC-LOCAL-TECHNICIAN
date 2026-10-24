@@ -31,7 +31,7 @@ from typing import Any
 
 from . import __version__
 from .contracts import REQUIRED, ContractValidationError, validate
-from .escalation.evidence import EvidenceAssemblyError, ObservedResult, assemble_evidence_bundle
+from .escalation.evidence import EvidenceAssemblyError, ObservedResult, assemble_evidence_bundle, verify_bundle
 from .escalation.proposal import ProposalError, propose_maintenance
 from .knowledge.trust import ToolCallRefused, build_tool_request_from_model_output
 from .orchestrator.allowlist import OrchestratorConfig, default_config
@@ -39,6 +39,20 @@ from .orchestrator.audit import DEFAULT_BACKUPS, DEFAULT_MAX_BYTES, AuditLog, au
 from .orchestrator.dispatch import ToolDispatchError, dispatch_tool_request
 from .policy.risk_levels import RiskLevel
 from .policy.tool_matrix import TOOL_MATRIX
+
+
+# Exit codes: 0 done; 1 the work ran and its result is an error (a tool status that is not ok, an invalid contract, a journal chain that is
+# broken); 2 the request was refused before anything ran (an argument, a configuration, a policy or a grounding check said no).
+EXIT_ERROR = 1
+EXIT_REFUSED = 2
+
+
+def _write_output(path: str, text: str) -> None:
+    """Writes `text` to `path` without ever leaving a half-written file where a reader might pick it up."""
+    target = Path(path)
+    temporary = target.with_name(target.name + ".tmp")
+    temporary.write_text(text + "\n", encoding="utf-8")
+    os.replace(temporary, target)
 
 
 def _cmd_contracts_validate(args: argparse.Namespace) -> int:
@@ -188,13 +202,13 @@ def _cmd_tools_call(args: argparse.Namespace) -> int:
         # A config file that is missing, not JSON, or shaped wrongly is an
         # operator mistake to report in one line, not a traceback.
         print(f"REFUSED: invalid --config {args.config}: {exc}", file=sys.stderr)
-        return 1
+        return EXIT_REFUSED
     arguments: dict[str, Any] = {}
     for spec in args.arg or ():
         name, sep, value = spec.partition("=")
         if not sep:
             print(f"REFUSED: --arg must be name=value, got {spec!r}", file=sys.stderr)
-            return 1
+            return EXIT_REFUSED
         arguments[name] = _parse_argument_value(value)
 
     try:
@@ -205,10 +219,19 @@ def _cmd_tools_call(args: argparse.Namespace) -> int:
         result = dispatch_tool_request(request, config)
     except (ToolCallRefused, ToolDispatchError) as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
-        return 1
+        return EXIT_REFUSED
 
-    print(json.dumps(result, indent=2, ensure_ascii=False))
-    return 0 if result["status"] == "ok" else 1
+    text = json.dumps(result, indent=2, ensure_ascii=False)
+    if args.output:
+        try:
+            _write_output(args.output, text)
+        except OSError as exc:
+            print(f"REFUSED: cannot write --output {args.output}: {exc}", file=sys.stderr)
+            return EXIT_REFUSED
+        print(f"{result['status'].upper()}: {args.tool} -> {args.output}")
+    else:
+        print(text)
+    return 0 if result["status"] == "ok" else EXIT_ERROR
 
 
 def _load_observed_results(specs: list[str]) -> list[ObservedResult]:
@@ -237,25 +260,46 @@ def _cmd_escalation_evidence(args: argparse.Namespace) -> int:
         )
     except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError, EvidenceAssemblyError, ContractValidationError) as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
-        return 1
-    print(json.dumps(bundle, indent=2, ensure_ascii=False))
+        return EXIT_REFUSED
+    text = json.dumps(bundle, indent=2, ensure_ascii=False)
+    if args.output:
+        try:
+            _write_output(args.output, text)
+        except OSError as exc:
+            print(f"REFUSED: cannot write --output {args.output}: {exc}", file=sys.stderr)
+            return EXIT_REFUSED
+        print(f"EVIDENCE_BUNDLE -> {args.output}")
+    else:
+        print(text)
     return 0
 
 
 def _cmd_escalation_propose(args: argparse.Namespace) -> int:
     try:
-        evidence_pool = _load_observed_results(args.result)
+        if not args.result and not args.from_bundle:
+            raise ValueError("give the tool results the diagnosis rests on (--result) or an assembled evidence bundle (--from-bundle)")
+        evidence_pool = _load_observed_results(args.result or [])
+        bundle_evidence = verify_bundle(json.loads(Path(args.from_bundle).read_text(encoding="utf-8"))) if args.from_bundle else None
         risk = RiskLevel.from_wire_name(args.risk)
         proposal = propose_maintenance(
             diagnosis=args.diagnosis, cited_evidence=args.cited_evidence, evidence_pool=evidence_pool,
             scope=args.scope, risk=risk, steps=args.step, rollback=args.rollback,
             pre_checks=args.pre_check or None, expected_changes=args.expected_change or None,
-            explicit_limits=args.explicit_limit or None,
+            explicit_limits=args.explicit_limit or None, bundle_evidence=bundle_evidence,
         )
-    except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError, ProposalError, ContractValidationError) as exc:
+    except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError, ProposalError, EvidenceAssemblyError, ContractValidationError) as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
-        return 1
-    print(json.dumps(proposal, indent=2, ensure_ascii=False))
+        return EXIT_REFUSED
+    text = json.dumps(proposal, indent=2, ensure_ascii=False)
+    if args.output:
+        try:
+            _write_output(args.output, text)
+        except OSError as exc:
+            print(f"REFUSED: cannot write --output {args.output}: {exc}", file=sys.stderr)
+            return EXIT_REFUSED
+        print(f"MAINTENANCE_PROPOSAL -> {args.output}")
+    else:
+        print(text)
     return 0
 
 
@@ -310,6 +354,7 @@ def build_parser() -> argparse.ArgumentParser:
     call_cmd.add_argument("--reason", default="manual CLI call", help="Why - recorded on the real ToolRequest.")
     call_cmd.add_argument("--config", help="Path to a JSON OrchestratorConfig file; defaults to default_config() (the documented CM5 defaults) when omitted.")
     call_cmd.add_argument("--audit-log", help="Append-only JSONL journal of every request and its outcome (or HYDRA_UMC_LOCAL_TECHNICIAN_AUDIT_LOG, or auditLog in --config). When on, a request that cannot be recorded is not run.")
+    call_cmd.add_argument("--output", metavar="FILE", help="Write the ToolResult to FILE (replaced whole, never half written) instead of standard output, ready for --result of the escalation commands. Exit codes: 0 ok, 1 the tool answered with an error, 2 refused before anything ran.")
     call_cmd.set_defaults(func=_cmd_tools_call)
 
     escalation = subparsers.add_parser("escalation", help="Fase 4/5: real EvidenceBundle assembly and MaintenanceProposal construction.")
@@ -321,12 +366,15 @@ def build_parser() -> argparse.ArgumentParser:
     evidence_cmd.add_argument("--local-validation", help="What local validation (if any) already showed.")
     evidence_cmd.add_argument("--action-attempted", action="append", help="Something already tried (repeatable).")
     evidence_cmd.add_argument("--failed-test", action="append", help="A real test that failed (repeatable).")
+    evidence_cmd.add_argument("--output", metavar="FILE", help="Write the bundle to FILE instead of standard output, ready for --from-bundle.")
     evidence_cmd.set_defaults(func=_cmd_escalation_evidence)
 
     propose_cmd = escalation_sub.add_parser("propose", help="Build a real MaintenanceProposal, grounded against already-produced ToolResult files.")
     propose_cmd.add_argument("--diagnosis", required=True, help="What you believe is wrong - never generated by this CLI.")
     propose_cmd.add_argument("--cited-evidence", action="append", required=True, help="Must exactly match a real ToolResult's own evidence field (repeatable).")
-    propose_cmd.add_argument("--result", action="append", required=True, metavar="TOOL.NAME=PATH", help="One real ToolResult JSON file backing --cited-evidence (repeatable).")
+    propose_cmd.add_argument("--result", action="append", metavar="TOOL.NAME=PATH", help="One real ToolResult JSON file backing --cited-evidence (repeatable).")
+    propose_cmd.add_argument("--from-bundle", metavar="FILE", help="An EvidenceBundle assembled by 'escalation evidence' (its checksum is verified): its reproduction steps are the evidence --cited-evidence may cite, so the tool result files are not needed again. Give this, --result, or both.")
+    propose_cmd.add_argument("--output", metavar="FILE", help="Write the proposal to FILE instead of standard output.")
     propose_cmd.add_argument("--scope", required=True, help="What this proposal touches.")
     propose_cmd.add_argument("--risk", required=True, choices=[level.wire_name for level in RiskLevel], help="The proposal's own declared risk level.")
     propose_cmd.add_argument("--step", action="append", required=True, help="One real, ordered step (repeatable).")

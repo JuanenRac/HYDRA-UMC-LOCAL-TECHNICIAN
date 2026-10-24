@@ -249,7 +249,7 @@ class CliConfigErrorTests(unittest.TestCase):
             path = Path(tmp) / "config.json"
             path.write_text("{ not json", encoding="utf-8")
             code, _, err = self._call(["tools", "call", "storage.usage", "--arg", "name=x", "--config", str(path)])
-        self.assertEqual(code, 1)
+        self.assertEqual(code, 2)
         self.assertIn("REFUSED: invalid --config", err)
 
     def test_a_config_with_the_wrong_shape_is_refused(self):
@@ -257,12 +257,12 @@ class CliConfigErrorTests(unittest.TestCase):
             path = Path(tmp) / "config.json"
             path.write_text(json.dumps({"ports": {"web": [1]}}), encoding="utf-8")
             code, _, err = self._call(["tools", "call", "storage.usage", "--arg", "name=x", "--config", str(path)])
-        self.assertEqual(code, 1)
+        self.assertEqual(code, 2)
         self.assertIn("REFUSED: invalid --config", err)
 
     def test_a_missing_config_file_is_refused(self):
         code, _, err = self._call(["tools", "call", "storage.usage", "--arg", "name=x", "--config", "no-such-file.json"])
-        self.assertEqual(code, 1)
+        self.assertEqual(code, 2)
         self.assertIn("REFUSED", err)
 
     def test_a_payload_that_is_not_utf8_is_invalid_not_a_traceback(self):

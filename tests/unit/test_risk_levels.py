@@ -15,7 +15,7 @@ class RiskLevelOrderingTests(unittest.TestCase):
             RiskLevel.REVERSIBLE_OPERATION, RiskLevel.PRIVILEGED_CHANGE,
             RiskLevel.PHYSICAL_ACTION,
         ]
-        for lower, higher in zip(ordered, ordered[1:]):
+        for lower, higher in zip(ordered, ordered[1:], strict=False):
             self.assertLess(lower, higher)
 
     def test_wire_name_round_trips(self):
