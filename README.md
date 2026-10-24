@@ -251,6 +251,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   ├── orchestrator/          # Fase 3 + Fase 1 - all 10 real OBSERVE-level tool handlers, complete
 │   │   ├── allowlist.py      # OrchestratorConfig: symbolic-name allow-list a handler resolves against, never a raw path/host/port
 │   │   ├── audit.py          # Append-only, hash-chained JSONL audit journal
+│   │   ├── result_signing.py # A ToolResult that says which tool made it and that this technician made it (signed with a local key)
 │   │   └── dispatch.py       # dispatch_tool_request(): runs a validated ToolRequest for real, returns a real ToolResult
 │   ├── escalation/            # Fase 4 - real EvidenceBundle assembly + MaintenanceProposal construction, complete
 │   │   ├── evidence.py       # assemble_evidence_bundle(): real ToolResults -> a real, contract-valid EvidenceBundle
@@ -264,12 +265,21 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 ├── tests/
 │   ├── unit/                  # Real tests for every module above
 │   ├── adversarial/           # test_injection_defense.py - Fase 0's own literal exit criterion, extended for Fase 3's own allow-list defense
-│   └── fixtures/              # valid/invalid JSON fixtures for each contract
+│   ├── fixtures/              # valid/invalid JSON fixtures for each contract
+│   └── redaction_vectors.json # Cases every implementation of the secret redaction has to pass
 ├── docs/
 │   ├── ARCHITECTURE.md        # Purpose, five pieces (target design), target architecture, ecosystem relationships
 │   ├── SECURITY_MODEL.md      # The six risk levels, data/secrets rules, injection defense
 │   ├── CLI_REFERENCE.md       # contracts validate, flags, exit codes
-│   └── CONTRACTS.md           # The real field-by-field shape of all five contracts
+│   ├── CONTRACTS.md           # The real field-by-field shape of all five contracts
+│   ├── WEB_API.md             # The read-only local API and the single-page web page (serve)
+│   └── MATURITY_CRITERIA.md   # Maturity exit criteria (what must be true to move up a level)
+├── tools/
+│   ├── build_test.py          # Non-versioning build/compile check
+│   ├── ci_validate.py         # Manifest/CHANGELOG/docs validation used by CI
+│   ├── _doc_policy.py         # Documentation rules shared by the family (a copy of HYDRA-UMC-SDK's, kept in sync)
+│   ├── _readme_parity.py      # Check that the eight READMEs share one structure (a copy of HYDRA-UMC-SDK's, kept in sync)
+│   └── hydra_project_tool.py  # The same commands in every repository: validate, test, ci, version, status, bump
 ├── images/                    # Media and app icons
 ├── build.sh / build.bat       # venv + editable install + compile-check + tests
 ├── build-test.sh / .bat       # Non-mutating build validation only

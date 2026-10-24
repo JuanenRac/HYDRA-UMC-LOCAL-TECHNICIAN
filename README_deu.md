@@ -280,6 +280,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   ├── orchestrator/          # Phase 3 + Phase 1 - alle 10 realen OBSERVE-Werkzeug-Handler, vollständig
 │   │   ├── allowlist.py      # OrchestratorConfig: Positivliste symbolischer Namen, die ein Handler auflöst, niemals ein roher Pfad/Host/Port
 │   │   ├── audit.py          # Nur anfügbares, per Hash verkettetes JSONL-Audit-Journal
+│   │   ├── result_signing.py # Ein ToolResult, das sagt, welches Werkzeug es erzeugt hat und dass dieser Techniker es erzeugt hat (mit lokalem Schlüssel signiert)
 │   │   └── dispatch.py       # dispatch_tool_request(): führt einen validierten ToolRequest real aus, liefert ein reales ToolResult
 │   ├── escalation/            # Phase 4 - realer Aufbau von EvidenceBundle + Konstruktion von MaintenanceProposal, vollständig
 │   │   ├── evidence.py       # assemble_evidence_bundle(): echte ToolResults -> ein reales, vertragskonformes EvidenceBundle
@@ -293,12 +294,21 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 ├── tests/
 │   ├── unit/                   # Reale Tests für jedes obige Modul
 │   ├── adversarial/            # test_injection_defense.py - das wörtliche Austrittskriterium dieser Phase 0 selbst
-│   └── fixtures/                # Gültige/ungültige JSON-Fixtures für jeden Vertrag
+│   ├── fixtures/                # Gültige/ungültige JSON-Fixtures für jeden Vertrag
+│   └── redaction_vectors.json   # Fälle, die jede Implementierung der Geheimnis-Schwärzung bestehen muss
 ├── docs/
 │   ├── ARCHITECTURE.md         # Zweck, die fünf Zielbausteine, Zielarchitektur, Ökosystem-Beziehungen
 │   ├── SECURITY_MODEL.md       # Die sechs Risikostufen, Daten-/Geheimnisregeln, Injection-Abwehr
 │   ├── CLI_REFERENCE.md        # contracts validate, Flags, Exit-Codes
-│   └── CONTRACTS.md            # Die reale, feldweise Form aller fünf Verträge
+│   ├── CONTRACTS.md            # Die reale, feldweise Form aller fünf Verträge
+│   ├── WEB_API.md              # Die lesende lokale API und die Einzelseiten-Weboberfläche (serve)
+│   └── MATURITY_CRITERIA.md    # Austrittskriterien der Reifestufe (was gelten muss, um eine Stufe aufzusteigen)
+├── tools/
+│   ├── build_test.py           # Nicht-versionierender Build-Check
+│   ├── ci_validate.py          # Manifest/CHANGELOG/Docs-Validierung, von CI genutzt
+│   ├── _doc_policy.py          # Von der Familie geteilte Dokumentationsregeln (Kopie der von HYDRA-UMC-SDK, synchron gehalten)
+│   ├── _readme_parity.py       # Prüfung, dass die acht READMEs dieselbe Struktur haben (Kopie der von HYDRA-UMC-SDK, synchron gehalten)
+│   └── hydra_project_tool.py   # Dieselben Befehle in jedem Repository: validate, test, ci, version, status, bump
 ├── images/                      # Medien und App-Icons
 ├── build.sh / build.bat        # venv + editierbare Installation + Prüfung + Tests
 ├── build-test.sh / .bat        # Nur nicht-mutierende Build-Validierung

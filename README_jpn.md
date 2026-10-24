@@ -252,6 +252,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   ├── orchestrator/          # フェーズ3 + フェーズ1 - 10個すべての実際のOBSERVEツールハンドラー、完了
 │   │   ├── allowlist.py      # OrchestratorConfig: ハンドラーが解決するシンボル名の許可リスト、生のパス・ホスト・ポートは決して使わない
 │   │   ├── audit.py          # 追記専用・ハッシュ連鎖の JSONL 監査ジャーナル
+│   │   ├── result_signing.py # どのツールが作ったか、またこの技術者が作ったことを示す ToolResult (ローカル鍵で署名)
 │   │   └── dispatch.py       # dispatch_tool_request(): 検証済みの ToolRequest を実際に実行し、実際の ToolResult を返す
 │   ├── escalation/            # フェーズ4 - 実際の EvidenceBundle 組み立て + MaintenanceProposal 構築、完了
 │   │   ├── evidence.py       # assemble_evidence_bundle(): 実際の ToolResult -> 契約に適合する実際の EvidenceBundle
@@ -265,12 +266,21 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 ├── tests/
 │   ├── unit/                   # 上記各モジュールの実際のテスト
 │   ├── adversarial/            # test_injection_defense.py - フェーズ0自身の文字通りの終了基準
-│   └── fixtures/                # 各契約の有効/無効な JSON フィクスチャ
+│   ├── fixtures/                # 各契約の有効/無効な JSON フィクスチャ
+│   └── redaction_vectors.json   # 秘密情報の伏せ字処理の全実装が通過すべきケース
 ├── docs/
 │   ├── ARCHITECTURE.md         # 目的、5つの目標要素、目標アーキテクチャ、エコシステムとの関係
 │   ├── SECURITY_MODEL.md       # 6つのリスクレベル、データ/機密情報のルール、インジェクション防御
 │   ├── CLI_REFERENCE.md        # contracts validate、フラグ、終了コード
-│   └── CONTRACTS.md            # 5つの契約すべての実際のフィールド単位の形
+│   ├── CONTRACTS.md            # 5つの契約すべての実際のフィールド単位の形
+│   ├── WEB_API.md              # 読み取り専用のローカル API と単一ページの Web 画面 (serve)
+│   └── MATURITY_CRITERIA.md    # 成熟度の終了基準 (一段上がるために満たすべき条件)
+├── tools/
+│   ├── build_test.py           # バージョンを増やさないビルドチェック
+│   ├── ci_validate.py          # CI が使用するマニフェスト/CHANGELOG/ドキュメント検証
+│   ├── _doc_policy.py          # ファミリー共通のドキュメント規則 (HYDRA-UMC-SDK のコピーで、同期を維持)
+│   ├── _readme_parity.py       # 8つの README が同じ構造であることの検査 (HYDRA-UMC-SDK のコピーで、同期を維持)
+│   └── hydra_project_tool.py   # すべてのリポジトリで共通のコマンド: validate、test、ci、version、status、bump
 ├── images/                      # メディアとアプリアイコン
 ├── build.sh / build.bat        # venv + 編集可能インストール + コンパイルチェック + テスト
 ├── build-test.sh / .bat        # 非変更のビルド検証のみ

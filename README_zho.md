@@ -218,6 +218,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   ├── orchestrator/          # 第 3 阶段 + 第 1 阶段 - 全部 10 个真实的 OBSERVE 工具处理程序，已完成
 │   │   ├── allowlist.py      # OrchestratorConfig：处理程序解析的符号化名称白名单，绝不使用原始路径/主机/端口
 │   │   ├── audit.py          # 只追加、哈希链接的 JSONL 审计日志
+│   │   ├── result_signing.py # 声明由哪个工具生成、且由本技术员生成的 ToolResult (用本地密钥签名)
 │   │   └── dispatch.py       # dispatch_tool_request()：真实执行一个已校验的 ToolRequest，返回一个真实的 ToolResult
 │   ├── escalation/            # 第 4 阶段 - 真实的 EvidenceBundle 组装 + MaintenanceProposal 构建，已完成
 │   │   ├── evidence.py       # assemble_evidence_bundle()：真实 ToolResult -> 一份符合契约的真实 EvidenceBundle
@@ -231,12 +232,21 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 ├── tests/
 │   ├── unit/                   # 上述每个模块的真实测试
 │   ├── adversarial/            # test_injection_defense.py - 第 0 阶段自身字面意义上的退出标准
-│   └── fixtures/                # 每份合约的有效/无效 JSON 测试样例
+│   ├── fixtures/                # 每份合约的有效/无效 JSON 测试样例
+│   └── redaction_vectors.json   # 秘密脱敏的每个实现都必须通过的用例
 ├── docs/
 │   ├── ARCHITECTURE.md         # 目的、五个目标组成部分、目标架构、生态系统关系
 │   ├── SECURITY_MODEL.md       # 六个风险等级、数据/密钥规则、注入防御
 │   ├── CLI_REFERENCE.md        # contracts validate、参数标志、退出码
-│   └── CONTRACTS.md            # 五份合约逐字段的真实结构
+│   ├── CONTRACTS.md            # 五份合约逐字段的真实结构
+│   ├── WEB_API.md              # 只读的本地 API 与单页网页 (serve)
+│   └── MATURITY_CRITERIA.md    # 成熟度退出标准 (升一级必须满足的条件)
+├── tools/
+│   ├── build_test.py           # 不递增版本号的构建检查
+│   ├── ci_validate.py          # CI 使用的清单/CHANGELOG/文档校验
+│   ├── _doc_policy.py          # 家族共享的文档规则 (HYDRA-UMC-SDK 的副本,保持同步)
+│   ├── _readme_parity.py       # 检查八个 README 结构一致 (HYDRA-UMC-SDK 的副本,保持同步)
+│   └── hydra_project_tool.py   # 每个仓库相同的命令: validate、test、ci、version、status、bump
 ├── images/                      # 媒体资源与应用图标
 ├── build.sh / build.bat        # 虚拟环境 + 可编辑安装 + 编译检查 + 测试
 ├── build-test.sh / .bat        # 仅不产生变更的构建校验

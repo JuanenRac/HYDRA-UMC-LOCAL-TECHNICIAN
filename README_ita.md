@@ -265,6 +265,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   ├── orchestrator/          # Fase 3 + Fase 1 - tutti i 10 gestori reali di strumenti OBSERVE, completo
 │   │   ├── allowlist.py      # OrchestratorConfig: whitelist di nomi simbolici che un gestore risolve, mai un percorso/host/porta grezzo
 │   │   ├── audit.py          # Giornale di audit JSONL di sola aggiunta, concatenato con hash
+│   │   ├── result_signing.py # Un ToolResult che dice quale strumento lo ha prodotto e che lo ha prodotto questo tecnico (firmato con una chiave locale)
 │   │   └── dispatch.py       # dispatch_tool_request(): esegue davvero un ToolRequest validato, restituisce un vero ToolResult
 │   ├── escalation/            # Fase 4 - vero assemblaggio di EvidenceBundle + costruzione di MaintenanceProposal, completo
 │   │   ├── evidence.py       # assemble_evidence_bundle(): veri ToolResult -> un EvidenceBundle reale e valido secondo il contratto
@@ -278,12 +279,21 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 ├── tests/
 │   ├── unit/                   # Test reali per ogni modulo sopra
 │   ├── adversarial/            # test_injection_defense.py - il criterio di uscita letterale della stessa Fase 0
-│   └── fixtures/                # Fixture JSON valide/non valide per ogni contratto
+│   ├── fixtures/                # Fixture JSON valide/non valide per ogni contratto
+│   └── redaction_vectors.json   # Casi che ogni implementazione della redazione dei segreti deve superare
 ├── docs/
 │   ├── ARCHITECTURE.md         # Scopo, i cinque pezzi target, architettura target, relazioni con l'ecosistema
 │   ├── SECURITY_MODEL.md       # I sei livelli di rischio, regole dati/segreti, difesa contro l'injection
 │   ├── CLI_REFERENCE.md        # contracts validate, flag, codici di uscita
-│   └── CONTRACTS.md            # La forma reale, campo per campo, dei cinque contratti
+│   ├── CONTRACTS.md            # La forma reale, campo per campo, dei cinque contratti
+│   ├── WEB_API.md              # L'API locale in sola lettura e la pagina web a pagina singola (serve)
+│   └── MATURITY_CRITERIA.md    # Criteri di uscita della maturità (ciò che deve valere per salire di livello)
+├── tools/
+│   ├── build_test.py           # Controllo build senza versionamento
+│   ├── ci_validate.py          # Validazione manifest/CHANGELOG/docs usata dalla CI
+│   ├── _doc_policy.py          # Regole di documentazione condivise dalla famiglia (copia di quella di HYDRA-UMC-SDK, mantenuta sincronizzata)
+│   ├── _readme_parity.py       # Verifica che gli otto README abbiano la stessa struttura (copia di quella di HYDRA-UMC-SDK, mantenuta sincronizzata)
+│   └── hydra_project_tool.py   # Gli stessi comandi in ogni repository: validate, test, ci, version, status, bump
 ├── images/                      # Media e icone dell'app
 ├── build.sh / build.bat        # venv + installazione editabile + verifica + test
 ├── build-test.sh / .bat        # Solo validazione di build non mutante
