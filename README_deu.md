@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20von%206%20abgeschlossen-367BF5.svg" alt="Phasen 1, 3 und 4 von 6 abgeschlossen">
 </p>
 
-> **Status: v0.1.6, funktionsfähig - Phasen 1, 3 und 4 von 6
+> **Status: v0.1.7, funktionsfähig - Phasen 1, 3 und 4 von 6
 > abgeschlossen (abrufbares Wissen, Werkzeug-Orchestrator, Eskalation),
 > Phase 5 begonnen (eine echte lokale CLI, eine schreibgeschützte lokale API und Webseite).**
 > Phase 0 definierte die reale Risikostufen-Richtlinie
@@ -70,9 +70,9 @@
 
 | | |
 |---|---|
-| Version | `0.1.6` |
+| Version | `0.1.7` |
 | Reifegrad | Funktionsfähig |
-| Tests | 275 |
+| Tests | 255 |
 | Technik | Python 3.11+ / JSON Schema / HailoRT GenAI (optional, later phase) / systemd (cm5 role, Linux only) |
 | Ziel | Der Raspberry Pi CM5 einer HYDRA-UMC-Zelle |
 | Auf echter Hardware | Noch nicht: für diese Version ist kein Lauf auf echter Hardware vermerkt |

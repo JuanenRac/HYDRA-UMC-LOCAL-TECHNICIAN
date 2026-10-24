@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Fase-1%2C%203%20%26%204%20de%206%20completas-367BF5.svg" alt="Fases 1, 3 y 4 de 6 completas">
 </p>
 
-> **Estado: v0.1.6, funcional - Fases 1, 3 y 4 de 6 completas
+> **Estado: v0.1.7, funcional - Fases 1, 3 y 4 de 6 completas
 > (conocimiento recuperable, orquestador de herramientas, escalado),
 > Fase 5 iniciada (una CLI local real, una API local de solo lectura y una página web).** La
 > Fase 0 definió la política real de niveles de riesgo
@@ -66,9 +66,9 @@
 
 | | |
 |---|---|
-| Versión | `0.1.6` |
+| Versión | `0.1.7` |
 | Madurez | Funcional |
-| Tests | 275 |
+| Tests | 255 |
 | Tecnología | Python 3.11+ / JSON Schema / HailoRT GenAI (optional, later phase) / systemd (cm5 role, Linux only) |
 | Destino | La Raspberry Pi CM5 de una celda HYDRA-UMC |
 | En hardware real | Todavía no: no consta ninguna ejecución en hardware real para esta versión |
