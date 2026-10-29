@@ -1,5 +1,11 @@
+<!-- =============================================================================
+HYDRA-UMC-LOCAL-TECHNICIAN - Local, policy-gated maintenance assistant
+Copyright (C) JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+GPL-3.0-or-later - see LICENSE
+============================================================================= -->
+
 <p align="center">
-  <img src="images/HYDRA_UMC_BANNER.svg" alt="Banner de HYDRA-UMC-LOCAL-TECHNICIAN" width="100%">
+  <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-LOCAL-TECHNICIAN banner" width="100%">
 </p>
 
 # 🤖 HYDRA-UMC-LOCAL-TECHNICIAN
@@ -9,52 +15,18 @@
 ### 🛡️ Técnico de IA Local con Permisos Acotados por Política
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Licencia-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Lenguaje-Python%203.11%2B-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/Núcleo-solo%20stdlib-brightgreen.svg" alt="Núcleo solo stdlib">
-  <img src="https://img.shields.io/badge/Fase-1%2C%203%20%26%204%20de%206%20completas-367BF5.svg" alt="Fases 1, 3 y 4 de 6 completas">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
+  <img src="https://img.shields.io/badge/Language-Python%203.11%2B-blue.svg" alt="Language">
+  <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
+  <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20of%206%20complete-367BF5.svg" alt="Phase">
+  <img src="https://img.shields.io/badge/Tests-315%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.1.7-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
-
-> **Estado: v0.1.7, funcional - Fases 1, 3 y 4 de 6 completas
-> (conocimiento recuperable, orquestador de herramientas, escalado),
-> Fase 5 iniciada (una CLI local real, una API local de solo lectura y una página web).** La
-> Fase 0 definió la política real de niveles de riesgo
-> (`policy/risk_levels.py`), una lista blanca fija de herramientas
-> (`policy/tool_matrix.py`), los cinco contratos mínimos reales que toda
-> futura llamada a herramienta deberá validar (`contracts/*.schema.json`
-> + `contracts.py`), un saneamiento real de secretos portado del ya
-> probado `log_redaction.py` de HYDRA-UMC-OPS-AGENT, y el criterio de
-> salida literal de la propia Fase 0: una prueba adversarial real que
-> demuestra que un documento malicioso recuperado nunca puede disparar
-> una llamada a herramienta ni filtrar un secreto. La Fase 3 conecta 9 de las 10
-> de las herramientas OBSERVE declaradas a un manejador real
-> (`orchestrator/dispatch.py`): `service.status`, `storage.usage`,
-> `network.port_status`, `network.connectivity`, `system.temperature`,
-> `manifest.read`, `logs.read`, `process.list` y `update.pending` - cada
-> una resolviendo solo un nombre simbólico en lista blanca
-> (`orchestrator/allowlist.py`), nunca una ruta/host/puerto/URL en bruto
-> que un documento recuperado pudiera aportar. La Fase 1 añade una
-> décima, `knowledge.search` (`knowledge/index.py`) - un índice TF-IDF
-> local y real sobre una raíz en lista blanca de documentación,
-> manifiestos y contratos aprobados, portado del motor de recuperación
-> ya probado de HYDRA-UMC-DOCS-QA. La Fase 4 añade el ensamblado real de
-> `EvidenceBundle` y la construcción de `MaintenanceProposal`
-> (`escalation/`) - fundamentados en salidas de herramientas ya
-> observadas, nunca un diagnóstico inventado: como todavía no existe
-> motor de inferencia, `propose_maintenance()` solo valida y fundamenta
-> contenido que aporta un operador humano, nunca lo genera. La primera
-> porción real de la Fase 5 - `tools list`/`tools call` y `escalation
-> evidence`/`escalation propose` - da a cada pieza anterior una línea de
-> comandos real, nunca una nueva fuente de autoridad: solo llama al
-> mismo código ya validado por política que cada test ya ejercita.
-> Todavía no existe motor de inferencia ni integración con
-> HYDRA-UMC-SERVER - ver
-> [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) para la superficie de
-> comandos exacta que existe hoy.
 
 ---
 
-**Comprobación de honestidad - qué funciona realmente hoy:** la política de niveles de riesgo (`policy/risk_levels.py`), la lista fija de herramientas permitidas (`policy/tool_matrix.py`), los cinco validadores de contrato (`contracts.py` + `contracts/*.schema.json`), el límite de defensa contra inyecciones (`knowledge/trust.py`, `knowledge/redaction.py`), el índice de conocimiento TF-IDF local (`knowledge/index.py`, Fase 1), las 10 herramientas OBSERVE declaradas con manejador real (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), la construcción real de `EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4), y una CLI real sobre todo lo anterior (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, primera porción de la Fase 5) están testeadas (275 tests más 30 subtests pasando entre `tests/unit/` y `tests/adversarial/`) - las Fases 1, 3 y 4 están completas, la Fase 5 está iniciada. `update.pending` necesita la dependencia opcional `hydra-umc-updater` (extra `update-check`) para consultar GitHub de verdad, y degrada honestamente (`available: false`) sin ella. Todavía no hay motor de inferencia ni integración con HYDRA-UMC-SERVER en ningún lugar de este repositorio, y nada en este código puede actuar sobre un `MaintenanceProposal` todavía - la Fase 2 y el resto de la Fase 5 (la API integrada con HYDRA-UMC-SERVER, y la voz) del Roadmap más abajo siguen siendo totalmente aspiracionales, sin ningún código detrás. Ver `CHANGELOG.md` para lo que se ha entregado exactamente hasta ahora.
+**Comprobación de honestidad - qué funciona realmente hoy:** la política de niveles de riesgo (`policy/risk_levels.py`), la lista fija de herramientas permitidas (`policy/tool_matrix.py`), los cinco validadores de contrato (`contracts.py` + `contracts/*.schema.json`), el límite de defensa contra inyecciones (`knowledge/trust.py`, `knowledge/redaction.py`), el índice de conocimiento TF-IDF local (`knowledge/index.py`, Fase 1), las 10 herramientas OBSERVE declaradas con manejador real (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), la construcción real de `EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4), y una CLI real sobre todo lo anterior (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, primera porción de la Fase 5) están testeadas (315 tests más 149 subtests pasando entre `tests/unit/` y `tests/adversarial/`) - las Fases 1, 3 y 4 están completas, la Fase 5 está iniciada. `update.pending` necesita la dependencia opcional `hydra-umc-updater` (extra `update-check`) para consultar GitHub de verdad, y degrada honestamente (`available: false`) sin ella. Todavía no hay motor de inferencia ni integración con HYDRA-UMC-SERVER en ningún lugar de este repositorio, y nada en este código puede actuar sobre un `MaintenanceProposal` todavía - la Fase 2 y el resto de la Fase 5 (la API integrada con HYDRA-UMC-SERVER, y la voz) del Roadmap más abajo siguen siendo totalmente aspiracionales, sin ningún código detrás. Ver `CHANGELOG.md` para lo que se ha entregado exactamente hasta ahora.
 
 **Resultados firmados.** Un `ToolResult` nombra ahora la `tool` que lo hizo y, cuando hay una clave local configurada (`HYDRA_UMC_LOCAL_TECHNICIAN_RESULT_KEY`, o `..._FILE` con un fichero, de 16 caracteres o más, fuera del repositorio), lleva una `signature`: HMAC-SHA256 sobre el JSON canónico de todo el resultado. Al construir un paquete de evidencia se rechaza un resultado sin firmar, falsificado o presentado como de otra herramienta; sin clave no se firma nada y no se rechaza nada, como antes. Los dos campos son opcionales en el contrato, de modo que los resultados anteriores siguen siendo válidos.
 
@@ -62,16 +34,20 @@
 
 > **Estado de seguridad física y de ciberseguridad:** este ecosistema no es un sistema de seguridad certificado. Todavía no existe una ruta de E-STOP por hardware, ni límites ni enclavamientos aplicados por el firmware, ni un comando de movimiento verificado; las imágenes de firmware se comprueban con CRC32 y un HMAC-SHA256 de clave compartida, no con una firma asimétrica; TLS y TLS mutuo son opcionales y están desactivados por defecto; aún no se ha poblado ni probado ninguna placa propia. Lee la [línea base de seguridad](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md) y el [modelo de amenazas](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md) antes de fiarte de cualquier afirmación de aquí para la seguridad de una persona.
 
+---
+
 ## 📋 De un vistazo
 
 | | |
 |---|---|
 | Versión | `0.1.7` |
 | Madurez | Funcional |
-| Tests | 255 |
+| Tests | 315 (`python -m pytest -q tests`) |
 | Tecnología | Python 3.11+ / JSON Schema / HailoRT GenAI (optional, later phase) / systemd (cm5 role, Linux only) |
 | Destino | La Raspberry Pi CM5 de una celda HYDRA-UMC |
 | En hardware real | Todavía no: no consta ninguna ejecución en hardware real para esta versión |
+
+**Ir a:** [Resumen](#-resumen) · [Arquitectura](#-arquitectura) · [Inicio rápido](#-inicio-rápido) · [Pruebas](#-pruebas) · [Estructura del repositorio](#-estructura-del-repositorio) · [Proyectos relacionados](#-proyectos-relacionados)
 
 ## 🚦 Estado del proyecto
 
@@ -82,11 +58,11 @@ Cada línea es una parte de este repositorio y la luz dice hasta dónde llega ho
 | Área | Estado | Qué significa aquí |
 |---|---|---|
 | Software | 🟡 | Funciona para su propósito principal; la comprobación de honestidad de arriba lista lo que aún falta |
-| Pruebas | 🟢 | 255 pruebas automáticas, ejecutadas en cada cambio |
+| Pruebas | 🟢 | 315 pruebas automáticas, ejecutadas en cada cambio |
 | Hardware real | 🔴 | Todavía no: no consta ninguna ejecución en hardware real para esta versión |
 | Documentación | 🟢 | README en ocho idiomas, comprobado contra el manifiesto en cada cambio |
 
-## 1. 🛠️ VISIÓN TÉCNICA
+## 🎯 Resumen
 
 HYDRA-UMC-LOCAL-TECHNICIAN es una IA local especializada para el propio
 ecosistema HYDRA-UMC: observa, explica, diagnostica y propone
@@ -208,7 +184,17 @@ No hay invocación por defecto/sin argumentos ni interfaz gráfica en esta
 entrega - ver [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) para la
 superficie de comandos real y completa.
 
-## 2. 🧱 ARQUITECTURA Y DECISIONES DE DISEÑO
+## 🧩 Papel en HYDRA-UMC
+
+**HYDRA-UMC-LOCAL-TECHNICIAN** es el asistente de mantenimiento local del ecosistema: observa, explica y propone, y el texto de un modelo nunca es autoridad para actuar. Sus herramientas están permitidas y son de solo lectura, y lo que encuentra se entrega a personas o a `HYDRA-UMC-OPS-AGENT` como pruebas y propuestas.
+
+## 🏛️ Arquitectura
+
+<p align="center">
+  <img src="images/architecture.svg" alt="HYDRA-UMC-LOCAL-TECHNICIAN architecture" width="100%">
+</p>
+
+### ARQUITECTURA Y DECISIONES DE DISEÑO
 
 - **La IA nunca obtiene autoridad generando una respuesta.** Cada
   decisión de diseño de esta entrega existe para proteger este único
@@ -248,60 +234,23 @@ superficie de comandos real y completa.
   encima de OBSERVE, ni integración con HYDRA-UMC-SERVER en ningún lugar
   de este repositorio todavía.
 
-## 📂 ESTRUCTURA DE DIRECTORIOS
+## 🚀 Inicio rápido
 
-```
-HYDRA-UMC-LOCAL-TECHNICIAN/
-├── src/hydra_umc_local_technician/
-│   ├── policy/
-│   │   ├── risk_levels.py    # RiskLevel + RiskLevelPolicy: los seis niveles, política real por nivel
-│   │   ├── tool_matrix.py    # TOOL_MATRIX: la lista blanca fija y real de herramientas (10 nombres OBSERVE)
-│   │   └── execution_mode.py # ExecutionMode + decide(): solo diagnóstico por defecto; salir de ahí exige una aprobación humana registrada y verificada
-│   ├── knowledge/
-│   │   ├── redaction.py      # Saneamiento real de secretos, portado de HYDRA-UMC-OPS-AGENT
-│   │   ├── trust.py          # UntrustedText + build_tool_request_from_model_output(): el límite de defensa contra inyección
-│   │   └── index.py          # Fase 1 - búsqueda TF-IDF real + ingesta acotada de Markdown/JSON, portado de HYDRA-UMC-DOCS-QA
-│   ├── orchestrator/          # Fase 3 + Fase 1 - los 10 manejadores reales de herramienta OBSERVE, completo
-│   │   ├── allowlist.py      # OrchestratorConfig: lista blanca de nombres simbólicos que resuelve un manejador, nunca una ruta/host/puerto en bruto
-│   │   ├── audit.py          # Diario de auditoría JSONL solo de añadir, encadenado por hash
-│   │   ├── result_signing.py # Un ToolResult que dice qué herramienta lo generó y que lo generó este técnico (firmado con una clave local)
-│   │   └── dispatch.py       # dispatch_tool_request(): ejecuta de verdad un ToolRequest validado, devuelve un ToolResult real
-│   ├── escalation/            # Fase 4 - ensamblado real de EvidenceBundle + construcción de MaintenanceProposal, completo
-│   │   ├── evidence.py       # assemble_evidence_bundle(): ToolResults reales -> un EvidenceBundle real y válido según contrato
-│   │   ├── proposal.py       # propose_maintenance(): constructor/validador real de MaintenanceProposal, nunca un generador
-│   │   └── outbox.py         # EscalationOutbox: cola local durable que sobrevive a una caída de red
-│   ├── contracts.py           # Validador real solo-stdlib para los cinco contratos mínimos
-│   ├── cli.py                 # Fase 5 - contracts validate, tools list/call, escalation evidence/propose, --version, serve
-│   ├── webapi.py              # API local de solo lectura: solo GET, loopback por defecto, token fuera de loopback, redactada y acotada
-│   └── webui/                 # la interfaz de una sola página sin conexión: index.html, app.js, app.css e i18n/ en ocho idiomas
-├── contracts/                  # Archivos JSON Schema normativos (draft 2020-12) para los cinco contratos
-├── tests/
-│   ├── unit/                   # Pruebas reales de cada módulo anterior
-│   ├── adversarial/            # test_injection_defense.py - el criterio de salida literal de la propia Fase 0
-│   ├── fixtures/                # Fixtures JSON válidos/inválidos para cada contrato
-│   └── redaction_vectors.json   # Casos que debe pasar toda implementación de la ocultación de secretos
-├── docs/
-│   ├── ARCHITECTURE.md         # Propósito, las cinco piezas objetivo, arquitectura objetivo, relaciones del ecosistema
-│   ├── SECURITY_MODEL.md       # Los seis niveles de riesgo, reglas de datos/secretos, defensa contra inyección
-│   ├── CLI_REFERENCE.md        # contracts validate, flags, códigos de salida
-│   ├── CONTRACTS.md            # La forma real campo a campo de los cinco contratos
-│   ├── WEB_API.md              # La API local de solo lectura y la página web de una sola página (serve)
-│   └── MATURITY_CRITERIA.md    # Criterios de salida de madurez (lo que debe cumplirse para subir de nivel)
-├── tools/
-│   ├── build_test.py           # Comprobación de compilación sin versionado
-│   ├── ci_validate.py          # Validación de manifiesto/CHANGELOG/docs usada por CI
-│   ├── _doc_policy.py          # Reglas de documentación compartidas por la familia (copia de la de HYDRA-UMC-SDK, mantenida en sincronía)
-│   ├── _readme_parity.py       # Comprobación de que los ocho README comparten estructura (copia de la de HYDRA-UMC-SDK, mantenida en sincronía)
-│   └── hydra_project_tool.py   # Los mismos comandos en todos los repositorios: validate, test, ci, version, status, bump
-├── images/                      # Medios e iconos de la app
-├── build.sh / build.bat        # venv + instalación editable + comprobación + pruebas
-├── build-test.sh / .bat        # Solo validación de build no mutante
-├── run.sh / run.bat            # Reenvía un comando CLI real
-├── bump_version.py             # Incremento de versión tipo cuentakilómetros (solo lo ejecuta el comando `bump` explícito)
-└── bump_manifest_version.py    # Sincroniza la versión de hydra-umc.project.json con la nativa (--sync)
+Requiere Python 3.11 o superior.
+
+```bash
+./build.sh  # Linux, macOS (build.bat on Windows)
+./run.sh contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
+./run.sh --version
 ```
 
-## ⚙️ GUÍA DE COMPILACIÓN Y EJECUCIÓN
+## 🧪 Pruebas
+
+315 pruebas automáticas se ejecutan con `python -m pytest -q tests`. No necesitan hardware ni nada fuera de esta máquina.
+
+El CI ejecuta `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que comprueba el manifiesto, los documentos, los ocho README y las imágenes.
+
+## 🏗️ Compilación y publicación
 
 ```bash
 chmod +x build.sh   # una sola vez
@@ -328,7 +277,48 @@ directamente) para la suite de pruebas local completa.
   regresión real del límite de defensa contra inyección, nunca como una
   prueba a relajar.
 
-## 🚀 HOJA DE RUTA
+## 📂 Estructura del repositorio
+
+<p align="center">
+  <img src="images/repository-structure.svg" alt="Repository structure of HYDRA-UMC-LOCAL-TECHNICIAN" width="100%">
+</p>
+
+<details>
+<summary>Versión en texto del árbol</summary>
+
+```text
+HYDRA-UMC-LOCAL-TECHNICIAN/
+├── src/hydra_umc_local_technician/   código fuente
+│   ├── policy/                       matriz de herramientas, niveles de riesgo, modo de ejecución
+│   ├── knowledge/                    índice, niveles de confianza, redacción de secretos
+│   ├── orchestrator/                 Fase 3 + Fase 1 - los 10 manejadores reales de herramienta OBSERVE, completo
+│   ├── escalation/                   Fase 4 - ensamblado real de EvidenceBundle + construcción de MaintenanceProposal, completo
+│   ├── contracts.py                  Validador real solo-stdlib para los cinco contratos mínimos
+│   ├── cli.py                        Fase 5 - contracts validate, tools list/call, escalation evidence/propose, --version, serve
+│   ├── webapi.py                     API local de solo lectura: solo GET, loopback por defecto, token fuera de loopback, redactada y acotada
+│   └── webui/                        la interfaz de una sola página sin conexión: index.html, app.js, app.css e i18n/ en ocho idiomas
+├── contracts/                        Archivos JSON Schema normativos (draft 2020-12) para los cinco contratos
+├── tests/                            pruebas automáticas
+├── docs/                             documentos del proyecto
+├── tools/                            herramientas del proyecto y comprobaciones del CI
+├── images/                           Medios e iconos de la app
+├── .github/                          flujo de CI y plantillas de incidencias
+├── build.sh / build.bat              venv + instalación editable + comprobación + pruebas
+├── run.sh / run.bat                  Reenvía un comando CLI real
+├── bump_version.py                   Incremento de versión tipo cuentakilómetros (solo lo ejecuta el comando `bump` explícito)
+├── bump_manifest_version.py          Sincroniza la versión de hydra-umc.project.json con la nativa (--sync)
+├── CHANGELOG.md                      qué cambió en cada versión
+├── build-test.sh                     comprobación de compilación sin cambios
+├── hydra-umc.project.json            manifiesto: versión, madurez, familia
+├── pyproject.toml                    metadatos del paquete
+└── test.sh                           ejecuta las pruebas
+```
+
+</details>
+
+## 🗺️ Hoja de ruta y límites conocidos
+
+**Límites conocidos hoy**
 
 Esta versión trae la Fase 0, la Fase 1, la Fase 3 y la Fase 4. Lo que queda, en orden de fases:
 
@@ -377,7 +367,11 @@ restante incluye y excluye explícitamente, y
 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) para los invariantes de
 seguridad que cada fase debe seguir respetando.
 
-## 🔗 Proyectos Relacionados
+## 🌍 Idiomas
+
+Este README y los documentos del repositorio existen en ocho idiomas: inglés, español, alemán, francés, italiano, japonés, chino y portugués (Portugal). Se escriben a la vez y el CI comprueba que los ocho ficheros tengan las mismas secciones y los mismos enlaces. Este repositorio no tiene pantalla ni catálogo de mensajes propios, así que no hay cadenas de interfaz que traducir.
+
+## 🔗 Proyectos relacionados
 
 Este proyecto es parte del ecosistema de robótica HYDRA-UMC del mismo autor (JuanenRac / Electro Hobby 3D). Vale la pena conocerlos, ya que una petición podría en realidad tratarse de uno de estos en vez de este repositorio.
 
@@ -466,24 +460,29 @@ Este proyecto es parte del ecosistema de robótica HYDRA-UMC del mismo autor (Ju
 - **[URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)** — firmware para un rack de montaje de placas con decodificación real de ID de herramienta y lógica de precalentamiento Smart Idle.
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — firmware más un compañero de visión Python real para un cabezal de inspección térmica/RGB.
 
----
+## 📚 Documentación
 
-## 📚 Documentación y Comunidad
+Dónde leer más:
 
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — propósito, las cinco piezas objetivo, arquitectura objetivo, y relaciones del ecosistema.
-- **[docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md)** — los seis niveles de riesgo, reglas de datos/secretos, y el límite real y probado de defensa contra inyección.
-- **[docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md)** — cada subcomando, sus flags, y el contrato de códigos de salida.
-- **[docs/CONTRACTS.md](docs/CONTRACTS.md)** — la forma real campo a campo de los cinco contratos.
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — stack técnico y guías de codificación para un pull request.
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — los estándares de comportamiento esperados en esta comunidad.
-- **[SECURITY.md](SECURITY.md)** — cómo reportar una vulnerabilidad, y las áreas reales de foco de seguridad de este proyecto.
-- **[SUPPORT.md](SUPPORT.md)** — dónde hacer preguntas y reportar errores.
+* **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — propósito, las cinco piezas objetivo, arquitectura objetivo, y relaciones del ecosistema.
+* **[docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md)** — cada subcomando, sus flags, y el contrato de códigos de salida.
+* **[docs/CONTRACTS.md](docs/CONTRACTS.md)** — la forma real campo a campo de los cinco contratos.
+* [Base de seguridad del ecosistema](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)
+* [Modelo de amenazas del ecosistema](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)
+* [Historial de cambios de este repositorio](CHANGELOG.md)
+* [Licencia de este repositorio](LICENSE.md)
+
+## 🤝 Contribuir y comunidad
+
+* Antes de un pull request ejecuta `HYDRA_UMC_CI=1 py -3 tools/ci_validate.py` (o `HYDRA_UMC_CI=1 python3 tools/ci_validate.py`): debe imprimir `CI_VALIDATION=PASS`. No ejecutes `build.sh` ni `build.bat` para esta comprobación; compilar no es comprobar.
+* Los ocho README se escriben desde una sola fuente en HYDRA-UMC-DOCS; no los edites a mano. Cambia la fuente y vuelve a escribirlos con `tools/make_readmes.py`.
+* No afirmes en un README lo que no se ha ejecutado: di «simulado» o «sin probar en hardware» cuando esa sea la verdad.
+* Mira [CONTRIBUTING.md](CONTRIBUTING.md), el [código de conducta](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md) y [SUPPORT.md](SUPPORT.md).
 
 ## 👤 AUTOR
-**JuanenRac** (Electro Hobby 3D)
-📧 electrohobby3d@gmail.com
-📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
+**JuanenRac (Electro Hobby 3D)** · electrohobby3d@gmail.com
 
 ## 📜 LICENCIA
 
-GPL-3.0-or-later (software) / CC BY-SA 4.0 (documentación) - ver [LICENSE.md](LICENSE.md).
+GPL-3.0-or-later - [LICENSE](LICENSE).

@@ -1,5 +1,11 @@
+<!-- =============================================================================
+HYDRA-UMC-LOCAL-TECHNICIAN - Local, policy-gated maintenance assistant
+Copyright (C) JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+GPL-3.0-or-later - see LICENSE
+============================================================================= -->
+
 <p align="center">
-  <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-LOCAL-TECHNICIAN 横幅" width="100%">
+  <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-LOCAL-TECHNICIAN banner" width="100%">
 </p>
 
 # 🤖 HYDRA-UMC-LOCAL-TECHNICIAN
@@ -9,44 +15,20 @@
 ### 🛡️ 由策略限权的本地 AI 技术员
 
 <p align="center">
-  <img src="https://img.shields.io/badge/许可证-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/语言-Python%203.11%2B-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/核心-仅标准库-brightgreen.svg" alt="仅标准库核心">
-  <img src="https://img.shields.io/badge/阶段-1%2C%203%20%26%204%2F6%20已完成-367BF5.svg" alt="第 1、3、4 阶段（共 6 阶段）已完成">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
+  <img src="https://img.shields.io/badge/Language-Python%203.11%2B-blue.svg" alt="Language">
+  <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
+  <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20of%206%20complete-367BF5.svg" alt="Phase">
+  <img src="https://img.shields.io/badge/Tests-315%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.1.7-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
-
-> **状态：v0.1.7，功能可用 - 六阶段计划中的第 1、3、4 阶段已完成（可检索知识、
-> 工具编排器、升级上报），第 5 阶段已启动（一个真实的本地 CLI、一个只读的本地 API 和网页）。**
-> 第 0 阶段定义了真实的风险等级策略（`policy/risk_levels.py`）、一份固定的
-> 工具白名单（`policy/tool_matrix.py`）、未来每一次工具调用都必须校验通过的
-> 五份真实最小合约（`contracts/*.schema.json` + `contracts.py`）、从
-> HYDRA-UMC-OPS-AGENT 自身已测试的 `log_redaction.py` 移植而来的真实密钥/
-> 敏感信息脱敏功能，以及第 0 阶段自身字面意义上的退出标准：一个真实的
-> 对抗性测试，证明恶意的被检索文档永远无法触发工具调用或泄露密钥。第 3 阶段
-> 将 9 个已声明的 OBSERVE 级工具连接到了真实的处理程序
-> （`orchestrator/dispatch.py`）：`service.status`、`storage.usage`、
-> `network.port_status`、`network.connectivity`、`system.temperature`、
-> `manifest.read`、`logs.read`、`process.list` 和 `update.pending` - 每一个都只解析一个白名单中的符号化名称
-> （`orchestrator/allowlist.py`），绝不直接使用被检索文档可能提供的原始
-> 路径/主机/端口/URL。第 1 阶段新增了第十个工具 `knowledge.search`
-> （`knowledge/index.py`）- 一个真实的本地 TF-IDF 索引，覆盖一个白名单中
-> 的、已批准的文档/清单/合约根目录，移植自 HYDRA-UMC-DOCS-QA 自身已测试的
-> 检索引擎。第 4 阶段新增了真实的 `EvidenceBundle` 组装和
-> `MaintenanceProposal` 构建（`escalation/`）- 以已观测到的工具输出为
-> 依据，绝不是编造的诊断：由于目前仍不存在推理引擎，
-> `propose_maintenance()` 只会校验并印证人工操作员提供的内容，绝不会
-> 自行生成。第 5 阶段自身的第一个真实切片 - `tools list`/`tools call`
-> 和 `escalation evidence`/`escalation propose` - 为上述每一部分都提供
-> 了真实的命令行，绝不是新增的权限来源：它只调用每个测试早已在行使的、
-> 同样经过策略校验的代码。目前尚不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成 - 参见
-> [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) 了解今天真实存在的命令
-> 界面范围。
 
 ---
 
 - **第 5 阶段 - 只读本地 API 与网页（第二部分）。** `serve`（`webapi.py`、`webui/`）展示技术员已经产出的内容：工具注册表、数据目录中的 ToolResult、EvidenceBundle 和 MaintenanceProposal 文件、各项目的清单，以及已列入白名单的知识来源的文档索引。它只响应 GET（其他方法一律返回 405），除非另行指定否则只绑定 `127.0.0.1`，绑定到其他地址时要求至少 24 个字符的 Bearer 令牌；通过列出文件夹来查找条目（绝不拼接请求路径），像 CLI 一样对每个响应做脱敏，并限制所有大小。单页界面不需要任何来自互联网的资源，提供英语、西班牙语、德语、法语、意大利语、日语、中文和葡萄牙（欧洲）葡萄牙语。详见 [docs/WEB_API.md](docs/WEB_API.md)。
 
-**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)、本地 TF-IDF 知识索引(`knowledge/index.py`，第 1 阶段)、全部 10 个已声明的 OBSERVE 工具都有真实的处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)，真实的 `EvidenceBundle`/`MaintenanceProposal` 构建(`escalation/evidence.py`、`escalation/proposal.py`，第 4 阶段)，以及覆盖以上全部内容的真实 CLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`，第 5 阶段自身的第一个切片)，都经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 275 个测试外加 30 个子测试全部通过)——第 1、3、4 阶段均已完成，第 5 阶段已启动。`update.pending` 需要可选依赖 `hydra-umc-updater`(`update-check` extra)才能真正查询 GitHub，没有它时会诚实降级(`available: false`)。本仓库中任何地方仍不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成，本代码中也没有任何地方能对 `MaintenanceProposal` 采取行动——下方路线图中的第 2 阶段，以及第 5 阶段的其余部分（与 HYDRA-UMC-SERVER 集成的 API，以及语音）仍完全是愿景，背后没有任何代码。具体已交付的内容请见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)、本地 TF-IDF 知识索引(`knowledge/index.py`，第 1 阶段)、全部 10 个已声明的 OBSERVE 工具都有真实的处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)，真实的 `EvidenceBundle`/`MaintenanceProposal` 构建(`escalation/evidence.py`、`escalation/proposal.py`，第 4 阶段)，以及覆盖以上全部内容的真实 CLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`，第 5 阶段自身的第一个切片)，都经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 315 个测试外加 149 个子测试全部通过)——第 1、3、4 阶段均已完成，第 5 阶段已启动。`update.pending` 需要可选依赖 `hydra-umc-updater`(`update-check` extra)才能真正查询 GitHub，没有它时会诚实降级(`available: false`)。本仓库中任何地方仍不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成，本代码中也没有任何地方能对 `MaintenanceProposal` 采取行动——下方路线图中的第 2 阶段，以及第 5 阶段的其余部分（与 HYDRA-UMC-SERVER 集成的 API，以及语音）仍完全是愿景，背后没有任何代码。具体已交付的内容请见 `CHANGELOG.md`。
 
 **带签名的结果。** `ToolResult` 现在会写明生成它的 `tool`,并且在配置了本地密钥时(`HYDRA_UMC_LOCAL_TECHNICIAN_RESULT_KEY`,或指向仓库之外某个文件的 `..._FILE`,16 个字符或更长),带有对整个结果规范化 JSON 的 HMAC-SHA256 `signature`。构建证据包时会拒绝未签名、被伪造或被冒充为其他工具的结果;没有密钥时与以前一样不签名也不拒绝。这两个字段在契约中是可选的,因此以前的结果仍然有效。
 
@@ -54,16 +36,20 @@
 
 > **安全与安防现状:**本生态系统不是经认证的安全系统。目前尚无硬件 E-STOP 通路,没有由固件强制执行的限位或联锁,也没有经过验证的运动指令;固件映像使用 CRC32 和共享密钥的 HMAC-SHA256 校验,而非非对称签名;TLS 与双向 TLS 均为可选项,默认关闭;自制电路板尚未组装或测试。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
+---
+
 ## 📋 速览
 
 | | |
 |---|---|
 | 版本 | `0.1.7` |
 | 成熟度 | 可用 |
-| 测试 | 255 |
+| 测试 | 315 (`python -m pytest -q tests`) |
 | 技术栈 | Python 3.11+ / JSON Schema / HailoRT GenAI (optional, later phase) / systemd (cm5 role, Linux only) |
 | 目标 | HYDRA-UMC 工作单元的 Raspberry Pi CM5 |
 | 真实硬件 | 尚未：此版本没有在真实硬件上运行的记录 |
+
+**跳转：** [概述](#-概述) · [架构](#-架构) · [快速开始](#-快速开始) · [测试](#-测试) · [仓库结构](#-仓库结构) · [相关项目](#-相关项目)
 
 ## 🚦 项目状态
 
@@ -74,11 +60,11 @@
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟡 | 主要用途可用；上面的诚实性检查列出了仍然缺少的内容 |
-| 测试 | 🟢 | 255 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 315 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🔴 | 尚未：此版本没有在真实硬件上运行的记录 |
 | 文档 | 🟢 | 八种语言的 README，每次变更都会与清单核对 |
 
-## 1. 🛠️ 技术概览
+## 🎯 概述
 
 HYDRA-UMC-LOCAL-TECHNICIAN 是为 HYDRA-UMC 生态系统自身量身打造的专用本地
 AI：它观察、解释、诊断并为生态系统自己的服务和节点提出维护建议 - 它绝不会
@@ -171,7 +157,17 @@ INVALID: tests/fixtures/tool_request.invalid.json (ToolRequest): ...
 本次交付没有默认/无参数调用方式，也没有图形界面 - 完整、真实的命令界面参见
 [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md)。
 
-## 2. 🧱 架构与设计决策
+## 🧩 在 HYDRA-UMC 中的角色
+
+**HYDRA-UMC-LOCAL-TECHNICIAN** 是生态系统的本地维护助手：它观察、解释并提出建议，模型生成的文本永远不是行动的授权。它的工具在允许列表内且只读，发现的内容会作为证据和建议交给人或 `HYDRA-UMC-OPS-AGENT`。
+
+## 🏛️ 架构
+
+<p align="center">
+  <img src="images/architecture.svg" alt="HYDRA-UMC-LOCAL-TECHNICIAN architecture" width="100%">
+</p>
+
+### 架构与设计决策
 
 - **AI 永远不会因生成一段回复而获得权限。** 本次交付的每一个设计决策都是为
   了保护这一条原则而存在 - 完整模型参见
@@ -202,60 +198,23 @@ INVALID: tests/fixtures/tool_request.invalid.json (ToolRequest): ...
   都还不存在推理引擎、超出 OBSERVE 级别的真实工具执行,也没有与
   HYDRA-UMC-SERVER 的集成。
 
-## 📂 目录结构
+## 🚀 快速开始
 
-```
-HYDRA-UMC-LOCAL-TECHNICIAN/
-├── src/hydra_umc_local_technician/
-│   ├── policy/
-│   │   ├── risk_levels.py    # RiskLevel + RiskLevelPolicy：六个等级，每级真实策略
-│   │   ├── tool_matrix.py    # TOOL_MATRIX：固定且真实的工具白名单（10 个 OBSERVE 级名称）
-│   │   └── execution_mode.py # ExecutionMode + decide()：默认仅诊断；离开该模式需要已记录且已验证的人工批准
-│   ├── knowledge/
-│   │   ├── redaction.py      # 真实的密钥脱敏，移植自 HYDRA-UMC-OPS-AGENT
-│   │   ├── trust.py          # UntrustedText + build_tool_request_from_model_output()：注入防御边界
-│   │   └── index.py          # 第 1 阶段 - 真实的 TF-IDF 搜索 + 有限的 Markdown/JSON 摄取，移植自 HYDRA-UMC-DOCS-QA
-│   ├── orchestrator/          # 第 3 阶段 + 第 1 阶段 - 全部 10 个真实的 OBSERVE 工具处理程序，已完成
-│   │   ├── allowlist.py      # OrchestratorConfig：处理程序解析的符号化名称白名单，绝不使用原始路径/主机/端口
-│   │   ├── audit.py          # 只追加、哈希链接的 JSONL 审计日志
-│   │   ├── result_signing.py # 声明由哪个工具生成、且由本技术员生成的 ToolResult (用本地密钥签名)
-│   │   └── dispatch.py       # dispatch_tool_request()：真实执行一个已校验的 ToolRequest，返回一个真实的 ToolResult
-│   ├── escalation/            # 第 4 阶段 - 真实的 EvidenceBundle 组装 + MaintenanceProposal 构建，已完成
-│   │   ├── evidence.py       # assemble_evidence_bundle()：真实 ToolResult -> 一份符合契约的真实 EvidenceBundle
-│   │   ├── proposal.py       # propose_maintenance()：MaintenanceProposal 的真实构造器/校验器，绝不是生成器
-│   │   └── outbox.py         # EscalationOutbox：可在网络中断后保留的持久本地队列
-│   ├── contracts.py           # 五份最小合约的真实、仅标准库校验器
-│   ├── cli.py                 # 第 5 阶段 - contracts validate、tools list/call、escalation evidence/propose、--version, serve
-│   ├── webapi.py              # 只读本地 API：仅 GET，默认回环地址，非回环需令牌，已脱敏并限制大小
-│   └── webui/                 # 可离线使用的单页界面：index.html、app.js、app.css 与八种语言的 i18n/
-├── contracts/                  # 五份合约的规范性 JSON Schema 文件（draft 2020-12）
-├── tests/
-│   ├── unit/                   # 上述每个模块的真实测试
-│   ├── adversarial/            # test_injection_defense.py - 第 0 阶段自身字面意义上的退出标准
-│   ├── fixtures/                # 每份合约的有效/无效 JSON 测试样例
-│   └── redaction_vectors.json   # 秘密脱敏的每个实现都必须通过的用例
-├── docs/
-│   ├── ARCHITECTURE.md         # 目的、五个目标组成部分、目标架构、生态系统关系
-│   ├── SECURITY_MODEL.md       # 六个风险等级、数据/密钥规则、注入防御
-│   ├── CLI_REFERENCE.md        # contracts validate、参数标志、退出码
-│   ├── CONTRACTS.md            # 五份合约逐字段的真实结构
-│   ├── WEB_API.md              # 只读的本地 API 与单页网页 (serve)
-│   └── MATURITY_CRITERIA.md    # 成熟度退出标准 (升一级必须满足的条件)
-├── tools/
-│   ├── build_test.py           # 不递增版本号的构建检查
-│   ├── ci_validate.py          # CI 使用的清单/CHANGELOG/文档校验
-│   ├── _doc_policy.py          # 家族共享的文档规则 (HYDRA-UMC-SDK 的副本,保持同步)
-│   ├── _readme_parity.py       # 检查八个 README 结构一致 (HYDRA-UMC-SDK 的副本,保持同步)
-│   └── hydra_project_tool.py   # 每个仓库相同的命令: validate、test、ci、version、status、bump
-├── images/                      # 媒体资源与应用图标
-├── build.sh / build.bat        # 虚拟环境 + 可编辑安装 + 编译检查 + 测试
-├── build-test.sh / .bat        # 仅不产生变更的构建校验
-├── run.sh / run.bat            # 转发一条真实的 CLI 命令
-├── bump_version.py             # 里程表式版本递增（仅由显式 `bump` 命令运行）
-└── bump_manifest_version.py    # 将 hydra-umc.project.json 的版本与原生版本同步（--sync）
+需要 Python 3.11 或更高版本。
+
+```bash
+./build.sh  # Linux, macOS (build.bat on Windows)
+./run.sh contracts validate tests/fixtures/tool_request.valid.json --contract ToolRequest
+./run.sh --version
 ```
 
-## ⚙️ 构建与运行指南
+## 🧪 测试
+
+运行 `python -m pytest -q tests` 会执行 315 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+
+CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
+
+## 🏗️ 构建与发布
 
 ```bash
 chmod +x build.sh   # 只需一次
@@ -279,7 +238,48 @@ CHANGELOG - 它并**不**运行测试套件；要运行完整的本地测试套�
   退出标准 - 请将那里的任何失败都当作注入防御边界的真实退化，绝不要把它当
   作一个应该放宽的测试。
 
-## 🚀 路线图
+## 📂 仓库结构
+
+<p align="center">
+  <img src="images/repository-structure.svg" alt="Repository structure of HYDRA-UMC-LOCAL-TECHNICIAN" width="100%">
+</p>
+
+<details>
+<summary>目录树的文本版本</summary>
+
+```text
+HYDRA-UMC-LOCAL-TECHNICIAN/
+├── src/hydra_umc_local_technician/   源代码
+│   ├── policy/                       工具矩阵、风险等级、执行模式
+│   ├── knowledge/                    索引、信任级别、脱敏
+│   ├── orchestrator/                 第 3 阶段 + 第 1 阶段 - 全部 10 个真实的 OBSERVE 工具处理程序，已完成
+│   ├── escalation/                   第 4 阶段 - 真实的 EvidenceBundle 组装 + MaintenanceProposal 构建，已完成
+│   ├── contracts.py                  五份最小合约的真实、仅标准库校验器
+│   ├── cli.py                        第 5 阶段 - contracts validate、tools list/call、escalation evidence/propose、--version, serve
+│   ├── webapi.py                     只读本地 API：仅 GET，默认回环地址，非回环需令牌，已脱敏并限制大小
+│   └── webui/                        可离线使用的单页界面：index.html、app.js、app.css 与八种语言的 i18n/
+├── contracts/                        五份合约的规范性 JSON Schema 文件（draft 2020-12）
+├── tests/                            自动测试
+├── docs/                             项目文档
+├── tools/                            项目工具和 CI 检查
+├── images/                           媒体资源与应用图标
+├── .github/                          CI 工作流和 Issue 模板
+├── build.sh / build.bat              虚拟环境 + 可编辑安装 + 编译检查 + 测试
+├── run.sh / run.bat                  转发一条真实的 CLI 命令
+├── bump_version.py                   显式提升版本
+├── bump_manifest_version.py          将 hydra-umc.project.json 的版本与原生版本同步（--sync）
+├── CHANGELOG.md                      每个版本的变更
+├── build-test.sh                     不修改内容的构建检查
+├── hydra-umc.project.json            清单：版本、成熟度、系列
+├── pyproject.toml                    包的元数据
+└── test.sh                           运行测试
+```
+
+</details>
+
+## 🗺️ 路线图与已知限制
+
+**当前已知限制**
 
 本版本交付了第 0 阶段、第 1 阶段、第 3 阶段和第 4 阶段。剩余部分，按阶段顺序：
 
@@ -316,6 +316,10 @@ CHANGELOG - 它并**不**运行测试套件；要运行完整的本地测试套�
 参见
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，各阶段必须持续遵守的安全
 不变量参见 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md)。
+
+## 🌍 语言
+
+本 README 和仓库文档提供八种语言：英语、西班牙语、德语、法语、意大利语、日语、中文和葡萄牙语（葡萄牙）。它们同时编写，并由 CI 检查八个文件拥有相同的章节和相同的链接。 本仓库没有自己的界面或消息目录，因此没有需要翻译的界面文字。
 
 ## 🔗 相关项目
 
@@ -408,24 +412,29 @@ CHANGELOG - 它并**不**运行测试套件；要运行完整的本地测试套�
 - **[URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)** — 用于板卡安装机架的固件，具备真实的工具 ID 解码与 Smart Idle 预热逻辑。
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — 固件加上一个真实的 Python 视觉伴侣程序，用于热成像/RGB 检测工具头。
 
----
+## 📚 文档
 
-## 📚 文档与社区
+更多阅读：
 
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — 目的、五个目标组成部分、目标架构，以及生态系统关系。
-- **[docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md)** — 六个风险等级、数据/密钥规则，以及真实且经过测试的注入防御边界。
-- **[docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md)** — 每个子命令、其参数标志，以及退出码合约。
-- **[docs/CONTRACTS.md](docs/CONTRACTS.md)** — 五份合约逐字段的真实结构。
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — 提交拉取请求所需的技术栈与编码规范。
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — 本社区所期望的行为准则。
-- **[SECURITY.md](SECURITY.md)** — 如何报告漏洞，以及本项目真实的安全重点领域。
-- **[SUPPORT.md](SUPPORT.md)** — 在哪里提问和报告错误。
+* **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — 目的、五个目标组成部分、目标架构，以及生态系统关系。
+* **[docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md)** — 每个子命令、其参数标志，以及退出码合约。
+* **[docs/CONTRACTS.md](docs/CONTRACTS.md)** — 五份合约逐字段的真实结构。
+* [生态系统的安全基线](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)
+* [生态系统的威胁模型](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)
+* [本仓库的更新日志](CHANGELOG.md)
+* [本仓库的许可证](LICENSE.md)
+
+## 🤝 参与贡献与社区
+
+* 提交 pull request 之前，请运行 `HYDRA_UMC_CI=1 py -3 tools/ci_validate.py`（或 `HYDRA_UMC_CI=1 python3 tools/ci_validate.py`）：它必须输出 `CI_VALIDATION=PASS`。此检查不要运行 `build.sh` 或 `build.bat`；构建不是检查。
+* 八个 README 由 HYDRA-UMC-DOCS 中的同一个源生成；请勿手工编辑。修改源文件，再用 `tools/make_readmes.py` 重新生成。
+* 不要在 README 中声称尚未运行过的内容：属实时请写“仅模拟”或“尚未在硬件上试过”。
+* 请参阅 [CONTRIBUTING.md](CONTRIBUTING.md)、[行为准则](CODE_OF_CONDUCT.md)、[SECURITY.md](SECURITY.md) 和 [SUPPORT.md](SUPPORT.md)。
 
 ## 👤 作者
-**JuanenRac** (Electro Hobby 3D)
-📧 electrohobby3d@gmail.com
-📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
+**JuanenRac (Electro Hobby 3D)** · electrohobby3d@gmail.com
 
 ## 📜 许可证
 
-GPL-3.0-or-later（软件）/ CC BY-SA 4.0（文档）- 详见 [LICENSE.md](LICENSE.md)。
+GPL-3.0-or-later - [LICENSE](LICENSE).

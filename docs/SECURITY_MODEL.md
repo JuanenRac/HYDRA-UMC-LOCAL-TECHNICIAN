@@ -108,8 +108,8 @@ marker:
   `-password VALUE`).
 - `Authorization: Bearer <token>`, bare `Bearer <token>` and `Basic <base64>`
   credentials, and `Cookie` / `Set-Cookie` headers.
-- Tokens with a well-known shape of their own (GitHub, Slack, AWS, Anthropic
-  and OpenAI style keys) and a token used as the whole user part of a URL.
+- Tokens with a well-known shape of their own (GitHub, Slack, AWS and the style
+  of keys that AI providers issue) and a token used as the whole user part of a URL.
 - `scheme://user:password@host` credentials embedded in a URL (the
   username is kept - it rarely is the secret itself and helps a human
   recognize which credential was in play; only the password is

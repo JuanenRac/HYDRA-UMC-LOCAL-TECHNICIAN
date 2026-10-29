@@ -1,0 +1,151 @@
+{
+  "repo": "HYDRA-UMC-LOCAL-TECHNICIAN",
+  "ecosystem": "hydra",
+  "tagline": "Tools that only read, a risk matrix that decides, and nothing a model writes can act.",
+  "description": "HYDRA-UMC-LOCAL-TECHNICIAN validates each tool request against five contracts and a tool and risk matrix, runs only allow-listed read-only handlers, redacts secrets, signs results and prepares evidence and proposals for people or the ops agent.",
+  "columns": [
+    "WHO USES IT",
+    "THIS REPOSITORY",
+    "READS AND FEEDS"
+  ],
+  "nodes": [
+    {
+      "id": "user",
+      "column": 0,
+      "level": "external",
+      "title": "People",
+      "lines": [
+        "CLI, local web UI",
+        "in eight languages"
+      ]
+    },
+    {
+      "id": "host",
+      "column": 2,
+      "level": "external",
+      "title": "Host state",
+      "lines": [
+        "services, disk, logs:",
+        "read, never changed"
+      ]
+    },
+    {
+      "id": "ops",
+      "column": 2,
+      "level": "external",
+      "title": "OPS-AGENT",
+      "lines": [
+        "receives evidence and",
+        "proposals"
+      ]
+    },
+    {
+      "id": "cli",
+      "column": 1,
+      "level": "tested",
+      "title": "cli.py / webapi.py",
+      "lines": [
+        "entry points; the web UI",
+        "binds to the loopback"
+      ],
+      "code": [
+        "src/hydra_umc_local_technician/cli.py",
+        "src/hydra_umc_local_technician/webapi.py"
+      ]
+    },
+    {
+      "id": "pol",
+      "column": 1,
+      "level": "tested",
+      "title": "policy/",
+      "lines": [
+        "tool matrix, risk levels,",
+        "execution mode"
+      ],
+      "code": [
+        "src/hydra_umc_local_technician/policy/tool_matrix.py",
+        "src/hydra_umc_local_technician/policy/risk_levels.py"
+      ]
+    },
+    {
+      "id": "orc",
+      "column": 1,
+      "level": "tested",
+      "title": "orchestrator/",
+      "lines": [
+        "allow-list, dispatch, audit,",
+        "signed results"
+      ],
+      "code": [
+        "src/hydra_umc_local_technician/orchestrator/dispatch.py",
+        "src/hydra_umc_local_technician/orchestrator/result_signing.py"
+      ]
+    },
+    {
+      "id": "kn",
+      "column": 1,
+      "level": "tested",
+      "title": "knowledge/",
+      "lines": [
+        "index with trust levels",
+        "and secret redaction"
+      ],
+      "code": [
+        "src/hydra_umc_local_technician/knowledge/redaction.py"
+      ]
+    },
+    {
+      "id": "esc",
+      "column": 1,
+      "level": "tested",
+      "title": "escalation/",
+      "lines": [
+        "evidence, outbox and",
+        "proposals"
+      ],
+      "code": [
+        "src/hydra_umc_local_technician/escalation/proposal.py"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "user",
+      "to": "cli",
+      "level": "tested"
+    },
+    {
+      "from": "cli",
+      "to": "pol",
+      "level": "tested"
+    },
+    {
+      "from": "cli",
+      "to": "orc",
+      "level": "tested"
+    },
+    {
+      "from": "orc",
+      "to": "host",
+      "level": "external",
+      "label": "read"
+    },
+    {
+      "from": "orc",
+      "to": "kn",
+      "level": "tested"
+    },
+    {
+      "from": "orc",
+      "to": "esc",
+      "level": "tested"
+    },
+    {
+      "from": "esc",
+      "to": "ops",
+      "level": "external",
+      "label": "proposal"
+    }
+  ],
+  "footer": "No model inference is wired in yet; the tools are real and read-only."
+}

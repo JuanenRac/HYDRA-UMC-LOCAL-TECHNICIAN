@@ -1,0 +1,549 @@
+{
+  "repo": "HYDRA-UMC-LOCAL-TECHNICIAN",
+  "ecosystem": "hydra",
+  "svg": "en",
+  "exempt": [
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "SUPPORT.md",
+    "LICENSE",
+    "LICENSE.md",
+    "build-test.bat",
+    "test.bat"
+  ],
+  "cards": [
+    {
+      "name": "src/hydra_umc_local_technician/",
+      "span": 3,
+      "accent": "a",
+      "rows": [
+        {
+          "name": "policy/",
+          "desc": {
+            "en": "tool matrix, risk levels, execution mode",
+            "es": "matriz de herramientas",
+            "de": "Werkzeugmatrix",
+            "fr": "matrice d'outils",
+            "it": "matrice degli strumenti",
+            "ja": "ツールのマトリクス、リスクレベル、実行モード",
+            "zh": "工具矩阵、风险等级、执行模式",
+            "pt": "matriz de ferramentas"
+          },
+          "tree_desc": {
+            "en": "tool matrix, risk levels, execution mode",
+            "es": "matriz de herramientas, niveles de riesgo, modo de ejecución",
+            "de": "Werkzeugmatrix, Risikostufen, Ausführungsmodus",
+            "fr": "matrice d'outils, niveaux de risque, mode d'exécution",
+            "it": "matrice degli strumenti, livelli di rischio, modalità di esecuzione",
+            "ja": "ツールのマトリクス、リスクレベル、実行モード",
+            "zh": "工具矩阵、风险等级、执行模式",
+            "pt": "matriz de ferramentas, níveis de risco, modo de execução"
+          }
+        },
+        {
+          "name": "knowledge/",
+          "desc": {
+            "en": "index, trust levels, redaction",
+            "es": "índice, niveles de confianza, redacción de",
+            "de": "Index, Vertrauensstufen, Schwärzung",
+            "fr": "index, niveaux de confiance, masquage",
+            "it": "indice, livelli di fiducia, oscuramento",
+            "ja": "インデックス、信頼レベル、秘匿",
+            "zh": "索引、信任级别、脱敏",
+            "pt": "índice, níveis de confiança, ocultação"
+          },
+          "tree_desc": {
+            "en": "index, trust levels, redaction",
+            "es": "índice, niveles de confianza, redacción de secretos",
+            "de": "Index, Vertrauensstufen, Schwärzung",
+            "fr": "index, niveaux de confiance, masquage",
+            "it": "indice, livelli di fiducia, oscuramento",
+            "ja": "インデックス、信頼レベル、秘匿",
+            "zh": "索引、信任级别、脱敏",
+            "pt": "índice, níveis de confiança, ocultação"
+          }
+        },
+        {
+          "name": "orchestrator/",
+          "desc": {
+            "en": "Fase 3 + Fase 1",
+            "es": "Fase 3 + Fase 1",
+            "de": "Phase 3 + Phase 1",
+            "fr": "Phase 3 + Phase 1",
+            "it": "Fase 3 + Fase 1",
+            "ja": "フェーズ3 + フェーズ1 - 10個すべて",
+            "zh": "第 3 阶段 + 第 1 阶段",
+            "pt": "Fase 3 + Fase 1"
+          },
+          "tree_desc": {
+            "en": "Fase 3 + Fase 1 - all 10 real OBSERVE-level tool handlers, complete",
+            "es": "Fase 3 + Fase 1 - los 10 manejadores reales de herramienta OBSERVE, completo",
+            "de": "Phase 3 + Phase 1 - alle 10 realen OBSERVE-Werkzeug-Handler, vollständig",
+            "fr": "Phase 3 + Phase 1 - les 10 vrais gestionnaires d'outils OBSERVE, complet",
+            "it": "Fase 3 + Fase 1 - tutti i 10 gestori reali di strumenti OBSERVE, completo",
+            "ja": "フェーズ3 + フェーズ1 - 10個すべての実際のOBSERVEツールハンドラー、完了",
+            "zh": "第 3 阶段 + 第 1 阶段 - 全部 10 个真实的 OBSERVE 工具处理程序，已完成",
+            "pt": "Fase 3 + Fase 1 - os 10 manipuladores reais de ferramentas de nível OBSERVE, completos"
+          }
+        },
+        {
+          "name": "escalation/",
+          "desc": {
+            "en": "Fase 4 - real EvidenceBundle assembly +",
+            "es": "Fase 4 - ensamblado real de EvidenceBundle",
+            "de": "Phase 4 - realer Aufbau von EvidenceBundle",
+            "fr": "Phase 4 - assemblage réel d'EvidenceBundle",
+            "it": "Fase 4 - vero assemblaggio di",
+            "ja": "フェーズ4 - 実際の EvidenceBu",
+            "zh": "第 4 阶段 - 真实的 EvidenceB",
+            "pt": "Fase 4 - montagem real de EvidenceBundle +"
+          },
+          "tree_desc": {
+            "en": "Fase 4 - real EvidenceBundle assembly + MaintenanceProposal construction, complete",
+            "es": "Fase 4 - ensamblado real de EvidenceBundle + construcción de MaintenanceProposal, completo",
+            "de": "Phase 4 - realer Aufbau von EvidenceBundle + Konstruktion von MaintenanceProposal, vollständig",
+            "fr": "Phase 4 - assemblage réel d'EvidenceBundle + construction de MaintenanceProposal, complet",
+            "it": "Fase 4 - vero assemblaggio di EvidenceBundle + costruzione di MaintenanceProposal, completo",
+            "ja": "フェーズ4 - 実際の EvidenceBundle 組み立て + MaintenanceProposal 構築、完了",
+            "zh": "第 4 阶段 - 真实的 EvidenceBundle 组装 + MaintenanceProposal 构建，已完成",
+            "pt": "Fase 4 - montagem real de EvidenceBundle + construção de MaintenanceProposal, completas"
+          }
+        },
+        {
+          "name": "contracts.py",
+          "desc": {
+            "en": "Real, stdlib-only validator for the five",
+            "es": "Validador real solo-stdlib para los cinco",
+            "de": "Realer, nur-stdlib Validator für die fünf",
+            "fr": "Validateur réel",
+            "it": "Validatore reale",
+            "ja": "5つの最小契約のための実際の標準ライブラリの",
+            "zh": "五份最小合约的真实、仅标准库校验器",
+            "pt": "Validador real"
+          },
+          "tree_desc": {
+            "en": "Real, stdlib-only validator for the five minimal contracts",
+            "es": "Validador real solo-stdlib para los cinco contratos mínimos",
+            "de": "Realer, nur-stdlib Validator für die fünf Minimalverträge",
+            "fr": "Validateur réel, stdlib uniquement, pour les cinq contrats minimaux",
+            "it": "Validatore reale, solo stdlib, per i cinque contratti minimi",
+            "ja": "5つの最小契約のための実際の標準ライブラリのみのバリデータ",
+            "zh": "五份最小合约的真实、仅标准库校验器",
+            "pt": "Validador real, só com a biblioteca padrão, para os cinco contratos mínimos"
+          }
+        },
+        {
+          "name": "cli.py",
+          "desc": {
+            "en": "Fase 5 - contracts validate",
+            "es": "Fase 5 - contracts validate",
+            "de": "Phase 5 - contracts validate",
+            "fr": "Phase 5 - contracts validate",
+            "it": "Fase 5 - contracts validate",
+            "ja": "フェーズ5 - contracts vali",
+            "zh": "第 5 阶段 - contracts val",
+            "pt": "Fase 5 - contracts validate"
+          },
+          "tree_desc": {
+            "en": "Fase 5 - contracts validate, tools list/call, escalation evidence/propose, --version, serve",
+            "es": "Fase 5 - contracts validate, tools list/call, escalation evidence/propose, --version, serve",
+            "de": "Phase 5 - contracts validate, tools list/call, escalation evidence/propose, --version, serve",
+            "fr": "Phase 5 - contracts validate, tools list/call, escalation evidence/propose, --version, serve",
+            "it": "Fase 5 - contracts validate, tools list/call, escalation evidence/propose, --version, serve",
+            "ja": "フェーズ5 - contracts validate、tools list/call、escalation evidence/propose、--version, serve",
+            "zh": "第 5 阶段 - contracts validate、tools list/call、escalation evidence/propose、--version, serve",
+            "pt": "Fase 5 - contracts validate, tools list/call, escalation evidence/propose, --version, serve"
+          }
+        },
+        {
+          "name": "webapi.py",
+          "desc": {
+            "en": "read-only local API",
+            "es": "API local de solo lectura",
+            "de": "schreibgeschützte lokale API",
+            "fr": "API locale en lecture seule",
+            "it": "API locale di sola lettura",
+            "ja": "読み取り専用のローカルAPI：GET のみ",
+            "zh": "只读本地 API：仅 GET",
+            "pt": "API local só de leitura"
+          },
+          "tree_desc": {
+            "en": "read-only local API: GET only, loopback by default, token off loopback, redacted and bounded",
+            "es": "API local de solo lectura: solo GET, loopback por defecto, token fuera de loopback, redactada y acotada",
+            "de": "schreibgeschützte lokale API: nur GET, standardmäßig Loopback, Token außerhalb von Loopback, geschwärzt und begrenzt",
+            "fr": "API locale en lecture seule : GET uniquement, loopback par défaut, jeton hors loopback, masquée et bornée",
+            "it": "API locale di sola lettura: solo GET, loopback di default, token fuori da loopback, oscurata e limitata",
+            "ja": "読み取り専用のローカルAPI：GET のみ、既定はループバック、ループバック以外はトークン必須、マスク済みで上限付き",
+            "zh": "只读本地 API：仅 GET，默认回环地址，非回环需令牌，已脱敏并限制大小",
+            "pt": "API local só de leitura: apenas GET, loopback por omissão, token fora do loopback, ocultada e limitada"
+          }
+        },
+        {
+          "name": "webui/",
+          "desc": {
+            "en": "the offline single-page UI",
+            "es": "la interfaz de una sola página sin conexión",
+            "de": "die Offline-Einzelseite",
+            "fr": "l'interface hors ligne d'une seule page",
+            "it": "l'interfaccia offline a pagina singola",
+            "ja": "オフラインで動く単一ページUI",
+            "zh": "可离线使用的单页界面：index.html",
+            "pt": "a interface offline de página única"
+          },
+          "tree_desc": {
+            "en": "the offline single-page UI: index.html, app.js, app.css and i18n/ in eight languages",
+            "es": "la interfaz de una sola página sin conexión: index.html, app.js, app.css e i18n/ en ocho idiomas",
+            "de": "die Offline-Einzelseite: index.html, app.js, app.css und i18n/ in acht Sprachen",
+            "fr": "l'interface hors ligne d'une seule page : index.html, app.js, app.css et i18n/ en huit langues",
+            "it": "l'interfaccia offline a pagina singola: index.html, app.js, app.css e i18n/ in otto lingue",
+            "ja": "オフラインで動く単一ページUI：index.html、app.js、app.css、8言語の i18n/",
+            "zh": "可离线使用的单页界面：index.html、app.js、app.css 与八种语言的 i18n/",
+            "pt": "a interface offline de página única: index.html, app.js, app.css e i18n/ em oito idiomas"
+          }
+        }
+      ],
+      "tree_head": {
+        "en": "source code",
+        "es": "código fuente",
+        "de": "Quellcode",
+        "fr": "code source",
+        "it": "codice sorgente",
+        "ja": "ソースコード",
+        "zh": "源代码",
+        "pt": "código-fonte"
+      },
+      "sub": {
+        "en": "source code",
+        "es": "código fuente",
+        "de": "Quellcode",
+        "fr": "code source",
+        "it": "codice sorgente",
+        "ja": "ソースコード",
+        "zh": "源代码",
+        "pt": "código-fonte"
+      }
+    },
+    {
+      "name": {
+        "en": "folders",
+        "es": "carpetas",
+        "de": "Ordner",
+        "fr": "dossiers",
+        "it": "cartelle",
+        "ja": "フォルダ",
+        "zh": "文件夹",
+        "pt": "pastas"
+      },
+      "kind": "group",
+      "span": 3,
+      "accent": "b",
+      "columns": 2,
+      "rows": [
+        {
+          "name": "contracts/",
+          "desc": {
+            "en": "Normative JSON Schema files",
+            "es": "Archivos JSON Schema normativos",
+            "de": "Normative JSON-Schema-Dateien",
+            "fr": "Fichiers JSON Schema normatifs",
+            "it": "File JSON Schema normativi",
+            "ja": "5つの契約のための規範的な JSON Sch",
+            "zh": "五份合约的规范性 JSON Schema 文",
+            "pt": "Ficheiros JSON Schema normativos"
+          },
+          "tree_desc": {
+            "en": "Normative JSON Schema files (draft 2020-12) for the five contracts",
+            "es": "Archivos JSON Schema normativos (draft 2020-12) para los cinco contratos",
+            "de": "Normative JSON-Schema-Dateien (Draft 2020-12) für die fünf Verträge",
+            "fr": "Fichiers JSON Schema normatifs (draft 2020-12) pour les cinq contrats",
+            "it": "File JSON Schema normativi (draft 2020-12) per i cinque contratti",
+            "ja": "5つの契約のための規範的な JSON Schema ファイル（draft 2020-12）",
+            "zh": "五份合约的规范性 JSON Schema 文件（draft 2020-12）",
+            "pt": "Ficheiros JSON Schema normativos (draft 2020-12) dos cinco contratos"
+          }
+        },
+        {
+          "name": "tests/",
+          "desc": {
+            "en": "automated tests",
+            "es": "pruebas automáticas",
+            "de": "automatische Tests",
+            "fr": "tests automatiques",
+            "it": "test automatici",
+            "ja": "自動テスト",
+            "zh": "自动测试",
+            "pt": "testes automáticos"
+          },
+          "tree_desc": {
+            "en": "automated tests",
+            "es": "pruebas automáticas",
+            "de": "automatische Tests",
+            "fr": "tests automatiques",
+            "it": "test automatici",
+            "ja": "自動テスト",
+            "zh": "自动测试",
+            "pt": "testes automáticos"
+          }
+        },
+        {
+          "name": "docs/",
+          "desc": {
+            "en": "documents of the project",
+            "es": "documentos del proyecto",
+            "de": "Dokumente des Projekts",
+            "fr": "documents du projet",
+            "it": "documenti del progetto",
+            "ja": "プロジェクトの文書",
+            "zh": "项目文档",
+            "pt": "documentos do projeto"
+          },
+          "tree_desc": {
+            "en": "documents of the project",
+            "es": "documentos del proyecto",
+            "de": "Dokumente des Projekts",
+            "fr": "documents du projet",
+            "it": "documenti del progetto",
+            "ja": "プロジェクトの文書",
+            "zh": "项目文档",
+            "pt": "documentos do projeto"
+          }
+        },
+        {
+          "name": "tools/",
+          "desc": {
+            "en": "project tools and CI checks",
+            "es": "herramientas del proyecto y comprobaciones",
+            "de": "Projektwerkzeuge und CI-Prüfungen",
+            "fr": "outils du projet et vérifications de la CI",
+            "it": "strumenti del progetto e controlli della CI",
+            "ja": "プロジェクトのツールと CI の検査",
+            "zh": "项目工具和 CI 检查",
+            "pt": "ferramentas do projeto e verificações da CI"
+          },
+          "tree_desc": {
+            "en": "project tools and CI checks",
+            "es": "herramientas del proyecto y comprobaciones del CI",
+            "de": "Projektwerkzeuge und CI-Prüfungen",
+            "fr": "outils du projet et vérifications de la CI",
+            "it": "strumenti del progetto e controlli della CI",
+            "ja": "プロジェクトのツールと CI の検査",
+            "zh": "项目工具和 CI 检查",
+            "pt": "ferramentas do projeto e verificações da CI"
+          }
+        },
+        {
+          "name": "images/",
+          "desc": {
+            "en": "Media and app icons",
+            "es": "Medios e iconos de la app",
+            "de": "Medien und App-Icons",
+            "fr": "Médias et icônes de l'app",
+            "it": "Media e icone dell'app",
+            "ja": "メディアとアプリアイコン",
+            "zh": "媒体资源与应用图标",
+            "pt": "Multimédia e ícones da aplicação"
+          },
+          "tree_desc": {
+            "en": "Media and app icons",
+            "es": "Medios e iconos de la app",
+            "de": "Medien und App-Icons",
+            "fr": "Médias et icônes de l'app",
+            "it": "Media e icone dell'app",
+            "ja": "メディアとアプリアイコン",
+            "zh": "媒体资源与应用图标",
+            "pt": "Multimédia e ícones da aplicação"
+          }
+        },
+        {
+          "name": ".github/",
+          "desc": {
+            "en": "CI workflow and issue templates",
+            "es": "flujo de CI y plantillas de incidencias",
+            "de": "CI-Workflow und Issue-Vorlagen",
+            "fr": "workflow de CI et modèles de tickets",
+            "it": "workflow di CI e modelli di segnalazione",
+            "ja": "CI ワークフローと Issue テンプレート",
+            "zh": "CI 工作流和 Issue 模板",
+            "pt": "fluxo de CI e modelos de problemas"
+          }
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "project files",
+        "es": "ficheros del proyecto",
+        "de": "Projektdateien",
+        "fr": "fichiers du projet",
+        "it": "file del progetto",
+        "ja": "プロジェクトのファイル",
+        "zh": "项目文件",
+        "pt": "ficheiros do projeto"
+      },
+      "kind": "group",
+      "span": 3,
+      "accent": "c",
+      "columns": 2,
+      "rows": [
+        {
+          "name": "build.sh / build.bat",
+          "desc": {
+            "en": "venv + editable install + compile-check +",
+            "es": "venv + instalación editable + comprobación",
+            "de": "venv + editierbare Installation + Prüfung +",
+            "fr": "venv + installation éditable + vérification",
+            "it": "venv + installazione editabile + verifica +",
+            "ja": "venv + 編集可能インストール + コン",
+            "zh": "虚拟环境 + 可编辑安装 + 编译检查 +",
+            "pt": "venv + instalação editável + verificação de"
+          },
+          "tree_desc": {
+            "en": "venv + editable install + compile-check + tests",
+            "es": "venv + instalación editable + comprobación + pruebas",
+            "de": "venv + editierbare Installation + Prüfung + Tests",
+            "fr": "venv + installation éditable + vérification + tests",
+            "it": "venv + installazione editabile + verifica + test",
+            "ja": "venv + 編集可能インストール + コンパイルチェック + テスト",
+            "zh": "虚拟环境 + 可编辑安装 + 编译检查 + 测试",
+            "pt": "venv + instalação editável + verificação de compilação + testes"
+          }
+        },
+        {
+          "name": "run.sh / run.bat",
+          "desc": {
+            "en": "Forwards a real CLI command",
+            "es": "Reenvía un comando CLI real",
+            "de": "Leitet einen realen CLI-Befehl weiter",
+            "fr": "Transmet une commande CLI réelle",
+            "it": "Inoltra un comando CLI reale",
+            "ja": "実際のCLIコマンドを転送",
+            "zh": "转发一条真实的 CLI 命令",
+            "pt": "Reencaminha um comando real da CLI"
+          },
+          "tree_desc": {
+            "en": "Forwards a real CLI command",
+            "es": "Reenvía un comando CLI real",
+            "de": "Leitet einen realen CLI-Befehl weiter",
+            "fr": "Transmet une commande CLI réelle",
+            "it": "Inoltra un comando CLI reale",
+            "ja": "実際のCLIコマンドを転送",
+            "zh": "转发一条真实的 CLI 命令",
+            "pt": "Reencaminha um comando real da CLI"
+          }
+        },
+        {
+          "name": "bump_version.py",
+          "desc": {
+            "en": "explicit version bump",
+            "es": "Incremento de versión tipo cuentakilómetros",
+            "de": "ausdrückliche Versionserhöhung",
+            "fr": "Incrément de version type compteur",
+            "it": "Incremento di versione stile contachilometri",
+            "ja": "エコシステム全体の「走行距離計」式バージョン",
+            "zh": "显式提升版本",
+            "pt": "Subida de versão ao estilo conta-quilómetros"
+          },
+          "tree_desc": {
+            "en": "explicit version bump",
+            "es": "Incremento de versión tipo cuentakilómetros (solo lo ejecuta el comando `bump` explícito)",
+            "de": "ausdrückliche Versionserhöhung",
+            "fr": "Incrément de version type compteur kilométrique (exécuté seulement par la commande `bump` explicite)",
+            "it": "Incremento di versione stile contachilometri (eseguito solo dal comando `bump` esplicito)",
+            "ja": "エコシステム全体の「走行距離計」式バージョン増分（pyproject.toml + __init__.py）",
+            "zh": "显式提升版本",
+            "pt": "Subida de versão ao estilo conta-quilómetros (executada só pelo comando `bump` explícito)"
+          }
+        },
+        {
+          "name": "bump_manifest_version.py",
+          "desc": {
+            "en": "Syncs hydra-umc.project.json's version to",
+            "es": "Sincroniza la versión de",
+            "de": "Synchronisiert die Version von",
+            "fr": "Synchronise la version de",
+            "it": "Sincronizza la versione di",
+            "ja": "hydra-umc.project.json",
+            "zh": "将 hydra-umc.project.js",
+            "pt": "Sincroniza a versão do"
+          },
+          "tree_desc": {
+            "en": "Syncs hydra-umc.project.json's version to the native one (--sync)",
+            "es": "Sincroniza la versión de hydra-umc.project.json con la nativa (--sync)",
+            "de": "Synchronisiert die Version von hydra-umc.project.json mit der nativen (--sync)",
+            "fr": "Synchronise la version de hydra-umc.project.json avec la native (--sync)",
+            "it": "Sincronizza la versione di hydra-umc.project.json con quella nativa (--sync)",
+            "ja": "hydra-umc.project.json のバージョンをネイティブのものと同期（--sync）",
+            "zh": "将 hydra-umc.project.json 的版本与原生版本同步（--sync）",
+            "pt": "Sincroniza a versão do hydra-umc.project.json com a nativa (--sync)"
+          }
+        },
+        {
+          "name": "CHANGELOG.md",
+          "desc": {
+            "en": "what changed in each version",
+            "es": "qué cambió en cada versión",
+            "de": "was sich in jeder Version geändert hat",
+            "fr": "ce qui a changé à chaque version",
+            "it": "cosa è cambiato in ogni versione",
+            "ja": "各バージョンの変更点",
+            "zh": "每个版本的变更",
+            "pt": "o que mudou em cada versão"
+          }
+        },
+        {
+          "name": "build-test.sh",
+          "desc": {
+            "en": "non-mutating build check",
+            "es": "comprobación de compilación sin cambios",
+            "de": "Build-Prüfung ohne Änderungen",
+            "fr": "vérification de build sans modification",
+            "it": "controllo di build senza modifiche",
+            "ja": "変更を伴わないビルド確認",
+            "zh": "不修改内容的构建检查",
+            "pt": "verificação de compilação sem alterações"
+          }
+        },
+        {
+          "name": "hydra-umc.project.json",
+          "desc": {
+            "en": "manifest: version, maturity, family",
+            "es": "manifiesto: versión, madurez, familia",
+            "de": "Manifest: Version, Reifegrad, Familie",
+            "fr": "manifeste : version, maturité, famille",
+            "it": "manifesto: versione, maturità, famiglia",
+            "ja": "マニフェスト：バージョン、成熟度、ファミリー",
+            "zh": "清单：版本、成熟度、系列",
+            "pt": "manifesto: versão, maturidade, família"
+          }
+        },
+        {
+          "name": "pyproject.toml",
+          "desc": {
+            "en": "package metadata",
+            "es": "metadatos del paquete",
+            "de": "Paketmetadaten",
+            "fr": "métadonnées du paquet",
+            "it": "metadati del pacchetto",
+            "ja": "パッケージのメタデータ",
+            "zh": "包的元数据",
+            "pt": "metadados do pacote"
+          }
+        },
+        {
+          "name": "test.sh",
+          "desc": {
+            "en": "runs the tests",
+            "es": "ejecuta las pruebas",
+            "de": "führt die Tests aus",
+            "fr": "lance les tests",
+            "it": "esegue i test",
+            "ja": "テストを実行",
+            "zh": "运行测试",
+            "pt": "executa os testes"
+          }
+        }
+      ]
+    }
+  ]
+}
