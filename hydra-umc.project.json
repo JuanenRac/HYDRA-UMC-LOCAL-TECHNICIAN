@@ -14,8 +14,8 @@
   "deployment_target": "cm5",
   "maturity": "functional",
   "evidence": "none",
-  "family": "Cognitive AI Node",
-  "parent": "HYDRA-UMC-COGNITIVE-NODE",
+  "family": "Ecosystem Operations",
+  "parent": null,
   "native_version": {
     "file": "pyproject.toml",
     "pattern": "^version\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""

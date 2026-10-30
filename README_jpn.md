@@ -369,7 +369,7 @@ HYDRA-UMC ロボティクス・エコシステムの一部です。リクエス�
 知っておく価値があります。
 
 **直接関連**
-- **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** — 本プロジェクト自身の親: この技術者の将来の推論エンジンが動作する Hailo-10 認知パイプラインの統合ハブ。
+- **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** — この技術者の将来の推論エンジンが動作する Hailo-10 認知パイプラインの統合ハブ。
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — 保守インシデントのライフサイクル(証拠、診断、人間が承認した変更、カナリアデプロイ、検証)を所有する; この技術者自身の `knowledge/redaction.py` はそのすでにテスト済みの `log_redaction.py` の直接的な移植であり、将来のフェーズは実際の証拠パッケージをそこへエスカレーションします。その独自の承認フローを迂回することは決してありません。
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — 後のフェーズが調査、テスト、レビュー済みパッチの準備のために実際の `EvidenceBundle` を送信する将来の Developer Node - 直接的で自動的なパッチ適用経路では決してありません。
 - **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** — 本プロジェクト自身のローカルな `contracts/*.schema.json` が、そこにも存在するようになった時点で整合を取ることを意図している、共有されバージョン管理された契約を定義します。

@@ -328,7 +328,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 本仓库。
 
 **直接相关**
-- **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** — 本项目自身的父项目：Hailo-10 认知流水线的集成中心，该技术员未来的推理引擎将运行在其上。
+- **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** — Hailo-10 认知流水线的集成中心，该技术员未来的推理引擎将运行在其上。
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — 拥有维护事件生命周期（证据、诊断、人工批准的变更、金丝雀部署、验证）；本技术员自身的 `knowledge/redaction.py` 是对其已测试的 `log_redaction.py` 的直接移植，未来某个阶段会向它升级真实的证据包，绝不会绕过它自身的审批流程。
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — 未来的 Developer Node，后续阶段会向其发送真实的 `EvidenceBundle` 以供研究、测试并准备一份经审查的补丁 - 绝不是一条直接、自动的打补丁通道。
 - **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** — 将定义共享的、带版本管理的合约，一旦这些合约也存在于那里，本项目自身本地的 `contracts/*.schema.json` 就会与之协调统一。

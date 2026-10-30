@@ -384,7 +384,7 @@ Ce README et les documents du dépôt existent en huit langues : anglais, espagn
 Ce projet fait partie de l'écosystème robotique HYDRA-UMC du même auteur (JuanenRac / Electro Hobby 3D). Bon à savoir, car une demande pourrait en réalité concerner l'un de ceux-ci plutôt que ce dépôt.
 
 **Directement Liés**
-- **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** — le propre parent de ce projet : le hub d'intégration du pipeline cognitif Hailo-10 sur lequel tournera le futur moteur d'inférence de ce technicien.
+- **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** — le hub d'intégration du pipeline cognitif Hailo-10 sur lequel tournera le futur moteur d'inférence de ce technicien.
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — propriétaire du cycle de vie des incidents de maintenance (preuve, diagnostic, changement approuvé par un humain, déploiement canari, vérification) ; le propre `knowledge/redaction.py` de ce technicien est un portage direct de son `log_redaction.py` déjà testé, et une phase future escalade de vrais paquets de preuves vers lui, sans jamais contourner son propre flux d'approbation.
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — le futur Developer Node vers lequel une phase ultérieure enverra un `EvidenceBundle` réel pour étude, test et préparation d'un correctif révisé - jamais un canal de correction direct et automatique.
 - **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** — définira les contrats partagés et versionnés avec lesquels les propres `contracts/*.schema.json` locaux de ce projet sont destinés à se réconcilier, une fois qu'ils y existeront aussi.
