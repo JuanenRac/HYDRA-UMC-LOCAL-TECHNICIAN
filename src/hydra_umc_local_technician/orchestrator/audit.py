@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from ..knowledge.redaction import redact_json, redact_secrets
+from ..knowledge.redaction import redact_json
 
 ENVIRONMENT_VARIABLE = "HYDRA_UMC_LOCAL_TECHNICIAN_AUDIT_LOG"
 DEFAULT_MAX_BYTES = 5 * 1024 * 1024
@@ -150,7 +150,3 @@ def audit_log_from(path: str | None, environ: dict[str, str] | None = None, **op
     """The journal chosen by an explicit path, else the environment; None when neither is set."""
     chosen = path or (os.environ if environ is None else environ).get(ENVIRONMENT_VARIABLE, "").strip()
     return AuditLog(chosen, **options) if chosen else None
-
-
-def describe_error(error: BaseException) -> str:
-    return redact_secrets(f"{type(error).__name__}: {error}")
