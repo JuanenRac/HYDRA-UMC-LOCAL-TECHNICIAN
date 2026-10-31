@@ -129,6 +129,26 @@ allow-list boundary every test already exercises. A config file that is
 missing, is not JSON or has the wrong shape is refused in one line
 (`REFUSED: invalid --config <path>: <reason>` to stderr, exit `2`).
 
+Two tools are closed until the file turns them on, with a `tools` section
+whose switches are real booleans (off when absent; a key it does not know is an
+error):
+
+```json
+{
+  "tools": {
+    "journalRead": {"enabled": true, "units": ["hydra-umc-server"]},
+    "serverMetrics": {"enabled": true, "targets": {"server": "http://127.0.0.1:3000/metrics"}}
+  }
+}
+```
+
+`journal.read --arg name=hydra-umc-server [--arg lines=100]` returns the last
+lines (at most 500) of that unit's journal, redacted. `server.metrics --arg
+name=server [--arg prefix=hydra_]` returns the numeric samples (at most 200) of
+that endpoint, which is asked with `X-Hydra-Client: technician`. While a switch
+is off, or for a name that is not listed, the call is refused before anything is
+read.
+
 ### Example
 
 ```bash
