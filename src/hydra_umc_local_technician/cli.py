@@ -121,7 +121,7 @@ def _cmd_audit_verify(args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
-def _audit_from_config(section: object) -> AuditLog | None:
+def _audit_from_config(section: Any) -> AuditLog | None:
     """`"auditLog": {"path": "/var/lib/.../audit.jsonl", "maxBytes": 5242880, "backups": 5}`; absent means off."""
     if section is None:
         return None

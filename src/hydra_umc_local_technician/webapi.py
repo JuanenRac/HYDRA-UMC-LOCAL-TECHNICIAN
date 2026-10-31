@@ -326,7 +326,7 @@ class _Handler(BaseHTTPRequestHandler):
                 return
             self._manifest_one(rest[0])
             return
-        projects = []
+        projects: list[Any] = []
         try:
             children = sorted(p.name for p in Path(root).iterdir() if p.is_dir())
         except OSError:

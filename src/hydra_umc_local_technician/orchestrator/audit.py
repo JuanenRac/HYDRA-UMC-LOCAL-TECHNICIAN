@@ -81,7 +81,7 @@ class AuditLog:
 
     def record(self, event: dict[str, Any]) -> None:
         """Append one redacted line. Raises AuditWriteError when it cannot be written."""
-        body = redact_json(event)
+        body: Any = redact_json(event)
         body["time"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         with self._lock:
             try:

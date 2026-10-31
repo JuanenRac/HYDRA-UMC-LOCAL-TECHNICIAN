@@ -41,3 +41,9 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 hydra_umc_local_technician = ["webui/*.html", "webui/*.js", "webui/*.css", "webui/i18n/*.json"]
+
+[tool.ruff.lint]
+select = ["F", "E9", "B"]
+
+[tool.mypy]
+ignore_missing_imports = true
