@@ -19,16 +19,18 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20of%206%20complete-367BF5.svg" alt="Phase">
-  <img src="https://img.shields.io/badge/Tests-315%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-335%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.8-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Comprobación de honestidad - qué funciona realmente hoy:** la política de niveles de riesgo (`policy/risk_levels.py`), la lista fija de herramientas permitidas (`policy/tool_matrix.py`), los cinco validadores de contrato (`contracts.py` + `contracts/*.schema.json`), el límite de defensa contra inyecciones (`knowledge/trust.py`, `knowledge/redaction.py`), el índice de conocimiento TF-IDF local (`knowledge/index.py`, Fase 1), las 10 herramientas OBSERVE declaradas con manejador real (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), la construcción real de `EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4), y una CLI real sobre todo lo anterior (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, primera porción de la Fase 5) están testeadas (315 tests más 149 subtests pasando entre `tests/unit/` y `tests/adversarial/`) - las Fases 1, 3 y 4 están completas, la Fase 5 está iniciada. `update.pending` necesita la dependencia opcional `hydra-umc-updater` (extra `update-check`) para consultar GitHub de verdad, y degrada honestamente (`available: false`) sin ella. Todavía no hay motor de inferencia ni integración con HYDRA-UMC-SERVER en ningún lugar de este repositorio, y nada en este código puede actuar sobre un `MaintenanceProposal` todavía - la Fase 2 y el resto de la Fase 5 (la API integrada con HYDRA-UMC-SERVER, y la voz) del Roadmap más abajo siguen siendo totalmente aspiracionales, sin ningún código detrás. Ver `CHANGELOG.md` para lo que se ha entregado exactamente hasta ahora.
+**Comprobación de honestidad - qué funciona realmente hoy:** la política de niveles de riesgo (`policy/risk_levels.py`), la lista fija de herramientas permitidas (`policy/tool_matrix.py`), los cinco validadores de contrato (`contracts.py` + `contracts/*.schema.json`), el límite de defensa contra inyecciones (`knowledge/trust.py`, `knowledge/redaction.py`), el índice de conocimiento TF-IDF local (`knowledge/index.py`, Fase 1), las 10 herramientas OBSERVE declaradas con manejador real (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), la construcción real de `EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4), y una CLI real sobre todo lo anterior (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, primera porción de la Fase 5) están testeadas (335 tests más 149 subtests pasando entre `tests/unit/` y `tests/adversarial/`) - las Fases 1, 3 y 4 están completas, la Fase 5 está iniciada. `update.pending` necesita la dependencia opcional `hydra-umc-updater` (extra `update-check`) para consultar GitHub de verdad, y degrada honestamente (`available: false`) sin ella. Todavía no hay motor de inferencia ni integración con HYDRA-UMC-SERVER en ningún lugar de este repositorio, y nada en este código puede actuar sobre un `MaintenanceProposal` todavía - la Fase 2 y el resto de la Fase 5 (la API integrada con HYDRA-UMC-SERVER, y la voz) del Roadmap más abajo siguen siendo totalmente aspiracionales, sin ningún código detrás. Ver `CHANGELOG.md` para lo que se ha entregado exactamente hasta ahora.
 
 **Resultados firmados.** Un `ToolResult` nombra ahora la `tool` que lo hizo y, cuando hay una clave local configurada (`HYDRA_UMC_LOCAL_TECHNICIAN_RESULT_KEY`, o `..._FILE` con un fichero, de 16 caracteres o más, fuera del repositorio), lleva una `signature`: HMAC-SHA256 sobre el JSON canónico de todo el resultado. Al construir un paquete de evidencia se rechaza un resultado sin firmar, falsificado o presentado como de otra herramienta; sin clave no se firma nada y no se rechaza nada, como antes. Los dos campos son opcionales en el contrato, de modo que los resultados anteriores siguen siendo válidos.
+
+**Herramientas opcionales, cerradas por defecto.** `journal.read` (el diario de systemd de una unidad de la lista permitida) y `server.metrics` (las muestras numéricas de un punto de métricas de la lista permitida) se rechazan, antes de leer nada, hasta que el fichero de configuración las active (`tools.journalRead.enabled`, `tools.serverMetrics.enabled`); no están entre las diez de arriba.
 
 ---
 
@@ -42,7 +44,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versión | `0.1.8` |
 | Madurez | Funcional |
-| Tests | 315 (`python -m pytest -q tests`) |
+| Tests | 335 (`python -m pytest -q tests`) |
 | Tecnología | Python 3.11+ / JSON Schema / HailoRT GenAI (optional, later phase) / systemd (cm5 role, Linux only) |
 | Destino | La Raspberry Pi CM5 de una celda HYDRA-UMC |
 | En hardware real | Todavía no: no consta ninguna ejecución en hardware real para esta versión |
@@ -58,7 +60,7 @@ Cada línea es una parte de este repositorio y la luz dice hasta dónde llega ho
 | Área | Estado | Qué significa aquí |
 |---|---|---|
 | Software | 🟡 | Funciona para su propósito principal; la comprobación de honestidad de arriba lista lo que aún falta |
-| Pruebas | 🟢 | 315 pruebas automáticas, ejecutadas en cada cambio |
+| Pruebas | 🟢 | 335 pruebas automáticas, ejecutadas en cada cambio |
 | Hardware real | 🔴 | Todavía no: no consta ninguna ejecución en hardware real para esta versión |
 | Documentación | 🟢 | README en ocho idiomas, comprobado contra el manifiesto en cada cambio |
 
@@ -246,7 +248,7 @@ Requiere Python 3.11 o superior.
 
 ## 🧪 Pruebas
 
-315 pruebas automáticas se ejecutan con `python -m pytest -q tests`. No necesitan hardware ni nada fuera de esta máquina.
+335 pruebas automáticas se ejecutan con `python -m pytest -q tests`. No necesitan hardware ni nada fuera de esta máquina.
 
 El CI ejecuta `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que comprueba el manifiesto, los documentos, los ocho README y las imágenes.
 

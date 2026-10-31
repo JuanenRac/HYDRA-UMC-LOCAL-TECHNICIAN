@@ -87,7 +87,16 @@ never a raw path/host/port/URL/pattern a retrieved document could
 supply (see this file's own `resolve_*` methods). Fase 1 has since added
 a tenth, `knowledge.search` (`knowledge/index.py`'s own bounded TF-IDF
 index over an allow-listed root), wired the same way through
-`OrchestratorConfig.resolve_knowledge_source`. A name still absent
+`OrchestratorConfig.resolve_knowledge_source`. Two more, `journal.read` (the
+systemd journal of an allow-listed unit) and `server.metrics` (the numeric
+samples of an allow-listed metrics endpoint), are CLOSED by default: each has a
+switch in the configuration file (`tools.journalRead.enabled`,
+`tools.serverMetrics.enabled`, off unless the file says `true`), and while it is
+off the call is refused before a process is started or a socket is opened, even
+for a name that is on the list. When on, the same rules apply: a short symbolic
+name from an exact allow-list, a bounded answer, redaction before it leaves.
+`server.metrics` returns parsed numeric samples only, never the raw text of the
+endpoint, and does not follow redirects. A name still absent
 from `TOOL_MATRIX` altogether (`shell.exec`, say) is refused exactly as
 before - see `tests/adversarial/test_injection_defense.py`'s own point
 (d), still exercised as a live invariant even though its own set of
@@ -121,7 +130,7 @@ marker:
   cannot reliably match balanced structures.
 
 Redaction is applied where data leaves a handler or this process, not
-only to logs: the lines `logs.read` returns, the command line of every
+only to logs: the lines `logs.read` and `journal.read` return, the command line of every
 process `process.list` reports (that is where `--token X` lives; a secret given
 as a separate argument is redacted too), the excerpt of every `knowledge.search`
 match (each also cut to a bounded length), the `output` and `evidence` of every

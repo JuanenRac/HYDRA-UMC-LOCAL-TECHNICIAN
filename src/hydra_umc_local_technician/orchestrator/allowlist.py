@@ -99,6 +99,16 @@ class OrchestratorConfig:
     # the append-only audit journal of every tool request (orchestrator/audit.py), or None when the deployment
     # did not turn it on. When it is set, a request whose first line cannot be written is not run.
     audit_log: Any = None
+    # Two optional tools are CLOSED by default and open only when the operator turns their switch on in the
+    # configuration file (`"tools": {"journalRead": {"enabled": true, "units": [...]}, "serverMetrics": {"enabled":
+    # true, "targets": {...}}}`): `journal.read` (the systemd journal of an allow-listed unit) and `server.metrics`
+    # (the Prometheus text of an allow-listed endpoint). Closed means the call is refused before anything is read.
+    journal_read_enabled: bool = False
+    # exact systemd unit names `journal.read` may read - an exact allow-list, as for `systemd_units`.
+    journal_units: tuple[str, ...] = ()
+    server_metrics_enabled: bool = False
+    # symbolic name -> a fixed http(s) URL of a metrics endpoint `server.metrics` may GET.
+    metrics_targets: dict[str, str] = field(default_factory=dict)
 
     def resolve_storage_path(self, name: str) -> Path:
         try:
@@ -122,6 +132,21 @@ class OrchestratorConfig:
         if name not in self.systemd_units:
             raise UnknownAllowlistEntry(f"'{name}' is not an allow-listed systemd unit")
         return name
+
+    def resolve_journal_unit(self, name: str) -> str:
+        if not self.journal_read_enabled:
+            raise UnknownAllowlistEntry("journal.read is switched off in the configuration")
+        if name not in self.journal_units:
+            raise UnknownAllowlistEntry(f"'{name}' is not an allow-listed journal unit")
+        return name
+
+    def resolve_metrics_target(self, name: str) -> str:
+        if not self.server_metrics_enabled:
+            raise UnknownAllowlistEntry("server.metrics is switched off in the configuration")
+        try:
+            return self.metrics_targets[name]
+        except KeyError:
+            raise UnknownAllowlistEntry(f"'{name}' is not an allow-listed metrics target") from None
 
     def resolve_log_source(self, name: str) -> Path:
         try:

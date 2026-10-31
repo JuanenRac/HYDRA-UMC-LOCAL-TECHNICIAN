@@ -19,16 +19,18 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20of%206%20complete-367BF5.svg" alt="Phase">
-  <img src="https://img.shields.io/badge/Tests-315%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-335%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.8-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**正直な現状確認 - 今日実際に動くもの:** リスクレベルポリシー(`policy/risk_levels.py`)、固定のツール許可リスト(`policy/tool_matrix.py`)、5 つの契約バリデーター(`contracts.py` + `contracts/*.schema.json`)、インジェクション防御境界(`knowledge/trust.py`、`knowledge/redaction.py`)、ローカルTF-IDF知識インデックス(`knowledge/index.py`、フェーズ1)、宣言済みの10個のOBSERVEツールすべてに実際のハンドラーがある(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)、実際の `EvidenceBundle`/`MaintenanceProposal` 構築(`escalation/evidence.py`、`escalation/proposal.py`、フェーズ4)、そしてそれらすべての上に実際のCLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`、フェーズ5自身の最初のスライス)はテスト済みである(`tests/unit/` と `tests/adversarial/` 全体で 315 件のテストと 149 件のサブテストが成功) - フェーズ1・フェーズ3・フェーズ4は完了し、フェーズ5は開始した。`update.pending` は実際にGitHubを確認するためにオプションの依存関係 `hydra-umc-updater`(`update-check` extra)を必要とし、それがない場合は正直に(`available: false`)劣化する。このリポジトリのどこにも推論エンジン、HYDRA-UMC-SERVER との統合はまだ存在せず、このコードのどこも `MaintenanceProposal` に対してまだ行動を起こせない——下記ロードマップのフェーズ 2、そしてフェーズ5の残り(HYDRA-UMC-SERVERと統合されたAPI、および音声)は依然として完全に願望であり、裏付けとなるコードは一切ない。これまでに何が実際に出荷されたかは `CHANGELOG.md` を参照。
+**正直な現状確認 - 今日実際に動くもの:** リスクレベルポリシー(`policy/risk_levels.py`)、固定のツール許可リスト(`policy/tool_matrix.py`)、5 つの契約バリデーター(`contracts.py` + `contracts/*.schema.json`)、インジェクション防御境界(`knowledge/trust.py`、`knowledge/redaction.py`)、ローカルTF-IDF知識インデックス(`knowledge/index.py`、フェーズ1)、宣言済みの10個のOBSERVEツールすべてに実際のハンドラーがある(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)、実際の `EvidenceBundle`/`MaintenanceProposal` 構築(`escalation/evidence.py`、`escalation/proposal.py`、フェーズ4)、そしてそれらすべての上に実際のCLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`、フェーズ5自身の最初のスライス)はテスト済みである(`tests/unit/` と `tests/adversarial/` 全体で 335 件のテストと 149 件のサブテストが成功) - フェーズ1・フェーズ3・フェーズ4は完了し、フェーズ5は開始した。`update.pending` は実際にGitHubを確認するためにオプションの依存関係 `hydra-umc-updater`(`update-check` extra)を必要とし、それがない場合は正直に(`available: false`)劣化する。このリポジトリのどこにも推論エンジン、HYDRA-UMC-SERVER との統合はまだ存在せず、このコードのどこも `MaintenanceProposal` に対してまだ行動を起こせない——下記ロードマップのフェーズ 2、そしてフェーズ5の残り(HYDRA-UMC-SERVERと統合されたAPI、および音声)は依然として完全に願望であり、裏付けとなるコードは一切ない。これまでに何が実際に出荷されたかは `CHANGELOG.md` を参照。
 
 **署名付きの結果。** `ToolResult` は、それを作成した `tool` を示し、ローカルの鍵(`HYDRA_UMC_LOCAL_TECHNICIAN_RESULT_KEY`、またはリポジトリ外のファイルを指す `..._FILE`、16 文字以上)が設定されている場合は、結果全体の正規化 JSON に対する HMAC-SHA256 の `signature` を持ちます。証拠バンドルの作成では、署名のない結果、偽造された結果、別のツールのものとして提示された結果は拒否されます。鍵がなければ従来どおり何も署名せず何も拒否しません。2 つのフィールドは契約上オプションなので、以前の結果も有効です。
+
+**任意のツール（既定では閉じています）。** `journal.read`（許可リストにあるユニットの systemd ジャーナル）と `server.metrics`（許可リストにあるメトリクスのエンドポイントの数値サンプル）は、設定ファイルが有効にする（`tools.journalRead.enabled`、`tools.serverMetrics.enabled`）まで、何かを読む前に拒否されます。上の 10 個には含まれません。
 
 ---
 
@@ -42,7 +44,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | バージョン | `0.1.8` |
 | 成熟度 | 機能する |
-| テスト | 315 (`python -m pytest -q tests`) |
+| テスト | 335 (`python -m pytest -q tests`) |
 | 技術 | Python 3.11+ / JSON Schema / HailoRT GenAI (optional, later phase) / systemd (cm5 role, Linux only) |
 | 対象 | HYDRA-UMC セルの Raspberry Pi CM5 |
 | 実機での確認 | まだです：このバージョンについて実機での動作記録はありません |
@@ -58,7 +60,7 @@ GPL-3.0-or-later - see LICENSE
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟡 | 主な目的では動作します。足りない点は上の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 315 件。変更のたびに実行されます |
+| テスト | 🟢 | 自動テスト 335 件。変更のたびに実行されます |
 | 実機 | 🔴 | まだです：このバージョンについて実機での動作記録はありません |
 | ドキュメント | 🟢 | 8 言語の README。変更のたびにマニフェストと照合されます |
 
@@ -237,7 +239,7 @@ Python 3.11 以上が必要です。
 
 ## 🧪 テスト
 
-`python -m pytest -q tests` で自動テスト 315 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
+`python -m pytest -q tests` で自動テスト 335 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
 
 CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
 

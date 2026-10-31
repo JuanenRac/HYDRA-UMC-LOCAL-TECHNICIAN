@@ -100,6 +100,10 @@ def _load_config(config_path: str | None) -> OrchestratorConfig:
         process_patterns=dict(raw.get("processPatterns", {})),
         knowledge_sources={name: Path(value) for name, value in raw.get("knowledgeSources", {}).items()},
         audit_log=_audit_from_config(raw.get("auditLog")),
+        journal_read_enabled=bool(raw.get("tools", {}).get("journalRead", {}).get("enabled", False)),
+        journal_units=tuple(raw.get("tools", {}).get("journalRead", {}).get("units", ())),
+        server_metrics_enabled=bool(raw.get("tools", {}).get("serverMetrics", {}).get("enabled", False)),
+        metrics_targets=dict(raw.get("tools", {}).get("serverMetrics", {}).get("targets", {})),
     )
 
 
@@ -126,7 +130,7 @@ def _audit_from_config(section: object) -> AuditLog | None:
 
 _CONFIG_KEYS = {
     "storagePaths", "ports", "connectivityTargets", "systemdUnits", "ecosystemRoot",
-    "logSources", "processPatterns", "knowledgeSources", "auditLog",
+    "logSources", "processPatterns", "knowledgeSources", "auditLog", "tools",
 }
 
 
@@ -157,6 +161,7 @@ def _validate_config_shape(raw: object) -> None:
         for name, value in mapping.items():
             if not isinstance(value, str) or not Path(value).is_absolute():
                 raise ValueError(f'"{key}.{name}" must be an absolute path')
+    _validate_tools_section(raw.get("tools", {}))
     root = raw.get("ecosystemRoot")
     if root is not None and (not isinstance(root, str) or not Path(root).is_absolute()):
         raise ValueError('"ecosystemRoot" must be an absolute path')
@@ -173,6 +178,24 @@ def _validate_config_shape(raw: object) -> None:
         mapping = raw.get(key, {})
         if not isinstance(mapping, dict) or not all(isinstance(v, str) for v in mapping.values()):
             raise ValueError(f'"{key}" must be an object of name -> string')
+
+
+def _validate_tools_section(tools: object) -> None:
+    """`"tools"` switches the two optional tools; each switch is a real boolean (the string "false" must not count as on)."""
+    if not isinstance(tools, dict) or set(tools) - {"journalRead", "serverMetrics"}:
+        raise ValueError('"tools" must be an object with "journalRead" and/or "serverMetrics"')
+    for key, allowed, list_key in (("journalRead", {"enabled", "units"}, "units"), ("serverMetrics", {"enabled", "targets"}, "targets")):
+        section = tools.get(key, {})
+        if not isinstance(section, dict) or set(section) - allowed:
+            raise ValueError(f'"tools.{key}" must be an object with "enabled" and "{list_key}"')
+        if not isinstance(section.get("enabled", False), bool):
+            raise ValueError(f'"tools.{key}.enabled" must be true or false')
+    units = tools.get("journalRead", {}).get("units", [])
+    if not isinstance(units, list) or not all(isinstance(unit, str) and unit for unit in units):
+        raise ValueError('"tools.journalRead.units" must be a list of unit names')
+    targets = tools.get("serverMetrics", {}).get("targets", {})
+    if not isinstance(targets, dict) or not all(isinstance(v, str) for v in targets.values()):
+        raise ValueError('"tools.serverMetrics.targets" must be an object of name -> string')
 
 
 def _cmd_tools_list(args: argparse.Namespace) -> int:

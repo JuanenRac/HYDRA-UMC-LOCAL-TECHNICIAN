@@ -103,6 +103,18 @@ TOOL_MATRIX: dict[str, ToolDescriptor] = {
         description="Reads a real hydra-umc.project.json (name/version/maturity/role) for a named project - same real, tested pattern as HYDRA-UMC-OPS-AGENT's and HYDRA-UMC-DEV-SERVER's own inventory.py.",
         implemented=True,
     ),
+    "journal.read": ToolDescriptor(
+        name="journal.read",
+        risk_level=RiskLevel.OBSERVE,
+        description="Reads a bounded window of the systemd journal of an allow-listed unit, redacted before it leaves; closed unless the configuration switches it on.",
+        implemented=True,
+    ),
+    "server.metrics": ToolDescriptor(
+        name="server.metrics",
+        risk_level=RiskLevel.OBSERVE,
+        description="Reads the Prometheus metrics of an allow-listed endpoint of the server as a bounded list of numeric samples; closed unless the configuration switches it on.",
+        implemented=True,
+    ),
     "knowledge.search": ToolDescriptor(
         name="knowledge.search",
         risk_level=RiskLevel.OBSERVE,

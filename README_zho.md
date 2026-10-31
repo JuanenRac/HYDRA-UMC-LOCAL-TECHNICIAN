@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20of%206%20complete-367BF5.svg" alt="Phase">
-  <img src="https://img.shields.io/badge/Tests-315%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-335%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.8-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -28,9 +28,11 @@ GPL-3.0-or-later - see LICENSE
 
 - **第 5 阶段 - 只读本地 API 与网页（第二部分）。** `serve`（`webapi.py`、`webui/`）展示技术员已经产出的内容：工具注册表、数据目录中的 ToolResult、EvidenceBundle 和 MaintenanceProposal 文件、各项目的清单，以及已列入白名单的知识来源的文档索引。它只响应 GET（其他方法一律返回 405），除非另行指定否则只绑定 `127.0.0.1`，绑定到其他地址时要求至少 24 个字符的 Bearer 令牌；通过列出文件夹来查找条目（绝不拼接请求路径），像 CLI 一样对每个响应做脱敏，并限制所有大小。单页界面不需要任何来自互联网的资源，提供英语、西班牙语、德语、法语、意大利语、日语、中文和葡萄牙（欧洲）葡萄牙语。详见 [docs/WEB_API.md](docs/WEB_API.md)。
 
-**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)、本地 TF-IDF 知识索引(`knowledge/index.py`，第 1 阶段)、全部 10 个已声明的 OBSERVE 工具都有真实的处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)，真实的 `EvidenceBundle`/`MaintenanceProposal` 构建(`escalation/evidence.py`、`escalation/proposal.py`，第 4 阶段)，以及覆盖以上全部内容的真实 CLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`，第 5 阶段自身的第一个切片)，都经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 315 个测试外加 149 个子测试全部通过)——第 1、3、4 阶段均已完成，第 5 阶段已启动。`update.pending` 需要可选依赖 `hydra-umc-updater`(`update-check` extra)才能真正查询 GitHub，没有它时会诚实降级(`available: false`)。本仓库中任何地方仍不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成，本代码中也没有任何地方能对 `MaintenanceProposal` 采取行动——下方路线图中的第 2 阶段，以及第 5 阶段的其余部分（与 HYDRA-UMC-SERVER 集成的 API，以及语音）仍完全是愿景，背后没有任何代码。具体已交付的内容请见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)、本地 TF-IDF 知识索引(`knowledge/index.py`，第 1 阶段)、全部 10 个已声明的 OBSERVE 工具都有真实的处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)，真实的 `EvidenceBundle`/`MaintenanceProposal` 构建(`escalation/evidence.py`、`escalation/proposal.py`，第 4 阶段)，以及覆盖以上全部内容的真实 CLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`，第 5 阶段自身的第一个切片)，都经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 335 个测试外加 149 个子测试全部通过)——第 1、3、4 阶段均已完成，第 5 阶段已启动。`update.pending` 需要可选依赖 `hydra-umc-updater`(`update-check` extra)才能真正查询 GitHub，没有它时会诚实降级(`available: false`)。本仓库中任何地方仍不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成，本代码中也没有任何地方能对 `MaintenanceProposal` 采取行动——下方路线图中的第 2 阶段，以及第 5 阶段的其余部分（与 HYDRA-UMC-SERVER 集成的 API，以及语音）仍完全是愿景，背后没有任何代码。具体已交付的内容请见 `CHANGELOG.md`。
 
 **带签名的结果。** `ToolResult` 现在会写明生成它的 `tool`,并且在配置了本地密钥时(`HYDRA_UMC_LOCAL_TECHNICIAN_RESULT_KEY`,或指向仓库之外某个文件的 `..._FILE`,16 个字符或更长),带有对整个结果规范化 JSON 的 HMAC-SHA256 `signature`。构建证据包时会拒绝未签名、被伪造或被冒充为其他工具的结果;没有密钥时与以前一样不签名也不拒绝。这两个字段在契约中是可选的,因此以前的结果仍然有效。
+
+**可选工具（默认关闭）。** `journal.read`（允许列表中某个单元的 systemd 日志）和 `server.metrics`（允许列表中某个指标端点的数值样本）在配置文件将其开启（`tools.journalRead.enabled`、`tools.serverMetrics.enabled`）之前，会在读取任何内容之前被拒绝；它们不在上面的十个之内。
 
 ---
 
@@ -44,7 +46,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | 版本 | `0.1.8` |
 | 成熟度 | 可用 |
-| 测试 | 315 (`python -m pytest -q tests`) |
+| 测试 | 335 (`python -m pytest -q tests`) |
 | 技术栈 | Python 3.11+ / JSON Schema / HailoRT GenAI (optional, later phase) / systemd (cm5 role, Linux only) |
 | 目标 | HYDRA-UMC 工作单元的 Raspberry Pi CM5 |
 | 真实硬件 | 尚未：此版本没有在真实硬件上运行的记录 |
@@ -60,7 +62,7 @@ GPL-3.0-or-later - see LICENSE
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟡 | 主要用途可用；上面的诚实性检查列出了仍然缺少的内容 |
-| 测试 | 🟢 | 315 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 335 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🔴 | 尚未：此版本没有在真实硬件上运行的记录 |
 | 文档 | 🟢 | 八种语言的 README，每次变更都会与清单核对 |
 
@@ -210,7 +212,7 @@ INVALID: tests/fixtures/tool_request.invalid.json (ToolRequest): ...
 
 ## 🧪 测试
 
-运行 `python -m pytest -q tests` 会执行 315 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+运行 `python -m pytest -q tests` 会执行 335 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
 
 CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
 

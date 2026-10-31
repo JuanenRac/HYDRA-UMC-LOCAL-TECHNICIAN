@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Two optional tools for the journal and the server metrics, closed by default:** `journal.read` reads a bounded window (at most 500 lines) of the systemd journal of an allow-listed unit (`journalctl -u <unit> -n N -o cat --no-pager`, the unit always a separate argument), redacted like the logs; `server.metrics` makes one GET of an allow-listed metrics endpoint with the client name `technician` in `X-Hydra-Client` (so the server can manage its access like that of any other client) and returns only numeric samples (at most 200, optionally filtered by a name prefix), never the raw text. Both are refused before anything is read until the configuration file turns them on: `"tools": {"journalRead": {"enabled": true, "units": [...]}, "serverMetrics": {"enabled": true, "targets": {"name": "http://127.0.0.1:3000/metrics"}}}`; the switch must be a real boolean and a key it does not know is an error. The tool list now has 12 tools, all at the OBSERVE level. Tested, including the closed state, the allow-list, the bounds, the redaction and the configuration file.
+
 ## [0.1.8] - The test count out of the manifest notes and the universal README
 
 - **The notes of the project manifest no longer carry a hand-written test count:** the counts went out of date at every change; the number of tests is stated by the README, which is checked against the code.

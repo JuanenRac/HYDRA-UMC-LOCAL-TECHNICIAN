@@ -501,6 +501,103 @@ def _handle_logs_read(config: OrchestratorConfig, arguments: dict[str, Any]) -> 
     return output, f"read the last {len(redacted)} line(s) of {path} (redacted via knowledge.redaction before leaving this module)"
 
 
+# journal.read: the journal of one allow-listed unit, through `journalctl` with the unit as a separate argument (the
+# unit comes from an exact allow-list). Bounded in lines and in bytes, redacted like logs.read.
+_JOURNAL_READ_DEFAULT_LINES = 50
+_JOURNAL_READ_MAX_LINES = 500
+_JOURNAL_READ_MAX_BYTES = 1_000_000
+
+
+def _handle_journal_read(config: OrchestratorConfig, arguments: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    name = arguments.get("name")
+    if not isinstance(name, str) or not name:
+        raise UnknownAllowlistEntry("journal.read requires a non-empty 'name' argument")
+    unit = config.resolve_journal_unit(name)
+    requested = arguments.get("lines", _JOURNAL_READ_DEFAULT_LINES)
+    if isinstance(requested, bool) or not isinstance(requested, int) or requested <= 0:
+        requested = _JOURNAL_READ_DEFAULT_LINES
+    max_lines = min(requested, _JOURNAL_READ_MAX_LINES)
+    journalctl = shutil.which("journalctl")
+    if journalctl is None:
+        output = {"unit": unit, "available": False, "reason": "journalctl not found on PATH - not a systemd host", "lines": [], "returned": 0}
+        return output, "shutil.which('journalctl') returned None - honest degradation, no guessed lines"
+    completed = subprocess.run(
+        [journalctl, "-u", unit, "-n", str(max_lines), "-o", "cat", "--no-pager"],
+        capture_output=True, timeout=10.0, check=False,
+    )
+    if completed.returncode != 0:
+        reason = redact_secrets(completed.stderr.decode("utf-8", errors="replace").strip())[:200] or f"exit code {completed.returncode}"
+        output = {"unit": unit, "available": True, "reason": reason, "lines": [], "returned": 0}
+        return output, f"journalctl -u {unit}: failed ({reason})"
+    text = completed.stdout[-_JOURNAL_READ_MAX_BYTES:].decode("utf-8", errors="replace")
+    redacted = redact_lines(text.splitlines()[-max_lines:])
+    output = {"unit": unit, "available": True, "reason": None, "lines": redacted, "returned": len(redacted)}
+    return output, f"journalctl -u {unit} -n {max_lines}: {len(redacted)} line(s), redacted before leaving this module"
+
+
+# server.metrics: one GET of an allow-listed metrics endpoint, sent with a client name of its own so the server's
+# per-client remote-access control can manage it. The answer is parsed, never copied: only samples of the form
+# `name{labels} number`, bounded in count and in size; help and type lines, and anything else, are dropped.
+_METRICS_CLIENT_HEADER = "technician"
+_METRICS_MAX_BYTES = 1_000_000
+_METRICS_MAX_SAMPLES = 200
+_METRICS_SAMPLE = re.compile(r"^([a-zA-Z_:][a-zA-Z0-9_:]*)(\{[^}]*\})?\s+(-?[0-9.]+(?:[eE][+-]?[0-9]+)?|NaN|[+-]?Inf)(?:\s+-?[0-9]+)?$")
+
+
+def parse_prometheus_samples(text: str, prefix: str | None = None) -> tuple[list[dict[str, Any]], bool]:
+    """The numeric samples of a Prometheus text exposition (at most `_METRICS_MAX_SAMPLES`), and whether more were left out."""
+    samples: list[dict[str, Any]] = []
+    truncated = False
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        found = _METRICS_SAMPLE.match(line)
+        if found is None or (prefix and not found.group(1).startswith(prefix)):
+            continue
+        try:
+            value = float(found.group(3))
+        except ValueError:
+            continue
+        if value != value or value in (float("inf"), float("-inf")):
+            continue
+        if len(samples) >= _METRICS_MAX_SAMPLES:
+            truncated = True
+            break
+        samples.append({"metric": found.group(1), "labels": (found.group(2) or "")[:200], "value": value})
+    return samples, truncated
+
+
+def _handle_server_metrics(config: OrchestratorConfig, arguments: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    name = arguments.get("name")
+    if not isinstance(name, str) or not name:
+        raise UnknownAllowlistEntry("server.metrics requires a non-empty 'name' argument")
+    url = config.resolve_metrics_target(name)
+    prefix = arguments.get("prefix")
+    if not isinstance(prefix, str) or not re.fullmatch(r"[a-zA-Z_:][a-zA-Z0-9_:]{0,63}", prefix):
+        prefix = None
+    scheme = urllib.parse.urlsplit(url).scheme.lower()
+    if scheme not in _SUPPORTED_HTTP_SCHEMES:
+        output = {"name": name, "reachable": False, "status_code": None, "reason": f"unsupported URL scheme {scheme!r} - only http/https are ever read", "samples": []}
+        return output, f"rejected {url!r} before ever calling urlopen() - unsupported scheme"
+    request = urllib.request.Request(url, headers={"X-Hydra-Client": _METRICS_CLIENT_HEADER, "Accept": "text/plain"})
+    timeout_s = 3.0
+    try:
+        with _NO_REDIRECT_OPENER.open(request, timeout=timeout_s) as response:  # noqa: S310 - scheme already restricted above
+            status_code = response.getcode()
+            body = response.read(_METRICS_MAX_BYTES).decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as exc:
+        output = {"name": name, "reachable": True, "status_code": exc.code, "reason": f"HTTP {exc.code}", "samples": []}
+        return output, f"GET {url!r} -> HTTP {exc.code} (endpoint answered, with an error status)"
+    except (urllib.error.URLError, http.client.HTTPException, OSError, ValueError) as exc:
+        reason = getattr(exc, "reason", None) or str(exc)
+        output = {"name": name, "reachable": False, "status_code": None, "reason": str(reason), "samples": []}
+        return output, f"GET {url!r} failed: {reason}"
+    samples, truncated = parse_prometheus_samples(body, prefix)
+    output = {"name": name, "reachable": True, "status_code": status_code, "reason": None, "samples": samples, "truncated": truncated}
+    return output, f"GET {url!r} -> HTTP {status_code}, {len(samples)} numeric sample(s)" + (" (truncated)" if truncated else "")
+
+
 # process.list's own real bound: never report more than this many real
 # matches for one pattern - an allow-listed ecosystem process is expected
 # to have a handful of instances at most (one per camera, say), never an
@@ -662,6 +759,8 @@ _HANDLERS = {
     "process.list": _handle_process_list,
     "update.pending": _handle_update_pending,
     "knowledge.search": _handle_knowledge_search,
+    "journal.read": _handle_journal_read,
+    "server.metrics": _handle_server_metrics,
 }
 
 
