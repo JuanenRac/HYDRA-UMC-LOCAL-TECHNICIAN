@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.2.0] - A signed outbox for escalations, deterministic runbooks written in Markdown, Ed25519 approvals bound to one proposal and a health snapshot that reports the drift
+
 - **The escalation outbox has a real transport, closed by default:** `escalation queue` puts a verified evidence bundle in the outbox and `escalation send` posts each pending item as a signed `incident-transport/1` message (HMAC-SHA256, nonce, time) to the configured address; an item leaves the queue only when the receiver answers 2xx with `"ok": true`. The secret comes from a file or an environment variable, plain http to a remote host and redirects are refused. Tested against a local HTTP server.
 - **A deterministic rule engine with Markdown runbooks, closed by default:** `runbook check` and `runbook run` match runbooks (front matter with conditions on tool results, sections with the diagnosis, steps and rollback, texts in the eight languages) against tool results and build grounded maintenance proposals; the same results always give the same proposals and the engine cannot run a step. A runbook example is shipped.
 - **Signed approvals with Ed25519 and a trust store of public keys with aliases, closed by default:** `approval keygen|trust|sign|verify` bind an approval to one action on one exact proposal, with a validity limit set in the configuration and optional single use; the private key never leaves the approver and is refused inside a git tree. Needs the optional `cryptography` package (the `approvals` extra).

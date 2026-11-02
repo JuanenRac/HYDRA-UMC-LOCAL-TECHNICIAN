@@ -287,6 +287,29 @@
           }
         },
         {
+          "name": "configs/",
+          "desc": {
+            "en": "example configuration and runbooks",
+            "es": "configuración de ejemplo y runbooks",
+            "de": "Beispielkonfiguration und Runbooks",
+            "fr": "configuration d'exemple et runbooks",
+            "it": "configurazione di esempio e runbook",
+            "ja": "設定例とランブック",
+            "zh": "示例配置与运行手册",
+            "pt": "configuração de exemplo e runbooks"
+          },
+          "tree_desc": {
+            "en": "example configuration and runbooks",
+            "es": "configuración de ejemplo y runbooks",
+            "de": "Beispielkonfiguration und Runbooks",
+            "fr": "configuration d'exemple et runbooks",
+            "it": "configurazione di esempio e runbook",
+            "ja": "設定例とランブック",
+            "zh": "示例配置与运行手册",
+            "pt": "configuração de exemplo e runbooks"
+          }
+        },
+        {
           "name": "docs/",
           "desc": {
             "en": "documents of the project",

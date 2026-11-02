@@ -20,7 +20,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20of%206%20complete-367BF5.svg" alt="Phase">
   <img src="https://img.shields.io/badge/Tests-362%20passing-2ea44f.svg" alt="Tests">
-  <img src="https://img.shields.io/badge/Version-0.1.9-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.2.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
@@ -28,7 +28,7 @@ GPL-3.0-or-later - see LICENSE
 
 - **Fase 5 - Local read-only API and web page (second slice).** `serve` (`webapi.py`, `webui/`) shows what the technician has already produced: the tool registry, the ToolResult, EvidenceBundle and MaintenanceProposal files of a data directory, the project manifests and the document index of the allow-listed knowledge sources. It answers GET only (every other method gets 405), binds to `127.0.0.1` unless told otherwise and then requires a bearer token of at least 24 characters, finds items by listing its folders (never by joining a request path), redacts every answer the way the CLI does and bounds every size. The single page needs nothing from the internet and is available in English, Spanish, German, French, Italian, Japanese, Chinese and European Portuguese. See [docs/WEB_API.md](docs/WEB_API.md).
 
-**Honesty check - what actually runs today:** the risk-level policy (`policy/risk_levels.py`), the fixed tool allowlist (`policy/tool_matrix.py`), the five contract validators (`contracts.py` + `contracts/*.schema.json`), the injection-defense boundary (`knowledge/trust.py`, `knowledge/redaction.py`), the local TF-IDF knowledge index (`knowledge/index.py`, Fase 1), all 10 declared OBSERVE-level tool handlers (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), real `EvidenceBundle`/`MaintenanceProposal` construction (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4), and a real CLI over all of it (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, Fase 5's own first slice) are real and tested (362 tests plus 153 subtests passing across `tests/unit/` and `tests/adversarial/`) - Fases 1, 3 and 4 are complete, Fase 5 is started. `update.pending` needs the optional `hydra-umc-updater` dependency (the `update-check` extra) to actually check GitHub, and degrades honestly (`available: false`) without it. There is still no inference engine and no HYDRA-UMC-SERVER integration anywhere in this repository, and nothing in this codebase can act on a `MaintenanceProposal` yet - Fase 2, and the rest of Fase 5 (the HYDRA-UMC-SERVER-integrated API, and voice) in the Roadmap below remain entirely aspirational, with zero code behind them. See `CHANGELOG.md` for exactly what has shipped so far.
+**Honesty check - what actually runs today:** the risk-level policy (`policy/risk_levels.py`), the fixed tool allowlist (`policy/tool_matrix.py`), the five contract validators (`contracts.py` + `contracts/*.schema.json`), the injection-defense boundary (`knowledge/trust.py`, `knowledge/redaction.py`), the local TF-IDF knowledge index (`knowledge/index.py`, Fase 1), all 10 declared OBSERVE-level tool handlers (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), real `EvidenceBundle`/`MaintenanceProposal` construction (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4), and a real CLI over all of it (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, Fase 5's own first slice) are real and tested (362 tests plus 149 subtests passing across `tests/unit/` and `tests/adversarial/`) - Fases 1, 3 and 4 are complete, Fase 5 is started. `update.pending` needs the optional `hydra-umc-updater` dependency (the `update-check` extra) to actually check GitHub, and degrades honestly (`available: false`) without it. There is still no inference engine and no HYDRA-UMC-SERVER integration anywhere in this repository, and nothing in this codebase can act on a `MaintenanceProposal` yet - Fase 2, and the rest of Fase 5 (the HYDRA-UMC-SERVER-integrated API, and voice) in the Roadmap below remain entirely aspirational, with zero code behind them. See `CHANGELOG.md` for exactly what has shipped so far.
 
 **Signed results.** A `ToolResult` now names the `tool` that made it and, when a local key is configured (`HYDRA_UMC_LOCAL_TECHNICIAN_RESULT_KEY`, or `..._FILE` naming a file, 16 characters or more, outside the repository), carries a `signature`: HMAC-SHA256 over the canonical JSON of the whole result. Building an evidence bundle then refuses a result that is unsigned, forged or presented for another tool; without a key nothing is signed and nothing is refused, as before. Both fields are optional in the contract, so results made earlier remain valid.
 
@@ -44,7 +44,7 @@ GPL-3.0-or-later - see LICENSE
 
 | | |
 |---|---|
-| Version | `0.1.9` |
+| Version | `0.2.0` |
 | Maturity | Functional |
 | Tests | 362 (`python -m pytest -q tests`) |
 | Stack | Python 3.11+ / JSON Schema / HailoRT GenAI (optional, later phase) / systemd (cm5 role, Linux only) |
@@ -296,6 +296,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   └── webui/                        the offline single-page UI: index.html, app.js, app.css and i18n/ in eight languages
 ├── contracts/                        Normative JSON Schema files (draft 2020-12) for the five contracts
 ├── tests/                            automated tests
+├── configs/                          example configuration and runbooks
 ├── docs/                             documents of the project
 ├── tools/                            project tools and CI checks
 ├── images/                           Media and app icons

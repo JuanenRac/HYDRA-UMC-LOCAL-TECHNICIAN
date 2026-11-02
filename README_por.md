@@ -20,13 +20,13 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20of%206%20complete-367BF5.svg" alt="Phase">
   <img src="https://img.shields.io/badge/Tests-362%20passing-2ea44f.svg" alt="Tests">
-  <img src="https://img.shields.io/badge/Version-0.1.9-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.2.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verificação de honestidade - o que realmente funciona hoje:** a política de níveis de risco (`policy/risk_levels.py`), a lista de permissões fixa de ferramentas (`policy/tool_matrix.py`), os cinco validadores de contratos (`contracts.py` + `contracts/*.schema.json`), a fronteira de defesa contra injeção (`knowledge/trust.py`, `knowledge/redaction.py`), o índice local de conhecimento TF-IDF (`knowledge/index.py`, Fase 1), os 10 manipuladores de ferramentas de nível OBSERVE declarados (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), a construção real de `EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4) e uma CLI real sobre tudo isso (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, a primeira fatia da Fase 5) são reais e estão testados (362 testes mais 153 subtestes a passar entre `tests/unit/` e `tests/adversarial/`) - as Fases 1, 3 e 4 estão concluídas, a Fase 5 está iniciada. O `update.pending` precisa da dependência opcional `hydra-umc-updater` (o extra `update-check`) para consultar de facto o GitHub e, sem ela, degrada com honestidade (`available: false`). Continua a não haver motor de inferência nem integração com o HYDRA-UMC-SERVER em lado nenhum deste repositório, e nada neste código pode ainda agir sobre uma `MaintenanceProposal` - a Fase 2 e o resto da Fase 5 (a API integrada no HYDRA-UMC-SERVER, e a voz) no Roteiro abaixo continuam inteiramente aspiracionais, sem qualquer código por trás. Veja o `CHANGELOG.md` para saber exatamente o que foi entregue até agora.
+**Verificação de honestidade - o que realmente funciona hoje:** a política de níveis de risco (`policy/risk_levels.py`), a lista de permissões fixa de ferramentas (`policy/tool_matrix.py`), os cinco validadores de contratos (`contracts.py` + `contracts/*.schema.json`), a fronteira de defesa contra injeção (`knowledge/trust.py`, `knowledge/redaction.py`), o índice local de conhecimento TF-IDF (`knowledge/index.py`, Fase 1), os 10 manipuladores de ferramentas de nível OBSERVE declarados (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), a construção real de `EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4) e uma CLI real sobre tudo isso (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, a primeira fatia da Fase 5) são reais e estão testados (362 testes mais 149 subtestes a passar entre `tests/unit/` e `tests/adversarial/`) - as Fases 1, 3 e 4 estão concluídas, a Fase 5 está iniciada. O `update.pending` precisa da dependência opcional `hydra-umc-updater` (o extra `update-check`) para consultar de facto o GitHub e, sem ela, degrada com honestidade (`available: false`). Continua a não haver motor de inferência nem integração com o HYDRA-UMC-SERVER em lado nenhum deste repositório, e nada neste código pode ainda agir sobre uma `MaintenanceProposal` - a Fase 2 e o resto da Fase 5 (a API integrada no HYDRA-UMC-SERVER, e a voz) no Roteiro abaixo continuam inteiramente aspiracionais, sem qualquer código por trás. Veja o `CHANGELOG.md` para saber exatamente o que foi entregue até agora.
 
 **Resultados assinados.** Um `ToolResult` nomeia agora a `tool` que o produziu e, quando há uma chave local configurada (`HYDRA_UMC_LOCAL_TECHNICIAN_RESULT_KEY`, ou `..._FILE` com um ficheiro, de 16 caracteres ou mais, fora do repositório), leva uma `signature`: HMAC-SHA256 sobre o JSON canónico de todo o resultado. Ao construir um pacote de evidências é recusado um resultado sem assinatura, forjado ou apresentado como de outra ferramenta; sem chave nada é assinado e nada é recusado, como antes. Os dois campos são opcionais no contrato, pelo que os resultados anteriores continuam válidos.
 
@@ -42,7 +42,7 @@ GPL-3.0-or-later - see LICENSE
 
 | | |
 |---|---|
-| Versão | `0.1.9` |
+| Versão | `0.2.0` |
 | Maturidade | Funcional |
 | Testes | 362 (`python -m pytest -q tests`) |
 | Tecnologia | Python 3.11+ / JSON Schema / HailoRT GenAI (optional, later phase) / systemd (cm5 role, Linux only) |
@@ -300,6 +300,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   └── webui/                        a interface offline de página única: index.html, app.js, app.css e i18n/ em oito idiomas
 ├── contracts/                        Ficheiros JSON Schema normativos (draft 2020-12) dos cinco contratos
 ├── tests/                            testes automáticos
+├── configs/                          configuração de exemplo e runbooks
 ├── docs/                             documentos do projeto
 ├── tools/                            ferramentas do projeto e verificações da CI
 ├── images/                           Multimédia e ícones da aplicação
