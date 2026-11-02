@@ -33,6 +33,7 @@ from . import __version__, cli_extra
 from .contracts import REQUIRED, ContractValidationError, validate
 from .escalation.evidence import EvidenceAssemblyError, ObservedResult, assemble_evidence_bundle, verify_bundle
 from .escalation.proposal import ProposalError, propose_maintenance
+from .knowledge import index as knowledge_index
 from .knowledge.trust import ToolCallRefused, build_tool_request_from_model_output
 from .orchestrator.allowlist import OrchestratorConfig, default_config
 from .orchestrator.audit import DEFAULT_BACKUPS, DEFAULT_MAX_BYTES, AuditLog, audit_log_from
@@ -91,6 +92,8 @@ def _load_config(config_path: str | None) -> OrchestratorConfig:
         return default_config()
     raw = json.loads(Path(config_path).read_text(encoding="utf-8"))
     _validate_config_shape(raw)
+    knowledge = parse_settings(raw).knowledge
+    knowledge_index.configure_persistence(knowledge.directory if knowledge.enabled else None, max_files=knowledge.max_stored_files)
     return OrchestratorConfig(
         storage_paths={name: Path(value) for name, value in raw.get("storagePaths", {}).items()},
         ports={name: (value[0], value[1]) for name, value in raw.get("ports", {}).items()},

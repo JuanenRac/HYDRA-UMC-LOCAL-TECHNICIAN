@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The knowledge index can be kept on disk between runs, closed by default:** the new `knowledge` section of the configuration file (`enabled`, `directory`, `maxStoredFiles`) stores the chunks of every indexed file in a versioned JSON file, so a later process reads again only the files whose modification time or size changed; a damaged or foreign store is ignored and made again, and a vanished file leaves it.
+
 ## [0.2.0] - A signed outbox for escalations, deterministic runbooks written in Markdown, Ed25519 approvals bound to one proposal and a health snapshot that reports the drift
 
 - **The escalation outbox has a real transport, closed by default:** `escalation queue` puts a verified evidence bundle in the outbox and `escalation send` posts each pending item as a signed `incident-transport/1` message (HMAC-SHA256, nonce, time) to the configured address; an item leaves the queue only when the receiver answers 2xx with `"ok": true`. The secret comes from a file or an environment variable, plain http to a remote host and redirects are refused. Tested against a local HTTP server.

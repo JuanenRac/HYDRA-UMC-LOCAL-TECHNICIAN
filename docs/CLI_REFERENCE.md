@@ -212,7 +212,7 @@ a bad bind, token, port or config; runs until interrupted, then exits `0`.
 
 ## Optional features (all closed until the configuration file opens them)
 
-Four more sections of the `--config` file, each with an `enabled` switch that must be a real `true` (default `false`); a key it does not know is an error. Every tuned value (URL, timeouts, limits, validity, directories) lives in the file, never in the code.
+Five more sections of the `--config` file, each with an `enabled` switch that must be a real `true` (default `false`); a key it does not know is an error. Every tuned value (URL, timeouts, limits, validity, directories) lives in the file, never in the code.
 
 ```json
 {
@@ -221,9 +221,14 @@ Four more sections of the `--config` file, each with an `enabled` switch that mu
                 "allowPlainHttp": false, "maxPayloadBytes": 1000000},
   "runbooks": {"enabled": false, "directory": "/etc/hydra-umc/runbooks", "language": "en"},
   "approvals": {"enabled": false, "trustStore": "/etc/hydra-umc/trust.json", "maxValiditySeconds": 900, "usedNonces": "/var/lib/hydra-umc/nonces.json"},
-  "snapshot": {"enabled": false, "directory": "/var/lib/hydra-umc/baselines", "keep": 48}
+  "snapshot": {"enabled": false, "directory": "/var/lib/hydra-umc/baselines", "keep": 48},
+  "knowledge": {"enabled": false, "directory": "/var/lib/hydra-umc/knowledge-index", "maxStoredFiles": 4096}
 }
 ```
+
+### Stored knowledge index
+
+With `knowledge.enabled` the chunks of every indexed file are also kept on disk (one versioned JSON file per knowledge source, written atomically), so a one-shot `tools call knowledge.search` does not read and split every document again: only the files whose modification time or size changed are read. A store that is damaged, of another format or made for another directory is ignored and written again; a file that vanished leaves the store. `maxStoredFiles` bounds how many files are kept. Closed by default (the index then lives in the process only).
 
 ### Outbox transport
 

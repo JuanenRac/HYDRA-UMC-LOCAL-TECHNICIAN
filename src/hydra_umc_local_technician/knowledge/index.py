@@ -27,14 +27,19 @@ uses), and the walk itself is bounded (file count, total bytes) so even
 a legitimately allow-listed root cannot turn into an unbounded read.
 Nothing is trusted to a cache that could be stale: a file is read and chunked again whenever its modification time or size changed,
 and the index is rebuilt whenever any file of the root appeared, vanished or changed (`cached_index`). The cache lives in this
-process only (the read-only API keeps one, a one-shot command starts empty) and holds at most `MAX_CACHED_FILES` files.
+process only (the read-only API keeps one, a one-shot command starts empty) and holds at most `MAX_CACHED_FILES` files. When the
+configuration turns it on (`configure_persistence`), the chunks of every file are also kept on disk, versioned (`STORE_FORMAT`), and
+a later process reads again only the files whose modification time or size changed; a store that is damaged or of another format
+is ignored and made again, never trusted.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import os
 import re
+import tempfile
 import threading
 from collections import Counter
 from dataclasses import dataclass
@@ -280,10 +285,89 @@ _FILE_CACHE: dict[tuple[str, str], tuple[int, int, tuple[KnowledgeChunk, ...], s
 _INDEX_CACHE: dict[str, tuple[tuple[object, ...], IngestResult, TfidfIndex]] = {}
 
 
+# The on-disk copy of the chunks of each file (closed unless configured): format 1 = {"format", "root", "files": {source: [mtime_ns, size, [chunk...]]}}.
+STORE_FORMAT = 1
+_STORE_DIRECTORY: Path | None = None
+_STORE_MAX_FILES = MAX_CACHED_FILES
+_STORE_LOADED: set[str] = set()
+_STORE_SOURCES: dict[str, set[str]] = {}
+
+
+def configure_persistence(directory: str | os.PathLike[str] | None, *, max_files: int = MAX_CACHED_FILES) -> None:
+    """Keeps (a directory) or stops keeping (None) the chunks of the indexed files on disk between runs."""
+    global _STORE_DIRECTORY, _STORE_MAX_FILES
+    with _CACHE_LOCK:
+        _STORE_DIRECTORY = Path(directory) if directory else None
+        _STORE_MAX_FILES = max(1, int(max_files))
+        _STORE_LOADED.clear()
+        _STORE_SOURCES.clear()
+
+
+def _store_path(root_key: str) -> Path | None:
+    if _STORE_DIRECTORY is None:
+        return None
+    return _STORE_DIRECTORY / f"knowledge-{hashlib.sha256(root_key.encode('utf-8')).hexdigest()[:32]}.json"
+
+
+def _load_store(root_key: str) -> None:
+    """Fills the file cache of a root from its stored copy, once per process; anything that is not the exact documented shape is dropped."""
+    path = _store_path(root_key)
+    if path is None or root_key in _STORE_LOADED:
+        return
+    _STORE_LOADED.add(root_key)
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        if raw.get("format") != STORE_FORMAT or raw.get("root") != root_key or not isinstance(raw.get("files"), dict):
+            return
+        loaded: dict[tuple[str, str], tuple[int, int, tuple[KnowledgeChunk, ...], str]] = {}
+        for source, entry in raw["files"].items():
+            mtime, size, chunks = entry
+            if not (isinstance(source, str) and isinstance(mtime, int) and isinstance(size, int) and isinstance(chunks, list)):
+                return
+            loaded[(root_key, source)] = (
+                mtime, size,
+                tuple(KnowledgeChunk(source=c["source"], heading=c["heading"], text=c["text"], kind=c["kind"]) for c in chunks),
+                "",
+            )
+    except (OSError, ValueError, TypeError, KeyError, AttributeError):
+        return
+    _STORE_SOURCES[root_key] = {key[1] for key in loaded}
+    for key, value in loaded.items():
+        if len(_FILE_CACHE) < MAX_CACHED_FILES:
+            _FILE_CACHE.setdefault(key, value)
+
+
+def _save_store(root_key: str, fingerprint: list[object]) -> None:
+    """Writes the chunks of the files the last walk saw (a vanished file leaves the store); a failure to write never breaks a search."""
+    path = _store_path(root_key)
+    if path is None:
+        return
+    files: dict[str, list[object]] = {}
+    for source, mtime, size in (item for item in fingerprint if isinstance(item, tuple)):
+        entry = _FILE_CACHE.get((root_key, source))
+        if entry is None or (entry[0], entry[1]) != (mtime, size) or len(files) >= _STORE_MAX_FILES:
+            continue
+        files[source] = [mtime, size, [{"source": c.source, "heading": c.heading, "text": c.text, "kind": c.kind} for c in entry[2]]]
+    payload = json.dumps({"format": STORE_FORMAT, "root": root_key, "files": files}, ensure_ascii=False, sort_keys=True)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        handle, temporary = tempfile.mkstemp(dir=path.parent, prefix=".knowledge-", suffix=".tmp")
+        try:
+            with os.fdopen(handle, "w", encoding="utf-8") as out:
+                out.write(payload)
+            os.replace(temporary, path)
+        except OSError:
+            Path(temporary).unlink(missing_ok=True)
+    except OSError:
+        return
+
+
 def clear_caches() -> None:
     with _CACHE_LOCK:
         _FILE_CACHE.clear()
         _INDEX_CACHE.clear()
+        _STORE_LOADED.clear()
+        _STORE_SOURCES.clear()
 
 
 def ingest_source_directory(root: Path) -> IngestResult:
@@ -299,6 +383,9 @@ def ingest_source_directory(root: Path) -> IngestResult:
 
     candidates, truncated = _bounded_candidates(root)
     root_key = str(root.resolve())
+    with _CACHE_LOCK:
+        _load_store(root_key)
+    changed = False
 
     all_chunks: list[KnowledgeChunk] = []
     indexed: list[str] = []
@@ -344,11 +431,19 @@ def ingest_source_directory(root: Path) -> IngestResult:
                 if len(_FILE_CACHE) >= MAX_CACHED_FILES and (root_key, source) not in _FILE_CACHE:
                     _FILE_CACHE.pop(next(iter(_FILE_CACHE)))  # the oldest entry goes
                 _FILE_CACHE[(root_key, source)] = (signature[0], signature[1], chunks, "")
+            changed = True
         if chunks:
             all_chunks.extend(chunks)
             indexed.append(source)
         else:
             skipped.append(source)
+
+    if _STORE_DIRECTORY is not None:
+        with _CACHE_LOCK:
+            seen = {item[0] for item in fingerprint if isinstance(item, tuple) and (root_key, item[0]) in _FILE_CACHE}
+            if changed or seen != _STORE_SOURCES.get(root_key, set()):
+                _save_store(root_key, fingerprint)
+                _STORE_SOURCES[root_key] = seen
 
     return IngestResult(
         chunks=tuple(all_chunks),

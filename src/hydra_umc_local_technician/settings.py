@@ -3,7 +3,7 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
-"""The four optional sections of the configuration file that switch on the escalation transport, the runbook rules, the signed
+"""The five optional sections of the configuration file that switch on the escalation transport, the runbook rules, the signed
 approvals and the periodic baseline snapshot.
 
 Every section is closed unless its `enabled` switch is a real `true`; a key this module does not know is an error (a typo must not
@@ -15,6 +15,7 @@ silently leave a safety setting at a different value), and every tuned number li
     "runbooks": {"enabled": false, "directory": "/etc/.../runbooks", "language": "en"}
     "approvals": {"enabled": false, "trustStore": "/etc/.../trust.json", "maxValiditySeconds": 900, "usedNonces": "/var/.../nonces.json"}
     "snapshot": {"enabled": false, "directory": "/var/.../baselines", "keep": 48}
+    "knowledge": {"enabled": false, "directory": "/var/.../index", "maxStoredFiles": 4096}
 """
 
 from __future__ import annotations
@@ -24,7 +25,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-SETTINGS_KEYS = ("transport", "runbooks", "approvals", "snapshot")
+SETTINGS_KEYS = ("transport", "runbooks", "approvals", "snapshot", "knowledge")
 LANGUAGES = ("en", "es", "de", "fr", "it", "ja", "zh", "pt")
 
 
@@ -68,11 +69,21 @@ class SnapshotSettings:
 
 
 @dataclass(frozen=True)
+class KnowledgeSettings:
+    """The index of the knowledge sources kept on disk between runs (off: it lives in the process only)."""
+
+    enabled: bool = False
+    directory: str = ""
+    max_stored_files: int = 4096
+
+
+@dataclass(frozen=True)
 class Settings:
     transport: TransportSettings = TransportSettings()
     runbooks: RunbookSettings = RunbookSettings()
     approvals: ApprovalSettings = ApprovalSettings()
     snapshot: SnapshotSettings = SnapshotSettings()
+    knowledge: KnowledgeSettings = KnowledgeSettings()
 
 
 def _section(raw: dict[str, Any], name: str, allowed: set[str]) -> dict[str, Any]:
@@ -146,7 +157,14 @@ def parse_settings(raw: object) -> Settings:
     )
     if snapshot.enabled and not snapshot.directory:
         raise SettingsError('"snapshot" needs "directory" when it is enabled')
-    return Settings(transport, runbooks, approvals, snapshot)
+    k = _section(raw, "knowledge", {"enabled", "directory", "maxStoredFiles"})
+    knowledge = KnowledgeSettings(
+        enabled=k.get("enabled", False), directory=_text(k, "knowledge", "directory", "", absolute=True),
+        max_stored_files=_number(k, "knowledge", "maxStoredFiles", 4096, 1, 100_000, integer=True),
+    )
+    if knowledge.enabled and not knowledge.directory:
+        raise SettingsError('"knowledge" needs "directory" when it is enabled')
+    return Settings(transport, runbooks, approvals, snapshot, knowledge)
 
 
 def load_settings(config_path: str | None) -> Settings:
