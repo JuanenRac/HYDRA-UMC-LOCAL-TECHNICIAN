@@ -29,7 +29,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from . import __version__
+from . import __version__, cli_extra
 from .contracts import REQUIRED, ContractValidationError, validate
 from .escalation.evidence import EvidenceAssemblyError, ObservedResult, assemble_evidence_bundle, verify_bundle
 from .escalation.proposal import ProposalError, propose_maintenance
@@ -39,6 +39,7 @@ from .orchestrator.audit import DEFAULT_BACKUPS, DEFAULT_MAX_BYTES, AuditLog, au
 from .orchestrator.dispatch import ToolDispatchError, dispatch_tool_request
 from .policy.risk_levels import RiskLevel
 from .policy.tool_matrix import TOOL_MATRIX
+from .settings import SETTINGS_KEYS, parse_settings
 
 
 # Exit codes: 0 done; 1 the work ran and its result is an error (a tool status that is not ok, an invalid contract, a journal chain that is
@@ -130,7 +131,7 @@ def _audit_from_config(section: Any) -> AuditLog | None:
 
 _CONFIG_KEYS = {
     "storagePaths", "ports", "connectivityTargets", "systemdUnits", "ecosystemRoot",
-    "logSources", "processPatterns", "knowledgeSources", "auditLog", "tools",
+    "logSources", "processPatterns", "knowledgeSources", "auditLog", "tools", *SETTINGS_KEYS,
 }
 
 
@@ -162,6 +163,7 @@ def _validate_config_shape(raw: object) -> None:
             if not isinstance(value, str) or not Path(value).is_absolute():
                 raise ValueError(f'"{key}.{name}" must be an absolute path')
     _validate_tools_section(raw.get("tools", {}))
+    parse_settings(raw)
     root = raw.get("ecosystemRoot")
     if root is not None and (not isinstance(root, str) or not Path(root).is_absolute()):
         raise ValueError('"ecosystemRoot" must be an absolute path')
@@ -420,6 +422,7 @@ def build_parser() -> argparse.ArgumentParser:
     audit_cmd.add_argument("path", help="The audit journal, e.g. /var/lib/hydra-umc/local-technician/audit.jsonl.")
     audit_cmd.set_defaults(func=_cmd_audit_verify)
 
+    cli_extra.register(subparsers, escalation_sub, tools_sub)
     return parser
 
 

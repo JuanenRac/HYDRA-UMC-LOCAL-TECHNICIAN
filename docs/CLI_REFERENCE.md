@@ -210,6 +210,54 @@ is given in `--token-file` or `HYDRA_UMC_LOCAL_TECHNICIAN_TOKEN` (there is no
 option to pass it on the command line). Exits `1` with a one-line `REFUSED` on
 a bad bind, token, port or config; runs until interrupted, then exits `0`.
 
+## Optional features (all closed until the configuration file opens them)
+
+Four more sections of the `--config` file, each with an `enabled` switch that must be a real `true` (default `false`); a key it does not know is an error. Every tuned value (URL, timeouts, limits, validity, directories) lives in the file, never in the code.
+
+```json
+{
+  "transport": {"enabled": false, "url": "https://dev-server.example/incident", "fromNode": "technician-1", "toNode": "dev-server",
+                "secretEnv": "HYDRA_UMC_LOCAL_TECHNICIAN_TRANSPORT_SECRET", "secretFile": "", "timeoutSeconds": 10,
+                "allowPlainHttp": false, "maxPayloadBytes": 1000000},
+  "runbooks": {"enabled": false, "directory": "/etc/hydra-umc/runbooks", "language": "en"},
+  "approvals": {"enabled": false, "trustStore": "/etc/hydra-umc/trust.json", "maxValiditySeconds": 900, "usedNonces": "/var/lib/hydra-umc/nonces.json"},
+  "snapshot": {"enabled": false, "directory": "/var/lib/hydra-umc/baselines", "keep": 48}
+}
+```
+
+### Outbox transport
+
+- `escalation queue --bundle FILE --outbox DIR [--id ID]` puts a checksum-verified EvidenceBundle into the outbox (same id and same content is a duplicate, never queued twice).
+- `escalation send --outbox DIR --config FILE` posts every pending item as a signed `incident-transport/1` message (message id, node names, nonce, time, HMAC-SHA256 over the canonical JSON) and marks it sent only when the receiver answers 2xx with `{"ok": true}`. Anything else leaves it queued. The shared secret (at least 24 characters) comes from `secretFile` or the environment variable, never from the command line, and is never printed. Plain `http://` is refused unless the host is loopback or `allowPlainHttp` is set; redirects are not followed. Exit `0` when the queue is empty afterwards, `1` when something is still queued, `2` when refused.
+
+### Runbooks
+
+- `runbook check DIR` validates every `.md` runbook. `runbook run --config FILE --result TOOL=FILE ... [--output FILE]` matches them against tool results and prints the grounded MaintenanceProposals. A runbook is a Markdown file with a front matter (`id`, `risk`, `scope`, `title`, one or more `when: <tool> <path> <operator> <value>`, operators `== != > >= < <= contains exists missing`) and the sections `Diagnosis`, `Steps`, `Rollback` and optionally `Pre-checks`, `Expected changes`, `Limits`; a suffix (`title.es`, `## Diagnosis.pt`) gives the text for one of the eight languages, the unsuffixed text is the fallback. The same results always give the same proposals. The engine only proposes: it has no way to run a step. A shipped example is in `configs/runbooks/`.
+
+### Signed approvals
+
+- `approval keygen --alias A --private FILE --public FILE` makes an Ed25519 key pair on the approver's machine; the private key is refused inside a git working tree, never overwritten, owner-only. It needs the optional `cryptography` package (`pip install .[approvals]`).
+- `approval trust add|remove|export|list --config FILE` manages the trust store of public keys by alias (files are exchanged by the public key file; the fingerprint is printed to compare by eye). An alias is never silently pointed at another key.
+- `approval sign --private FILE --approver A --action ACTION --proposal FILE --valid-for SECONDS --output FILE` signs one action on one exact proposal (its SHA-256 is inside the signature).
+- `approval verify --config FILE --approval FILE --proposal FILE --action ACTION` checks the signature, the alias, the action, the proposal, the validity (never longer than `maxValiditySeconds`) and, when `usedNonces` is set, that the approval was not used before; success yields the record that `policy.execution_mode.decide()` needs in ASSISTED mode. Nothing here executes a step.
+
+### Baseline snapshot
+
+- `tools snapshot --config FILE [--audit-log FILE]` runs the health tools once for every unit, port, connectivity target, storage path and process pattern the configuration lists (and the temperature), saves `baseline-<time>.json` with an EvidenceBundle and prints `DRIFT:` lines for every finding (status, yes/no or text value) that changed since the previous baseline; numbers that move by themselves are not drift. Baselines beyond `keep` are moved to `archive/`, never deleted. Run it from a systemd timer:
+
+```ini
+# hydra-umc-technician-snapshot.service
+[Service]
+Type=oneshot
+ExecStart=/opt/hydra-umc/.venv/bin/hydra-umc-local-technician tools snapshot --config /etc/hydra-umc/technician.json
+# hydra-umc-technician-snapshot.timer
+[Timer]
+OnCalendar=hourly
+Persistent=true
+[Install]
+WantedBy=timers.target
+```
+
 ## Roadmap: commands later phases will add
 
 Not implemented in this delivery:

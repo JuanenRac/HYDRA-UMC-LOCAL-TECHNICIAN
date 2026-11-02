@@ -20,7 +20,9 @@ keywords = ["hydra-umc", "urtc", "local-technician", "ai", "hailo", "policy", "s
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "cryptography>=42"]
+# Ed25519 signed approvals (policy/approvals.py); everything else stays stdlib-only.
+approvals = ["cryptography>=42"]
 # update.pending's own real integration boundary - reuses
 # hydra-umc-updater's own already-tested GitHub discovery/manifest-
 # parsing/version-comparison instead of a second, silently-drifting
