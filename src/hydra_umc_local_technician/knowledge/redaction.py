@@ -97,10 +97,6 @@ _URL_CREDENTIALS_RE = re.compile(
 # envelope) - re.DOTALL so the key MATERIAL between the markers (which is
 # exactly what must never leave this process) is captured and dropped too,
 # not just the header/footer lines.
-_PEM_BLOCK_RE = re.compile(
-    r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----.*?-----END [A-Z0-9 ]*PRIVATE KEY-----",
-    re.DOTALL,
-)
 
 _REDACTED = "[REDACTED]"
 
@@ -223,6 +219,29 @@ def _redact_truncated_pem(text: str) -> str:
     return text
 
 
+_PEM_END_RE = re.compile(r"-----END [A-Z0-9 ]{0,40}PRIVATE KEY-----")
+
+
+def _redact_pem_blocks(text: str) -> str:
+    """Replaces every complete private-key block (BEGIN marker up to the first END marker after it). One pass:
+    the END marker is searched only after the BEGIN marker, and when there is none no later BEGIN marker has one
+    either, so the search stops (the lazy pattern it replaces was quadratic on many BEGIN markers and no END)."""
+    pieces: list[str] = []
+    cursor = 0
+    while True:
+        begin = _PEM_BEGIN_RE.search(text, cursor)
+        if begin is None:
+            break
+        end = _PEM_END_RE.search(text, begin.end())
+        if end is None:
+            break
+        pieces.append(text[cursor:begin.start()])
+        pieces.append(_REDACTED)
+        cursor = end.end()
+    pieces.append(text[cursor:])
+    return "".join(pieces)
+
+
 def redact_secrets(text: str) -> str:
     """Returns `text` with every real, recognized secret shape replaced by
     a fixed [REDACTED] marker."""
@@ -231,12 +250,12 @@ def redact_secrets(text: str) -> str:
     # A truncated PEM block (a real BEGIN marker with no
     # matching END - a log excerpt cut off mid-key) used to leave the
     # ENTIRE block, key material included, completely unredacted,
-    # because _PEM_BLOCK_RE's own DOTALL match requires both markers.
+    # because the complete-block match requires both markers.
     # Handled first, and separately from the balanced BEGIN/END case
     # right below it, so a real, complete PEM block still keeps its own
     # more specific match.
     result = _redact_truncated_pem(text)
-    result = _PEM_BLOCK_RE.sub(_REDACTED, result)
+    result = _redact_pem_blocks(result)
     result = _BEARER_RE.sub(f"Bearer {_REDACTED}", result)
     result = _BASIC_AUTH_RE.sub(lambda m: f"{m.group(1)}Basic {_REDACTED}", result)
     result = _BASIC_BARE_RE.sub(f"Basic {_REDACTED}", result)
@@ -282,7 +301,7 @@ def redact_lines(lines: list[str]) -> list[str]:
     list entries (a PEM block whose own BEGIN/END markers land in two
     different lines of a bounded log excerpt) is still recognized as one
     real shape, instead of two line-local fragments neither of which
-    matches `_PEM_BLOCK_RE` on its own. Redacting line-by-line used to miss
+    matches `_redact_pem_blocks` on its own. Redacting line-by-line used to miss
     exactly this real case."""
     if not lines:
         return []
