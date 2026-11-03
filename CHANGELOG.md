@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.2.1] - The redaction of a truncated private key runs in linear time: a log excerpt made of many private-key BEGIN markers used to take quadratic time to redact; the search for the truncated block is now one pass, with a test on... (and 2 more changes)
+
 - **The redaction of a truncated private key runs in linear time:** a log excerpt made of many private-key BEGIN markers used to take quadratic time to redact; the search for the truncated block is now one pass, with a test on hostile input.
 
 - **Bench test script:** `docs/BENCH_TESTS.md` lists the checks of the default configuration that need a real Compute Module installation, all marked not executed.
