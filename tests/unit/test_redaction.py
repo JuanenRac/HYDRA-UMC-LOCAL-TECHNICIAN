@@ -120,6 +120,23 @@ class RedactSecretsTests(unittest.TestCase):
         self.assertIn("[REDACTED]", result)
         self.assertIn("before", result)
 
+    def test_many_repeated_begin_markers_are_redacted_in_linear_time(self):
+        import time
+
+        hostile = "-----BEGIN PRIVATE KEY-----" * 20000
+        started = time.perf_counter()
+        result = redact_secrets(hostile)
+        self.assertLess(time.perf_counter() - started, 2.0)
+        self.assertEqual(result, "[REDACTED]")
+        # with an END marker at the very end every BEGIN is part of one block, and the time is linear as well
+        started = time.perf_counter()
+        redact_secrets(hostile + "-----END PRIVATE KEY-----")
+        self.assertLess(time.perf_counter() - started, 2.0)
+        # a BEGIN marker with a very long run of capitals but no key name is not a quadratic search either
+        started = time.perf_counter()
+        redact_secrets(("-----BEGIN " + "A" * 200) * 2000)
+        self.assertLess(time.perf_counter() - started, 2.0)
+
     def test_a_complete_pem_block_is_unaffected_by_the_truncated_case(self):
         text = "before\n-----BEGIN RSA PRIVATE KEY-----\nMIIEpQIBAAKCAQEA1234567890abcdef\n-----END RSA PRIVATE KEY-----\nafter"
         result = redact_secrets(text)

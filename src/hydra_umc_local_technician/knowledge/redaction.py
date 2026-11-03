@@ -207,6 +207,22 @@ def _redact_nested_structured_values(text: str) -> str:
     return "".join(pieces)
 
 
+_PEM_BEGIN_RE = re.compile(r"-----BEGIN [A-Z0-9 ]{0,40}PRIVATE KEY-----")
+
+
+def _redact_truncated_pem(text: str) -> str:
+    """Replaces everything from the first private-key BEGIN marker that has no
+    END marker after it to the end of the text. Linear in the length of the
+    text: one search for the last END marker and one pass over the BEGIN
+    markers (a single regular expression with a look-ahead for the END marker
+    was quadratic on many BEGIN markers)."""
+    last_end = text.rfind("-----END")
+    for match in _PEM_BEGIN_RE.finditer(text):
+        if last_end < match.end():
+            return text[:match.start()] + _REDACTED
+    return text
+
+
 def redact_secrets(text: str) -> str:
     """Returns `text` with every real, recognized secret shape replaced by
     a fixed [REDACTED] marker."""
@@ -219,7 +235,7 @@ def redact_secrets(text: str) -> str:
     # Handled first, and separately from the balanced BEGIN/END case
     # right below it, so a real, complete PEM block still keeps its own
     # more specific match.
-    result = re.sub(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----(?!.*-----END).*", _REDACTED, text, flags=re.DOTALL)
+    result = _redact_truncated_pem(text)
     result = _PEM_BLOCK_RE.sub(_REDACTED, result)
     result = _BEARER_RE.sub(f"Bearer {_REDACTED}", result)
     result = _BASIC_AUTH_RE.sub(lambda m: f"{m.group(1)}Basic {_REDACTED}", result)

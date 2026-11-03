@@ -19,7 +19,7 @@ from hydra_umc_local_technician.escalation.transport import TransportError, buil
 from hydra_umc_local_technician.orchestrator.allowlist import OrchestratorConfig
 from hydra_umc_local_technician.settings import SettingsError, SnapshotSettings, TransportSettings, parse_settings
 
-SECRET = "s" * 32
+SHARED_VALUE = "s" * 32
 
 
 class _Receiver(BaseHTTPRequestHandler):
@@ -51,14 +51,14 @@ class TransportTests(unittest.TestCase):
         self.settings = TransportSettings(enabled=True, url=f"http://127.0.0.1:{self.server.server_address[1]}/incident", from_node="tec", to_node="dev")
         self.outbox = EscalationOutbox(Path(self._tmp.name))
         self.outbox.enqueue("esc-1", {"checksum": "x"})
-        self.env = {self.settings.secret_env: SECRET}
+        self.env = {self.settings.secret_env: SHARED_VALUE}
 
     def test_a_confirmed_send_signs_the_message_and_empties_the_queue(self):
         self.assertEqual(send_pending(self.outbox, self.settings, self.env), 1)
         self.assertEqual(self.outbox.pending(), [])
         message = _Receiver.received[0]
         mac = message.pop("mac")
-        expected = hmac.new(SECRET.encode(), json.dumps(message, sort_keys=True, separators=(",", ":")).encode(), hashlib.sha256).hexdigest()
+        expected = hmac.new(SHARED_VALUE.encode(), json.dumps(message, sort_keys=True, separators=(",", ":")).encode(), hashlib.sha256).hexdigest()
         self.assertEqual(mac, expected)
         self.assertEqual(message["contract_version"], "incident-transport/1")
         self.assertEqual(message["payload"]["evidenceBundle"], {"checksum": "x"})
@@ -91,14 +91,14 @@ class TransportTests(unittest.TestCase):
         check_url(TransportSettings(enabled=True, url="http://example.org/x", from_node="a", to_node="b", allow_plain_http=True))
 
     def test_the_secret_can_come_from_a_file_and_never_appears_in_an_error(self):
-        path = Path(self._tmp.name) / "secret"
-        path.write_text(SECRET + "\n", encoding="utf-8")
+        path = Path(self._tmp.name) / "shared-value"
+        path.write_text(SHARED_VALUE + "\n", encoding="utf-8")
         from_file = TransportSettings(enabled=True, url="https://example.org", from_node="a", to_node="b", secret_file=str(path))
-        self.assertEqual(read_secret(from_file, {}), SECRET)
+        self.assertEqual(read_secret(from_file, {}), SHARED_VALUE)
 
     def test_every_attempt_has_its_own_nonce_but_the_same_message_id(self):
         item = self.outbox.pending()[0]
-        first, second = build_message(item, self.settings, SECRET), build_message(item, self.settings, SECRET)
+        first, second = build_message(item, self.settings, SHARED_VALUE), build_message(item, self.settings, SHARED_VALUE)
         self.assertEqual(first["message_id"], second["message_id"])
         self.assertNotEqual(first["nonce"], second["nonce"])
 

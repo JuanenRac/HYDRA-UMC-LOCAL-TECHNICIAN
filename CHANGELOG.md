@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The redaction of a truncated private key runs in linear time:** a log excerpt made of many private-key BEGIN markers used to take quadratic time to redact; the search for the truncated block is now one pass, with a test on hostile input.
+
 - **Bench test script:** `docs/BENCH_TESTS.md` lists the checks of the default configuration that need a real Compute Module installation, all marked not executed.
 
 - **The knowledge index can be kept on disk between runs, closed by default:** the new `knowledge` section of the configuration file (`enabled`, `directory`, `maxStoredFiles`) stores the chunks of every indexed file in a versioned JSON file, so a later process reads again only the files whose modification time or size changed; a damaged or foreign store is ignored and made again, and a vanished file leaves it.
