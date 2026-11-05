@@ -218,7 +218,8 @@ Five more sections of the `--config` file, each with an `enabled` switch that mu
 {
   "transport": {"enabled": false, "url": "https://dev-server.example/incident", "fromNode": "technician-1", "toNode": "dev-server",
                 "secretEnv": "HYDRA_UMC_LOCAL_TECHNICIAN_TRANSPORT_SECRET", "secretFile": "", "timeoutSeconds": 10,
-                "allowPlainHttp": false, "maxPayloadBytes": 1000000},
+                "allowPlainHttp": false, "maxPayloadBytes": 1000000,
+                "nodeTokenFile": "/etc/hydra-umc/technician.node-token", "requireNodeToken": true},
   "runbooks": {"enabled": false, "directory": "/etc/hydra-umc/runbooks", "language": "en"},
   "approvals": {"enabled": false, "trustStore": "/etc/hydra-umc/trust.json", "maxValiditySeconds": 900, "usedNonces": "/var/lib/hydra-umc/nonces.json"},
   "snapshot": {"enabled": false, "directory": "/var/lib/hydra-umc/baselines", "keep": 48},
@@ -233,7 +234,7 @@ With `knowledge.enabled` the chunks of every indexed file are also kept on disk 
 ### Outbox transport
 
 - `escalation queue --bundle FILE --outbox DIR [--id ID]` puts a checksum-verified EvidenceBundle into the outbox (same id and same content is a duplicate, never queued twice).
-- `escalation send --outbox DIR --config FILE` posts every pending item as a signed `incident-transport/1` message (message id, node names, nonce, time, HMAC-SHA256 over the canonical JSON) and marks it sent only when the receiver answers 2xx with `{"ok": true}`. Anything else leaves it queued. The shared secret (at least 24 characters) comes from `secretFile` or the environment variable, never from the command line, and is never printed. Plain `http://` is refused unless the host is loopback or `allowPlainHttp` is set; redirects are not followed. Exit `0` when the queue is empty afterwards, `1` when something is still queued, `2` when refused.
+- `escalation send --outbox DIR --config FILE` posts every pending item as a signed `incident-transport/1` message (message id, node names, nonce, time, HMAC-SHA256 over the canonical JSON) and marks it sent only when the receiver answers 2xx with `{"ok": true}`. Anything else leaves it queued. The message carries the token of this node (`Authorization: Bearer ...`, read from `transport.nodeTokenFile`, issued on the development server with `node-token issue`): with `transport.requireNodeToken` on (the default) a send without a readable token is refused before anything leaves, and a revoked token is a `401` that leaves the item queued. The shared secret (at least 24 characters) comes from `secretFile` or the environment variable, never from the command line, and is never printed. Plain `http://` is refused unless the host is loopback or `allowPlainHttp` is set; redirects are not followed. Exit `0` when the queue is empty afterwards, `1` when something is still queued, `2` when refused.
 
 ### Runbooks
 

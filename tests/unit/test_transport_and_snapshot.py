@@ -25,8 +25,10 @@ SHARED_VALUE = "s" * 32
 class _Receiver(BaseHTTPRequestHandler):
     answer = (200, b'{"ok": true}')
     received: list[dict] = []
+    authorizations: list[str] = []
 
     def do_POST(self):
+        type(self).authorizations.append(self.headers.get("Authorization", ""))
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         type(self).received.append(body)
         status, payload = type(self).answer
@@ -43,12 +45,13 @@ class TransportTests(unittest.TestCase):
         self._tmp = TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         _Receiver.received = []
+        _Receiver.authorizations = []
         _Receiver.answer = (200, b'{"ok": true}')
         self.server = HTTPServer(("127.0.0.1", 0), _Receiver)
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
         self.addCleanup(self.server.server_close)
         self.addCleanup(self.server.shutdown)
-        self.settings = TransportSettings(enabled=True, url=f"http://127.0.0.1:{self.server.server_address[1]}/incident", from_node="tec", to_node="dev")
+        self.settings = TransportSettings(enabled=True, url=f"http://127.0.0.1:{self.server.server_address[1]}/incident", from_node="tec", to_node="dev", require_node_token=False)
         self.outbox = EscalationOutbox(Path(self._tmp.name))
         self.outbox.enqueue("esc-1", {"checksum": "x"})
         self.env = {self.settings.secret_env: SHARED_VALUE}
@@ -71,7 +74,7 @@ class TransportTests(unittest.TestCase):
             self.assertEqual(len(self.outbox.pending()), 1)
 
     def test_an_unreachable_receiver_keeps_the_item_queued(self):
-        closed = TransportSettings(enabled=True, url="http://127.0.0.1:9/x", from_node="tec", to_node="dev", timeout_seconds=1)
+        closed = TransportSettings(enabled=True, url="http://127.0.0.1:9/x", from_node="tec", to_node="dev", timeout_seconds=1, require_node_token=False)
         self.assertEqual(send_pending(self.outbox, closed, self.env), 0)
         self.assertEqual(len(self.outbox.pending()), 1)
 
@@ -95,6 +98,37 @@ class TransportTests(unittest.TestCase):
         path.write_text(SHARED_VALUE + "\n", encoding="utf-8")
         from_file = TransportSettings(enabled=True, url="https://example.org", from_node="a", to_node="b", secret_file=str(path))
         self.assertEqual(read_secret(from_file, {}), SHARED_VALUE)
+
+    def test_the_token_of_the_node_goes_in_the_header_and_is_required_by_default(self):
+        token = "hnt1_" + "t" * 43
+        path = Path(self._tmp.name) / "node.token"
+        path.write_text(token + "\n", encoding="utf-8")
+        with_token = TransportSettings(enabled=True, url=self.settings.url, from_node="tec", to_node="dev", node_token_file=str(path))
+        self.assertEqual(send_pending(self.outbox, with_token, self.env), 1)
+        self.assertEqual(_Receiver.authorizations, [f"Bearer {token}"])
+        # on by default: without a file nothing leaves, and the secret and the token never appear in the error
+        required = TransportSettings(enabled=True, url=self.settings.url, from_node="tec", to_node="dev")
+        self.outbox.enqueue("esc-2", {"checksum": "y"})
+        with self.assertRaises(TransportError) as caught:
+            send_pending(self.outbox, required, self.env)
+        self.assertNotIn(token, str(caught.exception))
+        self.assertEqual(len(_Receiver.received), 1)
+        path.write_text("short\n", encoding="utf-8")
+        with self.assertRaises(TransportError):
+            send_pending(self.outbox, with_token, self.env)
+        # the switch off: the message goes without the header
+        _Receiver.authorizations = []
+        self.assertEqual(send_pending(self.outbox, self.settings, self.env), 1)
+        self.assertEqual(_Receiver.authorizations, [""])
+
+    def test_a_revoked_token_is_a_refusal_that_keeps_the_item_queued(self):
+        token = "hnt1_" + "r" * 43
+        path = Path(self._tmp.name) / "node.token"
+        path.write_text(token, encoding="utf-8")
+        _Receiver.answer = (401, b'{"ok": false, "error": "unauthorized"}')
+        settings = TransportSettings(enabled=True, url=self.settings.url, from_node="tec", to_node="dev", node_token_file=str(path))
+        self.assertEqual(send_pending(self.outbox, settings, self.env), 0)
+        self.assertEqual(len(self.outbox.pending()), 1)
 
     def test_every_attempt_has_its_own_nonce_but_the_same_message_id(self):
         item = self.outbox.pending()[0]

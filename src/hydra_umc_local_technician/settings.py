@@ -44,6 +44,10 @@ class TransportSettings:
     timeout_seconds: float = 10.0
     allow_plain_http: bool = False
     max_payload_bytes: int = 1_000_000
+    # The token of THIS node for the receiving server (issued by `node-token issue` there). With require_node_token on (the
+    # default) a send without a readable token is refused before anything leaves; off, the message goes without the header.
+    node_token_file: str = ""
+    require_node_token: bool = True
 
 
 @dataclass(frozen=True)
@@ -120,9 +124,11 @@ def parse_settings(raw: object) -> Settings:
     """Reads the four sections out of a whole configuration object (the other keys are not this module's business)."""
     if not isinstance(raw, dict):
         raise SettingsError("the config must be a JSON object")
-    t = _section(raw, "transport", {"enabled", "url", "fromNode", "toNode", "secretEnv", "secretFile", "timeoutSeconds", "allowPlainHttp", "maxPayloadBytes"})
+    t = _section(raw, "transport", {"enabled", "url", "fromNode", "toNode", "secretEnv", "secretFile", "timeoutSeconds", "allowPlainHttp", "maxPayloadBytes", "nodeTokenFile", "requireNodeToken"})
     if not isinstance(t.get("allowPlainHttp", False), bool):
         raise SettingsError('"transport.allowPlainHttp" must be true or false')
+    if not isinstance(t.get("requireNodeToken", True), bool):
+        raise SettingsError('"transport.requireNodeToken" must be true or false')
     transport = TransportSettings(
         enabled=t.get("enabled", False), url=_text(t, "transport", "url", ""), from_node=_text(t, "transport", "fromNode", ""),
         to_node=_text(t, "transport", "toNode", ""), secret_env=_text(t, "transport", "secretEnv", TransportSettings.secret_env),
@@ -130,9 +136,12 @@ def parse_settings(raw: object) -> Settings:
         timeout_seconds=float(_number(t, "transport", "timeoutSeconds", 10, 1, 120, integer=False)),
         allow_plain_http=t.get("allowPlainHttp", False),
         max_payload_bytes=_number(t, "transport", "maxPayloadBytes", 1_000_000, 1024, 20_000_000, integer=True),
+        node_token_file=_text(t, "transport", "nodeTokenFile", "", absolute=True), require_node_token=t.get("requireNodeToken", True),
     )
     if transport.enabled and not (transport.url and transport.from_node and transport.to_node):
         raise SettingsError('"transport" needs "url", "fromNode" and "toNode" when it is enabled')
+    if transport.enabled and transport.require_node_token and not transport.node_token_file:
+        raise SettingsError('"transport" needs "nodeTokenFile" when it is enabled, or "requireNodeToken": false')
     r = _section(raw, "runbooks", {"enabled", "directory", "language"})
     runbooks = RunbookSettings(
         enabled=r.get("enabled", False), directory=_text(r, "runbooks", "directory", "", absolute=True),

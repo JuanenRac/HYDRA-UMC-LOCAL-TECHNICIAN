@@ -36,6 +36,7 @@ from .outbox import EscalationOutbox, QueuedEscalation
 CONTRACT_VERSION = "incident-transport/1"
 KIND_INCIDENT = "incident"
 MIN_SECRET_LENGTH = 24
+MIN_NODE_TOKEN_LENGTH = 40
 
 
 class TransportError(ValueError):
@@ -76,6 +77,21 @@ def read_secret(settings: TransportSettings, environ: Mapping[str, str]) -> str:
     return value
 
 
+def read_node_token(settings: TransportSettings) -> str:
+    """The token of this node for the receiver: from its file, or empty when `require_node_token` is off and no file is set."""
+    if not settings.node_token_file:
+        if settings.require_node_token:
+            raise TransportError("the node token file is not set: set transport.nodeTokenFile, or transport.requireNodeToken to false")
+        return ""
+    try:
+        value = Path(settings.node_token_file).read_text(encoding="utf-8").strip()
+    except OSError as error:
+        raise TransportError(f"cannot read the node token file: {error.strerror or 'error'}") from error
+    if len(value) < MIN_NODE_TOKEN_LENGTH:
+        raise TransportError(f"the node token is missing or shorter than {MIN_NODE_TOKEN_LENGTH} characters")
+    return value
+
+
 def _signing_bytes(body: dict[str, Any]) -> bytes:
     return json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
@@ -105,10 +121,11 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 class HttpSender:
     """`send(item) -> bool` for `EscalationOutbox.flush`: True only on a 2xx answer whose JSON body says `"ok": true`."""
 
-    def __init__(self, settings: TransportSettings, secret: str, opener: Any = None) -> None:
+    def __init__(self, settings: TransportSettings, secret: str, opener: Any = None, node_token: str = "") -> None:
         check_url(settings)
         self._settings = settings
         self._secret = secret
+        self._node_token = node_token
         self._opener = opener or urllib.request.build_opener(_NoRedirect)
 
     def __call__(self, item: QueuedEscalation) -> bool:
@@ -120,6 +137,8 @@ class HttpSender:
             self._settings.url, data=data, method="POST",
             headers={"Content-Type": "application/json", "X-Hydra-Client": "technician"},
         )
+        if self._node_token:
+            request.add_header("Authorization", f"Bearer {self._node_token}")  # the token of this node alone; never logged
         try:
             with self._opener.open(request, timeout=self._settings.timeout_seconds) as reply:
                 if not 200 <= reply.status < 300:
@@ -135,4 +154,5 @@ def send_pending(outbox: EscalationOutbox, settings: TransportSettings, environ:
     if not settings.enabled:
         raise TransportError("the transport is closed: set transport.enabled to true in the configuration file")
     secret = read_secret(settings, os.environ if environ is None else environ)
-    return outbox.flush(HttpSender(settings, secret, opener))
+    node_token = read_node_token(settings)
+    return outbox.flush(HttpSender(settings, secret, opener, node_token))
