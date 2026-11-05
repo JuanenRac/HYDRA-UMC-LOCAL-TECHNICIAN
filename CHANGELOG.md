@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The build test of the repository compiles only on CI or when allowed:** for the stacks that compile (`rust`, `go`, `android`, `flutter`, `firmware-c`), `tools/build_test.py` prints `BUILD_TEST=SKIPPED` with exit status 2 on a plain PC, never a pass; `ALLOW_LOCAL_BUILD=1` allows it and a CI runner always may. The `python` and `node` stacks are not locked.
+
 - **The text index reads the compatibility ideographs and no longer takes the multiplication and division signs as letters:** the character classes of the tokenizer now use exact ranges (the compatibility block was written with a wrong first character that overlapped the unified ideographs, and the accented Latin range included two symbols).
 
 - **The escalation carries the token of its node, required by default (`transport.nodeTokenFile`, `transport.requireNodeToken`):** the development server gives each node its own revocable token (`node-token issue`); the sender reads it from a file, adds it as a bearer header and never prints it. With the switch on (the default) a send without a readable token (missing, or under 40 characters) is refused before anything leaves; with `requireNodeToken: false` the message goes without the header. A revoked token is a refusal that leaves the item queued. The outbox transport now has its receiving route.
