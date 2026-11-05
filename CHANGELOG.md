@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The text index reads the compatibility ideographs and no longer takes the multiplication and division signs as letters:** the character classes of the tokenizer now use exact ranges (the compatibility block was written with a wrong first character that overlapped the unified ideographs, and the accented Latin range included two symbols).
+
 - **The escalation carries the token of its node, required by default (`transport.nodeTokenFile`, `transport.requireNodeToken`):** the development server gives each node its own revocable token (`node-token issue`); the sender reads it from a file, adds it as a bearer header and never prints it. With the switch on (the default) a send without a readable token (missing, or under 40 characters) is refused before anything leaves; with `requireNodeToken: false` the message goes without the header. A revoked token is a refusal that leaves the item queued. The outbox transport now has its receiving route.
 
 ## [0.2.1] - The redaction of a truncated private key runs in linear time: a log excerpt made of many private-key BEGIN markers used to take quadratic time to redact; the search for the truncated block is now one pass, with a test on... (and 2 more changes)

@@ -49,8 +49,8 @@ from pathlib import Path
 # index.py already established and tested - this technician's
 # own docs are written in the same 8 languages as every other repo in
 # this ecosystem.
-_LATIN_TOKEN_RE = re.compile(r"[a-z0-9À-ɏ]+")
-_CJK_RUN_RE = re.compile(r"[぀-ヿ㐀-䶿一-鿿豈-﫿]+")
+_LATIN_TOKEN_RE = re.compile(r"[a-z0-9À-ÖØ-öø-ɏ]+")
+_CJK_RUN_RE = re.compile(r"[぀-ヿ㐀-䶿一-鿿豈-﫿]+")  # kana, extension A, unified ideographs, compatibility ideographs
 _SCAN_RE = re.compile(f"{_CJK_RUN_RE.pattern}|{_LATIN_TOKEN_RE.pattern}")
 
 
