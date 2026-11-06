@@ -29,7 +29,7 @@ jobs:
       - name: Fetch the HYDRA-UMC-SDK contracts for the schema check
         run: |
           mkdir -p "$RUNNER_TEMP/hydra-umc-sdk"
-          curl -fsSL --retry 3 https://github.com/JuanenRac/HYDRA-UMC-SDK/archive/refs/tags/v0.5.7.tar.gz | tar -xz --strip-components=1 -C "$RUNNER_TEMP/hydra-umc-sdk"
+          curl -fsSL --retry 3 https://github.com/JuanenRac/HYDRA-UMC-SDK/archive/refs/tags/v0.5.8.tar.gz | tar -xz --strip-components=1 -C "$RUNNER_TEMP/hydra-umc-sdk"
           echo "HYDRA_UMC_SDK_DIR=$RUNNER_TEMP/hydra-umc-sdk" >> "$GITHUB_ENV"
           echo "HYDRA_UMC_REQUIRE_WORKSPACE=1" >> "$GITHUB_ENV"
       - name: Install and run the real Python test suite
