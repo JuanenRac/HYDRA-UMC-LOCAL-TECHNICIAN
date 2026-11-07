@@ -1,0 +1,60 @@
+# =============================================================================
+# HYDRA-UMC-LOCAL-TECHNICIAN - Default allow-list against the installer (manual)
+# Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+# GPL-3.0-or-later - see LICENSE
+# =============================================================================
+# Started by hand only (workflow_dispatch): it never runs on a push or a pull request, so it cannot turn the checks of a push red.
+#
+# Checks out this repository, the operating-system project and the server side by side and runs tests/unit/test_default_config_against_os.py: every entry of
+# `default_config()` (the folder and the log, the unit, the port, the route) must agree with what `install_server.sh`, the registry of ports and the server say.
+# A test that was skipped proves nothing, so the job fails when one was skipped. It needs no key, uploads nothing and publishes nothing. It is not a Compute
+# Module 5: step 1 of the bench list on the board is still to be done.
+
+name: Default allow-list against the installer (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: os-layout
+  cancel-in-progress: false
+
+jobs:
+  layout:
+    name: default_config against the installer
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: repos/HYDRA-UMC-LOCAL-TECHNICIAN
+          persist-credentials: false
+      - name: Check out the operating-system project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: JuanenRac/HYDRA-UMC-OS
+          path: repos/HYDRA-UMC-OS
+          persist-credentials: false
+      - name: Check out the server
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: JuanenRac/HYDRA-UMC-SERVER
+          path: repos/HYDRA-UMC-SERVER
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Run the tests and fail on a skipped one
+        shell: bash
+        working-directory: repos/HYDRA-UMC-LOCAL-TECHNICIAN
+        run: |
+          set -euo pipefail
+          PYTHONPATH=src python -m unittest -v tests.unit.test_default_config_against_os 2>&1 | tee "$RUNNER_TEMP/layout.log"
+          if grep -q "skipped" "$RUNNER_TEMP/layout.log"; then echo "::error::a test was skipped, so nothing was checked"; exit 1; fi
+          grep -q "^OK" "$RUNNER_TEMP/layout.log"

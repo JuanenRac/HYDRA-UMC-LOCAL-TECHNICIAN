@@ -5,6 +5,7 @@ Every test below is **not executed**. The default configuration of the orchestra
 ## What the software already covers (no board needed)
 
 - The unit tests check the allow-list rules, the evidence bundle, the signed outbox and the runbooks against temporary folders.
+- The manual workflow "Default allow-list against the installer" checks out the operating-system project and the server next to this one and checks that every entry of `default_config()` (folder, log, unit, port, route) agrees with `install_server.sh`, the registry of ports and the server: it passes. It is not step 1 on a board: it reads files, it does not look at an installation.
 
 ## Setup
 

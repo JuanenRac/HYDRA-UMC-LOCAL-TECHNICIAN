@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The default allow-list is checked against the installer of the operating-system project and the server:** `tests/unit/test_default_config_against_os.py` (6 tests; skipped, saying why, when the other checkouts are not next to this one) and the manual workflow "Default allow-list against the installer", which ran them: the data folder and the log are inside the folder `install_server.sh` makes, every unit is one the installer writes, the port is the one of the registry of ports, only loopback and `/opt/hydra-umc/` are named, the route exists in the server and the log file is the one the server writes. Step 1 of the bench list on a real board is still to be done.
 ## [0.2.2] - The build test of the repository compiles only on CI or when allowed: for the stacks that compile (rust, go, android, flutter, firmware-c), tools/buildtest.py prints BUILDTEST=SKIPPED with exit status 2 on a plain PC, never a... (and 2 more changes)
 
 - **The build test of the repository compiles only on CI or when allowed:** for the stacks that compile (`rust`, `go`, `android`, `flutter`, `firmware-c`), `tools/build_test.py` prints `BUILD_TEST=SKIPPED` with exit status 2 on a plain PC, never a pass; `ALLOW_LOCAL_BUILD=1` allows it and a CI runner always may. The `python` and `node` stacks are not locked.
