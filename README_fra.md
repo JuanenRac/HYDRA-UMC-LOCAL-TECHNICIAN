@@ -201,6 +201,8 @@ commandes réelle et complète.
 
 **HYDRA-UMC-LOCAL-TECHNICIAN** est l'assistant de maintenance local de l'écosystème : il observe, explique et propose, et le texte d'un modèle n'est jamais une autorité pour agir. Ses outils sont autorisés et en lecture seule, et ce qu'il trouve est remis à des personnes ou à `HYDRA-UMC-OPS-AGENT` sous forme de preuves et de propositions.
 
+> **Plateforme :** là où ce README dit CM5, il s'agit du banc pilote qui fonctionne aujourd'hui ; la plateforme visée par HYDRA-UMC est un NVIDIA Jetson Orin NX 16 Go, une conception ni construite ni testée.
+
 ## 🏛️ Architecture
 
 <p align="center">

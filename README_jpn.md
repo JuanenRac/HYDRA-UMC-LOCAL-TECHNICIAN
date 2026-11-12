@@ -188,6 +188,8 @@ INVALID: tests/fixtures/tool_request.invalid.json (ToolRequest): ...
 
 **HYDRA-UMC-LOCAL-TECHNICIAN** はエコシステムのローカルな保守アシスタントです。観察し、説明し、提案しますが、モデルの出力した文章が動作の権限になることはありません。ツールは許可リストにある読み取り専用のもので、見つけたことは証拠と提案として人または `HYDRA-UMC-OPS-AGENT` に渡されます。
 
+> **プラットフォーム：** この README の「CM5」は、現在動作している試験用ベンチを指します。HYDRA-UMC の目標プラットフォームは NVIDIA Jetson Orin NX 16 GB ですが、これは製作も試験もされていない設計です。
+
 ## 🏛️ アーキテクチャ
 
 <p align="center">
