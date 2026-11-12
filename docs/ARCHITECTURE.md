@@ -38,12 +38,13 @@ toward the real goal: keeping HYDRA-UMC correctly maintained.
 
 ## Five independent pieces (the target design)
 
-1. **Local inference engine** - a small LLM compatible with Hailo-10H.
-   Initial candidates: Qwen2.5-1.5B-Instruct, Qwen2.5-Coder-1.5B or
-   Qwen3-1.7B-Instruct. The real choice depends on real Hailo
-   compatibility, latency, Spanish-language quality, power draw and the
-   specific model's own license - never assumed just because a model is
-   open.
+1. **Open assistant** - no model is fixed by this project. The optional
+   `assistant` section of the configuration file names any OpenAI-compatible
+   chat endpoint and the model it offers (`assistant.py`, `assistant ask`); the
+   assistant only writes advice for a person and has no authority. Running a
+   small model on the Hailo-10H accelerator remains open until its real
+   compatibility, latency, language quality, power draw and licence are
+   verified on the hardware.
 2. **Retrievable knowledge (local RAG)** - a local index of approved
    documentation, manifests, contracts, manuals, changelogs, diagnostics
    and runbooks. Never "trained blindly" on the whole disk: every source

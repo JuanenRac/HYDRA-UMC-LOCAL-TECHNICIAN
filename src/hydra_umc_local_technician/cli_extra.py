@@ -17,7 +17,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .escalation.evidence import verify_bundle
+from . import assistant
+from .escalation.evidence import EvidenceAssemblyError, verify_bundle
 from .escalation.outbox import EscalationOutbox
 from .escalation.snapshot import SnapshotError, take_snapshot
 from .escalation.transport import TransportError, send_pending
@@ -180,7 +181,40 @@ def _cmd_verify(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_assistant_ask(args: argparse.Namespace) -> int:
+    try:
+        settings = load_settings(args.config).assistant
+        if args.bundle:
+            material = assistant.material_from_bundle(_read_json(args.bundle))
+        else:
+            material = Path(args.text).read_text(encoding="utf-8")
+        answer = assistant.ask(settings, material, args.question)
+    except (assistant.AssistantError, SettingsError, EvidenceAssemblyError) + _ERRORS as error:
+        return _refuse(str(error))
+    lines = [f"ADVISORY (model {answer.model}; nothing was run, nothing was proposed or approved):", answer.text]
+    if answer.truncated:
+        lines.append("NOTE: the answer was cut to the configured limit.")
+    text = "\n".join(lines)
+    if args.output:
+        Path(args.output).write_text(text + "\n", encoding="utf-8")
+        print(f"ADVICE -> {args.output}")
+    else:
+        print(text)
+    return 0
+
+
 def register(subparsers: Any, esc_sub: Any, tools_sub: Any) -> None:
+    asst = subparsers.add_parser("assistant", help="An open, configurable model that writes advice for a person; it proposes and runs nothing (closed unless assistant.enabled).")
+    asst_sub = asst.add_subparsers(dest="assistant_command", required=True)
+    ask = asst_sub.add_parser("ask", help="Ask the configured endpoint one question about a verified evidence bundle or a text file.")
+    ask.add_argument("--config", required=True)
+    source = ask.add_mutually_exclusive_group(required=True)
+    source.add_argument("--bundle", metavar="FILE", help="An assembled EvidenceBundle (its checksum is verified first).")
+    source.add_argument("--text", metavar="FILE", help="A text file (redacted before it is sent).")
+    ask.add_argument("--question", required=True)
+    ask.add_argument("--output", metavar="FILE")
+    ask.set_defaults(func=_cmd_assistant_ask)
+
     queue = esc_sub.add_parser("queue", help="Put an assembled, checksum-verified EvidenceBundle into the outbox.")
     queue.add_argument("--bundle", required=True, metavar="FILE")
     queue.add_argument("--outbox", required=True, metavar="DIR")

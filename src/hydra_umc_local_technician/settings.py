@@ -16,6 +16,10 @@ silently leave a safety setting at a different value), and every tuned number li
     "approvals": {"enabled": false, "trustStore": "/etc/.../trust.json", "maxValiditySeconds": 900, "usedNonces": "/var/.../nonces.json"}
     "snapshot": {"enabled": false, "directory": "/var/.../baselines", "keep": 48}
     "knowledge": {"enabled": false, "directory": "/var/.../index", "maxStoredFiles": 4096}
+    "assistant": {"enabled": false, "url": "http://127.0.0.1:11434/v1/chat/completions", "model": "<name of any model the server offers>",
+                  "apiKeyEnv": "HYDRA_UMC_LOCAL_TECHNICIAN_ASSISTANT_KEY", "apiKeyFile": "/etc/.../key", "timeoutSeconds": 60,
+                  "allowPlainHttp": false, "allowRemote": false, "maxPromptChars": 12000, "maxResponseChars": 8000,
+                  "temperature": 0.0, "language": "en", "systemPromptFile": "/etc/.../prompt.txt"}
 """
 
 from __future__ import annotations
@@ -25,7 +29,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-SETTINGS_KEYS = ("transport", "runbooks", "approvals", "snapshot", "knowledge")
+SETTINGS_KEYS = ("transport", "runbooks", "approvals", "snapshot", "knowledge", "assistant")
 LANGUAGES = ("en", "es", "de", "fr", "it", "ja", "zh", "pt")
 
 
@@ -82,12 +86,36 @@ class KnowledgeSettings:
 
 
 @dataclass(frozen=True)
+class AssistantSettings:
+    """The open, configurable assistant: any model behind an OpenAI-compatible chat endpoint, none fixed by the code.
+
+    It only writes advice for a person. Its text is never a proposal, never a step and never an approval.
+    """
+
+    enabled: bool = False
+    url: str = ""
+    model: str = ""
+    api_key_env: str = "HYDRA_UMC_LOCAL_TECHNICIAN_ASSISTANT_KEY"
+    api_key_file: str = ""
+    timeout_seconds: float = 60.0
+    allow_plain_http: bool = False
+    # off: only a loopback address may be asked, so nothing of the node leaves the machine unless the owner opens it
+    allow_remote: bool = False
+    max_prompt_chars: int = 12_000
+    max_response_chars: int = 8_000
+    temperature: float = 0.0
+    language: str = "en"
+    system_prompt_file: str = ""
+
+
+@dataclass(frozen=True)
 class Settings:
     transport: TransportSettings = TransportSettings()
     runbooks: RunbookSettings = RunbookSettings()
     approvals: ApprovalSettings = ApprovalSettings()
     snapshot: SnapshotSettings = SnapshotSettings()
     knowledge: KnowledgeSettings = KnowledgeSettings()
+    assistant: AssistantSettings = AssistantSettings()
 
 
 def _section(raw: dict[str, Any], name: str, allowed: set[str]) -> dict[str, Any]:
@@ -173,7 +201,29 @@ def parse_settings(raw: object) -> Settings:
     )
     if knowledge.enabled and not knowledge.directory:
         raise SettingsError('"knowledge" needs "directory" when it is enabled')
-    return Settings(transport, runbooks, approvals, snapshot, knowledge)
+    x = _section(raw, "assistant", {
+        "enabled", "url", "model", "apiKeyEnv", "apiKeyFile", "timeoutSeconds", "allowPlainHttp", "allowRemote", "maxPromptChars",
+        "maxResponseChars", "temperature", "language", "systemPromptFile"})
+    for flag in ("allowPlainHttp", "allowRemote"):
+        if not isinstance(x.get(flag, False), bool):
+            raise SettingsError(f'"assistant.{flag}" must be true or false')
+    assistant = AssistantSettings(
+        enabled=x.get("enabled", False), url=_text(x, "assistant", "url", ""), model=_text(x, "assistant", "model", ""),
+        api_key_env=_text(x, "assistant", "apiKeyEnv", AssistantSettings.api_key_env),
+        api_key_file=_text(x, "assistant", "apiKeyFile", "", absolute=True),
+        timeout_seconds=float(_number(x, "assistant", "timeoutSeconds", 60, 1, 600, integer=False)),
+        allow_plain_http=x.get("allowPlainHttp", False), allow_remote=x.get("allowRemote", False),
+        max_prompt_chars=_number(x, "assistant", "maxPromptChars", 12_000, 500, 200_000, integer=True),
+        max_response_chars=_number(x, "assistant", "maxResponseChars", 8_000, 200, 100_000, integer=True),
+        temperature=float(_number(x, "assistant", "temperature", 0.0, 0, 2, integer=False)),
+        language=_text(x, "assistant", "language", "en"),
+        system_prompt_file=_text(x, "assistant", "systemPromptFile", "", absolute=True),
+    )
+    if assistant.language not in LANGUAGES:
+        raise SettingsError(f'"assistant.language" must be one of {", ".join(LANGUAGES)}')
+    if assistant.enabled and not (assistant.url and assistant.model.strip()):
+        raise SettingsError('"assistant" needs "url" and "model" when it is enabled (no model is built in: name the one your server offers)')
+    return Settings(transport, runbooks, approvals, snapshot, knowledge, assistant)
 
 
 def load_settings(config_path: str | None) -> Settings:

@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20of%206%20complete-367BF5.svg" alt="Phase">
-  <img src="https://img.shields.io/badge/Tests-377%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-405%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.2-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -28,7 +28,7 @@ GPL-3.0-or-later - see LICENSE
 
 - **第 5 阶段 - 只读本地 API 与网页（第二部分）。** `serve`（`webapi.py`、`webui/`）展示技术员已经产出的内容：工具注册表、数据目录中的 ToolResult、EvidenceBundle 和 MaintenanceProposal 文件、各项目的清单，以及已列入白名单的知识来源的文档索引。它只响应 GET（其他方法一律返回 405），除非另行指定否则只绑定 `127.0.0.1`，绑定到其他地址时要求至少 24 个字符的 Bearer 令牌；通过列出文件夹来查找条目（绝不拼接请求路径），像 CLI 一样对每个响应做脱敏，并限制所有大小。单页界面不需要任何来自互联网的资源，提供英语、西班牙语、德语、法语、意大利语、日语、中文和葡萄牙（欧洲）葡萄牙语。详见 [docs/WEB_API.md](docs/WEB_API.md)。
 
-**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)、本地 TF-IDF 知识索引(`knowledge/index.py`，第 1 阶段)、全部 10 个已声明的 OBSERVE 工具都有真实的处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)，真实的 `EvidenceBundle`/`MaintenanceProposal` 构建(`escalation/evidence.py`、`escalation/proposal.py`，第 4 阶段)，以及覆盖以上全部内容的真实 CLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`，第 5 阶段自身的第一个切片)，都经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 377 个测试外加 149 个子测试全部通过)——第 1、3、4 阶段均已完成，第 5 阶段已启动。`update.pending` 需要可选依赖 `hydra-umc-updater`(`update-check` extra)才能真正查询 GitHub，没有它时会诚实降级(`available: false`)。本仓库中任何地方仍不存在推理引擎，也没有与 HYDRA-UMC-SERVER 的集成，本代码中也没有任何地方能对 `MaintenanceProposal` 采取行动——下方路线图中的第 2 阶段，以及第 5 阶段的其余部分（与 HYDRA-UMC-SERVER 集成的 API，以及语音）仍完全是愿景，背后没有任何代码。具体已交付的内容请见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** 风险等级策略(`policy/risk_levels.py`)、固定的工具白名单(`policy/tool_matrix.py`)、五个契约验证器(`contracts.py` + `contracts/*.schema.json`)、注入防御边界(`knowledge/trust.py`、`knowledge/redaction.py`)、本地 TF-IDF 知识索引(`knowledge/index.py`，第 1 阶段)、全部 10 个已声明的 OBSERVE 工具都有真实的处理程序(`orchestrator/dispatch.py` + `orchestrator/allowlist.py`：`service.status`、`storage.usage`、`network.port_status`、`network.connectivity`、`system.temperature`、`manifest.read`、`logs.read`、`process.list`、`update.pending`、`knowledge.search`)，真实的 `EvidenceBundle`/`MaintenanceProposal` 构建(`escalation/evidence.py`、`escalation/proposal.py`，第 4 阶段)，以及覆盖以上全部内容的真实 CLI(`tools list`/`tools call`/`escalation evidence`/`escalation propose`，第 5 阶段自身的第一个切片)，都经过测试(`tests/unit/` 和 `tests/adversarial/` 中共 405 个测试外加 149 个子测试全部通过)——第 1、3、4 阶段均已完成，第 5 阶段已启动。`update.pending` 需要可选依赖 `hydra-umc-updater`(`update-check` extra)才能真正查询 GitHub，没有它时会诚实降级(`available: false`)。没有内置任何模型（可选的助手只连接到你配置的聊天端点并写出建议），本仓库中任何地方也没有与 HYDRA-UMC-SERVER 的集成，本代码中也没有任何地方能对 `MaintenanceProposal` 采取行动——下方路线图中第 5 阶段的其余部分（与 HYDRA-UMC-SERVER 集成的 API，以及语音）仍完全是愿景，背后没有任何代码。具体已交付的内容请见 `CHANGELOG.md`。
 
 **带签名的结果。** `ToolResult` 现在会写明生成它的 `tool`,并且在配置了本地密钥时(`HYDRA_UMC_LOCAL_TECHNICIAN_RESULT_KEY`,或指向仓库之外某个文件的 `..._FILE`,16 个字符或更长),带有对整个结果规范化 JSON 的 HMAC-SHA256 `signature`。构建证据包时会拒绝未签名、被伪造或被冒充为其他工具的结果;没有密钥时与以前一样不签名也不拒绝。这两个字段在契约中是可选的,因此以前的结果仍然有效。
 
@@ -46,7 +46,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | 版本 | `0.2.2` |
 | 成熟度 | 可用 |
-| 测试 | 377 (`python -m pytest -q tests`) |
+| 测试 | 405 (`python -m pytest -q tests`) |
 | 技术栈 | Python 3.11+ / JSON Schema / HailoRT GenAI (optional, later phase) / systemd (cm5 role, Linux only) |
 | 目标 | HYDRA-UMC 工作单元的 Raspberry Pi CM5 |
 | 真实硬件 | 尚未：此版本没有在真实硬件上运行的记录 |
@@ -62,7 +62,7 @@ GPL-3.0-or-later - see LICENSE
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟡 | 主要用途可用；上面的诚实性检查列出了仍然缺少的内容 |
-| 测试 | 🟢 | 377 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 405 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🔴 | 尚未：此版本没有在真实硬件上运行的记录 |
 | 接口与协议 | 🟡 | 提供的路由或消息已有文档，并用客户端测试过；尚未被所有客户端使用 |
 | 集成 | 🟠 | 其消息和路由已对照 SDK 的共享契约检查；尚未与真实设备一起运行 |
@@ -217,7 +217,7 @@ INVALID: tests/fixtures/tool_request.invalid.json (ToolRequest): ...
 
 ## 🧪 测试
 
-运行 `python -m pytest -q tests` 会执行 377 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+运行 `python -m pytest -q tests` 会执行 405 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
 
 CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
 
@@ -263,6 +263,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   ├── escalation/                   第 4 阶段 - 真实的 EvidenceBundle 组装 + MaintenanceProposal 构建，已完成
 │   ├── contracts.py                  五份最小合约的真实、仅标准库校验器
 │   ├── cli.py                        第 5 阶段 - contracts validate、tools list/call、escalation evidence/propose、--version, serve
+│   ├── assistant.py                  可选的开放助手：任意聊天端点，仅提供建议
 │   ├── webapi.py                     只读本地 API：仅 GET，默认回环地址，非回环需令牌，已脱敏并限制大小
 │   └── webui/                        可离线使用的单页界面：index.html、app.js、app.css 与八种语言的 i18n/
 ├── contracts/                        五份合约的规范性 JSON Schema 文件（draft 2020-12）
@@ -296,10 +297,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
   `knowledge/index.py` 未经改动地移植了 HYDRA-UMC-DOCS-QA 自身已测试的
   TF-IDF 搜索，并新增了针对 Markdown 和 JSON 来源的有限、白名单化摄取，
   作为第十个 OBSERVE 级工具 `knowledge.search` 接入。
-- **第 2 阶段 - 本地推理引擎。** 一个与 Hailo-10H 兼容的小型 LLM（候选：
-  Qwen2.5-1.5B-Instruct、Qwen2.5-Coder-1.5B、Qwen3-1.7B-Instruct），只有
-  在验证了真实的 Hailo 兼容性、延迟、语言质量、功耗和许可证之后才会真正
-  选定。
+- **第 2 阶段 - 开放的助手（已启动：只是连接，不含模型）。** 一个可选的助手（`assistant.py`、`assistant ask`）把经过脱敏和校验的证据包或文本文件发送到任意兼容 OpenAI 的聊天端点，并为人输出建议。代码不指定也不推荐任何模型：地址、模型名、密钥、限制和系统提示都是配置文件中的设置。它默认关闭，除非所有者开启，否则只访问回环地址，从不跟随重定向，对发出和收到的内容都进行脱敏，其文本永远不是提案、步骤或批准。在 Hailo-10H 加速器上运行小型模型仍未决定，需先在硬件上验证真实兼容性。
 - **第 3 阶段 - 工具编排器（已完成：已声明的 9 个中的 9 个）。** 确定性代码，将
   全部真实的 `OBSERVE` 级工具处理程序接入 `TOOL_MATRIX`，并在每次调用时
   强制执行策略。`service.status`、`storage.usage`、`network.port_status`、
@@ -320,7 +318,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
   真实部分，刻意将范围限定在这一个仓库内部。与 HYDRA-UMC-SERVER 集成的
   API 以及语音仍是留待未来交付的、独立的跨仓库工作。
 
-第 2 阶段，以及第 5 阶段的其余部分，目前均尚未存在于本仓库中 - 剩余各阶段明确包含与排除的内容
+第 5 阶段的其余部分目前尚未存在于本仓库中 - 剩余各阶段明确包含与排除的内容
 参见
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，各阶段必须持续遵守的安全
 不变量参见 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md)。

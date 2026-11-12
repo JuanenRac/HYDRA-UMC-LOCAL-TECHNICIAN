@@ -19,14 +19,14 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-blue.svg" alt="Language">
   <img src="https://img.shields.io/badge/Core-stdlib%20only-brightgreen.svg" alt="Core">
   <img src="https://img.shields.io/badge/Phase-1%2C%203%20%26%204%20of%206%20complete-367BF5.svg" alt="Phase">
-  <img src="https://img.shields.io/badge/Tests-377%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-405%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.2-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Comprobación de honestidad - qué funciona realmente hoy:** la política de niveles de riesgo (`policy/risk_levels.py`), la lista fija de herramientas permitidas (`policy/tool_matrix.py`), los cinco validadores de contrato (`contracts.py` + `contracts/*.schema.json`), el límite de defensa contra inyecciones (`knowledge/trust.py`, `knowledge/redaction.py`), el índice de conocimiento TF-IDF local (`knowledge/index.py`, Fase 1), las 10 herramientas OBSERVE declaradas con manejador real (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), la construcción real de `EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4), y una CLI real sobre todo lo anterior (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, primera porción de la Fase 5) están testeadas (377 tests más 149 subtests pasando entre `tests/unit/` y `tests/adversarial/`) - las Fases 1, 3 y 4 están completas, la Fase 5 está iniciada. `update.pending` necesita la dependencia opcional `hydra-umc-updater` (extra `update-check`) para consultar GitHub de verdad, y degrada honestamente (`available: false`) sin ella. Todavía no hay motor de inferencia ni integración con HYDRA-UMC-SERVER en ningún lugar de este repositorio, y nada en este código puede actuar sobre un `MaintenanceProposal` todavía - la Fase 2 y el resto de la Fase 5 (la API integrada con HYDRA-UMC-SERVER, y la voz) del Roadmap más abajo siguen siendo totalmente aspiracionales, sin ningún código detrás. Ver `CHANGELOG.md` para lo que se ha entregado exactamente hasta ahora.
+**Comprobación de honestidad - qué funciona realmente hoy:** la política de niveles de riesgo (`policy/risk_levels.py`), la lista fija de herramientas permitidas (`policy/tool_matrix.py`), los cinco validadores de contrato (`contracts.py` + `contracts/*.schema.json`), el límite de defensa contra inyecciones (`knowledge/trust.py`, `knowledge/redaction.py`), el índice de conocimiento TF-IDF local (`knowledge/index.py`, Fase 1), las 10 herramientas OBSERVE declaradas con manejador real (`orchestrator/dispatch.py` + `orchestrator/allowlist.py`: `service.status`, `storage.usage`, `network.port_status`, `network.connectivity`, `system.temperature`, `manifest.read`, `logs.read`, `process.list`, `update.pending`, `knowledge.search`), la construcción real de `EvidenceBundle`/`MaintenanceProposal` (`escalation/evidence.py`, `escalation/proposal.py`, Fase 4), y una CLI real sobre todo lo anterior (`tools list`/`tools call`/`escalation evidence`/`escalation propose`, primera porción de la Fase 5) están testeadas (405 tests más 149 subtests pasando entre `tests/unit/` y `tests/adversarial/`) - las Fases 1, 3 y 4 están completas, la Fase 5 está iniciada. `update.pending` necesita la dependencia opcional `hydra-umc-updater` (extra `update-check`) para consultar GitHub de verdad, y degrada honestamente (`available: false`) sin ella. No hay ningún modelo incorporado (el asistente opcional se conecta al endpoint de chat que se configure y solo escribe consejos) ni integración con HYDRA-UMC-SERVER en ningún lugar de este repositorio, y nada en este código puede actuar sobre un `MaintenanceProposal` todavía - el resto de la Fase 5 (la API integrada con HYDRA-UMC-SERVER, y la voz) del Roadmap más abajo siguen siendo totalmente aspiracionales, sin ningún código detrás. Ver `CHANGELOG.md` para lo que se ha entregado exactamente hasta ahora.
 
 **Resultados firmados.** Un `ToolResult` nombra ahora la `tool` que lo hizo y, cuando hay una clave local configurada (`HYDRA_UMC_LOCAL_TECHNICIAN_RESULT_KEY`, o `..._FILE` con un fichero, de 16 caracteres o más, fuera del repositorio), lleva una `signature`: HMAC-SHA256 sobre el JSON canónico de todo el resultado. Al construir un paquete de evidencia se rechaza un resultado sin firmar, falsificado o presentado como de otra herramienta; sin clave no se firma nada y no se rechaza nada, como antes. Los dos campos son opcionales en el contrato, de modo que los resultados anteriores siguen siendo válidos.
 
@@ -44,7 +44,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versión | `0.2.2` |
 | Madurez | Funcional |
-| Tests | 377 (`python -m pytest -q tests`) |
+| Tests | 405 (`python -m pytest -q tests`) |
 | Tecnología | Python 3.11+ / JSON Schema / HailoRT GenAI (optional, later phase) / systemd (cm5 role, Linux only) |
 | Destino | La Raspberry Pi CM5 de una celda HYDRA-UMC |
 | En hardware real | Todavía no: no consta ninguna ejecución en hardware real para esta versión |
@@ -60,7 +60,7 @@ Cada línea es una parte de este repositorio y la luz dice hasta dónde llega ho
 | Área | Estado | Qué significa aquí |
 |---|---|---|
 | Software | 🟡 | Funciona para su propósito principal; la comprobación de honestidad de arriba lista lo que aún falta |
-| Pruebas | 🟢 | 377 pruebas automáticas, ejecutadas en cada cambio |
+| Pruebas | 🟢 | 405 pruebas automáticas, ejecutadas en cada cambio |
 | Hardware real | 🔴 | Todavía no: no consta ninguna ejecución en hardware real para esta versión |
 | Interfaz y protocolos | 🟡 | Las rutas o los mensajes que ofrece están documentados y probados con un cliente; aún no los han usado todos los clientes |
 | Integración | 🟠 | Sus mensajes y rutas se comprueban contra los contratos compartidos del SDK; no ha funcionado junto con el equipo real |
@@ -253,7 +253,7 @@ Requiere Python 3.11 o superior.
 
 ## 🧪 Pruebas
 
-377 pruebas automáticas se ejecutan con `python -m pytest -q tests`. No necesitan hardware ni nada fuera de esta máquina.
+405 pruebas automáticas se ejecutan con `python -m pytest -q tests`. No necesitan hardware ni nada fuera de esta máquina.
 
 El CI ejecuta `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que comprueba el manifiesto, los documentos, los ocho README y las imágenes.
 
@@ -302,6 +302,7 @@ HYDRA-UMC-LOCAL-TECHNICIAN/
 │   ├── escalation/                   Fase 4 - ensamblado real de EvidenceBundle + construcción de MaintenanceProposal, completo
 │   ├── contracts.py                  Validador real solo-stdlib para los cinco contratos mínimos
 │   ├── cli.py                        Fase 5 - contracts validate, tools list/call, escalation evidence/propose, --version, serve
+│   ├── assistant.py                  asistente abierto opcional: cualquier endpoint de chat, solo consejos
 │   ├── webapi.py                     API local de solo lectura: solo GET, loopback por defecto, token fuera de loopback, redactada y acotada
 │   └── webui/                        la interfaz de una sola página sin conexión: index.html, app.js, app.css e i18n/ en ocho idiomas
 ├── contracts/                        Archivos JSON Schema normativos (draft 2020-12) para los cinco contratos
@@ -337,11 +338,7 @@ Esta versión trae la Fase 0, la Fase 1, la Fase 3 y la Fase 4. Lo que queda, en
   de HYDRA-UMC-DOCS-QA y añade una ingesta acotada y en lista blanca
   para fuentes Markdown y JSON, conectada como la décima herramienta de
   nivel OBSERVE, `knowledge.search`.
-- **Fase 2 - Motor de inferencia local.** Un LLM pequeño compatible con
-  Hailo-10H (candidatos: Qwen2.5-1.5B-Instruct, Qwen2.5-Coder-1.5B,
-  Qwen3-1.7B-Instruct), elegido solo una vez verificadas la
-  compatibilidad Hailo real, la latencia, la calidad de idioma, el
-  consumo y la licencia.
+- **Fase 2 - Asistente abierto (iniciada: la conexión, no un modelo).** Un asistente opcional (`assistant.py`, `assistant ask`) envía un paquete de evidencia verificado y censurado, o un fichero de texto, a cualquier endpoint de chat compatible con OpenAI e imprime un consejo para una persona. El código no nombra ni recomienda ningún modelo: la dirección, el nombre del modelo, la clave, los límites y el prompt del sistema son ajustes del fichero de configuración. Está cerrado por defecto, solo consulta una dirección de loopback salvo que el dueño lo abra, nunca sigue una redirección, censura lo que envía y lo que recibe, y su texto nunca es una propuesta, un paso ni una aprobación. Ejecutar un modelo pequeño en el acelerador Hailo-10H sigue abierto hasta verificar la compatibilidad real en el hardware.
 - **Fase 3 - Orquestador de herramientas (completa: 9 de 9 de la Fase 3, más knowledge.search de la Fase 1).** Código
   determinista que conecta todos los manejadores reales de
   herramienta de nivel `OBSERVE` a `TOOL_MATRIX`, con la política
@@ -369,7 +366,7 @@ Esta versión trae la Fase 0, la Fase 1, la Fase 3 y la Fase 4. Lo que queda, en
 
 - **Fase 5 - API local de solo lectura y página web (segunda parte).** `serve` (`webapi.py`, `webui/`) muestra lo que el técnico ya ha producido: el registro de herramientas, los ficheros ToolResult, EvidenceBundle y MaintenanceProposal de un directorio de datos, los manifiestos de los proyectos y el índice de documentos de las fuentes de conocimiento permitidas. Solo responde a GET (cualquier otro método recibe 405), escucha en `127.0.0.1` salvo que se indique otra cosa y entonces exige un token bearer de al menos 24 caracteres, encuentra los elementos listando sus carpetas (nunca uniendo una ruta de la petición), redacta cada respuesta como lo hace la CLI y acota todos los tamaños. La página única no necesita nada de internet y está disponible en inglés, español, alemán, francés, italiano, japonés, chino y portugués de Portugal. Véase [docs/WEB_API.md](docs/WEB_API.md).
 
-La Fase 2 y el resto de la Fase 5 no existen todavía en este repositorio - ver
+El resto de la Fase 5 no existe todavía en este repositorio - ver
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) para lo que cada fase
 restante incluye y excluye explícitamente, y
 [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) para los invariantes de

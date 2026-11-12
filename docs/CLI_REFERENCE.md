@@ -9,7 +9,7 @@ GPL-3.0-or-later - see LICENSE
 Four real command families: contract validation (Fase 0), real
 OBSERVE-level tool calls (`tools`, Fase 5's own first slice), and real
 `EvidenceBundle`/`MaintenanceProposal` construction (`escalation`, Fase
-4/5). There is still no inference engine and no HYDRA-UMC-SERVER
+4/5). There is no model built in (the optional `assistant ask` talks to a chat endpoint you configure) and no HYDRA-UMC-SERVER
 integration - `tools call` only ever reaches the same real, already
 policy-enforced `dispatch_tool_request()` every unit test already
 exercises, never a new authority of its own. A future phase adding the
@@ -263,6 +263,12 @@ Persistent=true
 [Install]
 WantedBy=timers.target
 ```
+
+### Open assistant
+
+- `assistant ask --config FILE (--bundle FILE | --text FILE) --question TEXT [--output FILE]` sends one question about a stored EvidenceBundle (its checksum is verified first) or a text file to a chat endpoint and prints the answer marked `ADVISORY`. It is closed unless `assistant.enabled` is `true`, and enabling it needs the `url` and the `model` the server offers: no model is built in or recommended by the code. Keys of the `assistant` section: `url`, `model`, `apiKeyEnv` / `apiKeyFile` (the key is never taken from the command line and never printed), `timeoutSeconds`, `allowPlainHttp`, `allowRemote`, `maxPromptChars`, `maxResponseChars`, `temperature`, `language` (one of the eight) and `systemPromptFile`.
+- Only a loopback address is asked unless `allowRemote` is `true`; plain http to another machine also needs `allowPlainHttp`; an address with credentials is refused and a redirect is never followed. The material and the question are redacted before they are sent and the answer is redacted again, stripped of control characters and cut to `maxResponseChars`.
+- The answer is advice for a person: it is never parsed into a `MaintenanceProposal`, a step or an approval. A proposal still needs `propose_maintenance()` with evidence grounded in real tool results, and anything above OBSERVE still needs a signed approval. Exit code 2 (`REFUSED`) when it is closed, misconfigured or the endpoint does not answer a chat completion. Not run against a real language model.
 
 ## Roadmap: commands later phases will add
 

@@ -157,6 +157,19 @@
           }
         },
         {
+          "name": "assistant.py",
+          "desc": {
+            "en": "optional open assistant: any chat endpoint, advice only",
+            "es": "asistente abierto opcional: cualquier endpoint de chat, solo consejos",
+            "de": "optionaler offener Assistent: beliebiger Chat-Endpunkt, nur Ratschläge",
+            "fr": "assistant ouvert optionnel : n'importe quel point de chat, conseils seulement",
+            "it": "assistente aperto opzionale: qualsiasi endpoint di chat, solo consigli",
+            "ja": "任意のチャットエンドポイントを使う助言のみの任意アシスタント",
+            "zh": "可选的开放助手：任意聊天端点，仅提供建议",
+            "pt": "assistente aberto opcional: qualquer endpoint de chat, só conselhos"
+          }
+        },
+        {
           "name": "webapi.py",
           "desc": {
             "en": "read-only local API",

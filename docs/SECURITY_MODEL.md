@@ -221,7 +221,7 @@ adds no authority: the risk-level policy is untouched.
 
 ## What is deliberately not implemented
 
-There is no inference engine and no HYDRA-UMC-SERVER integration. The ten
+There is no model built in and no HYDRA-UMC-SERVER integration. The optional assistant (`assistant.py`, closed by default, loopback only unless the owner allows another address, redacting what it sends and what it receives) writes advice for a person and nothing else: its text is never parsed into a proposal, a step or an approval. The ten
 OBSERVE-level tools do run for real, and a local TF-IDF index searches the
 configured knowledge sources. Everything above is either a declared
 contract/policy (enforced by tests) or a tested defensive boundary. The
