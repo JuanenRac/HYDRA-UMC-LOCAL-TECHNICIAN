@@ -19,14 +19,14 @@ from hydra_umc_local_technician.settings import AssistantSettings, SettingsError
 
 ENV_NAME = "HYDRA_UMC_LOCAL_TECHNICIAN_ASSISTANT_KEY"
 KEY = "k" * 24
-SECRET_LINE = "password=hunter2hunter2 and Bearer abcdefghijklmnop0123456789"
+REDACTION_SAMPLE = "password=hunter2hunter2 and Bearer abcdefghijklmnop0123456789"
 
 
 def make_bundle(**changes):
     bundle = {
         "componentVersions": {"hydra-umc-server": "0.9.1"},
         "relevantManifests": [],
-        "redactedLogExcerpts": ["server stopped", SECRET_LINE],
+        "redactedLogExcerpts": ["server stopped", REDACTION_SAMPLE],
         "reproductionSteps": ["systemctl is-active hydra-umc-server"],
         "failedTests": ["health"],
         "impact": "The panel shows no robots.",
@@ -108,7 +108,7 @@ class UrlAndKeyTests(unittest.TestCase):
 
 class RequestTests(unittest.TestCase):
     def test_nothing_secret_is_sent_and_the_language_and_model_are_the_settings(self):
-        body = assistant.build_request(settings(language="es"), SECRET_LINE + " and more", "What failed?")
+        body = assistant.build_request(settings(language="es"), REDACTION_SAMPLE + " and more", "What failed?")
         text = json.dumps(body)
         self.assertNotIn("hunter2hunter2", text)
         self.assertNotIn("abcdefghijklmnop0123456789", text)
