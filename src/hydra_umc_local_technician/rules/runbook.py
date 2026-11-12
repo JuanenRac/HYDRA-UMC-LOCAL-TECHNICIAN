@@ -201,6 +201,8 @@ def parse_runbook(text: str, source: str = "runbook") -> Runbook:
 
 def load_runbooks(directory: Path) -> list[Runbook]:
     """Every `*.md` runbook of a directory, sorted by file name; one bad file is an error naming it (no silent skip)."""
+    if not directory.is_dir():
+        raise RunbookError(f"{directory} is not a directory (a mistyped path must not read as zero rules)")
     runbooks: list[Runbook] = []
     seen: dict[str, str] = {}
     for path in sorted(directory.glob("*.md")):
