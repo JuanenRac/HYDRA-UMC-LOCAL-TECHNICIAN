@@ -13,7 +13,7 @@
   ],
   "deployment_target": "cm5",
   "maturity": "functional",
-  "evidence": "host-test",
+  "evidence": "simulator",
   "family": "Ecosystem Operations",
   "parent": null,
   "native_version": {
@@ -21,5 +21,5 @@
     "pattern": "^version\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""
   },
   "build": "Six-phase plan (see the README's own Roadmap section): a local, policy-gated AI technician for the ecosystem itself - observes, explains, diagnoses and proposes maintenance, never acts by generating text. The LLM proposes; a deterministic orchestrator validates against real contracts and a real risk-level policy before anything executes, and the highest-risk levels (privileged change, physical action) are not implemented at all in this delivery. Real build: python -m build (see pyproject.toml).",
-  "notes": "Read-only diagnostic CLI for the HYDRA-UMC/URTC ecosystem: ten OBSERVE-level tools with real handlers (storage, ports, processes, systemd units, logs, temperature, connectivity, manifests, pending updates, local knowledge search) behind a symbolic allow-list, secret redaction at every output boundary, JSON Schema contracts (ToolRequest, ToolResult, MaintenanceProposal, EvidenceBundle, PatchVerificationReport), a local TF-IDF knowledge index, evidence-bundle and proposal builders grounded only in valid tool results, and an adversarial test that a poisoned document can never produce a tool execution or leak a secret. Its test suite (`pytest tests`) passes in full. There is no inference engine, no transport for the escalation outbox and no HYDRA-UMC-SERVER integration yet - see the README ROADMAP. Evidence is host-test: the automated test suite runs in CI on the host; nothing here has run against a simulator bench or real hardware."
+  "notes": "Read-only diagnostic CLI for the HYDRA-UMC/URTC ecosystem: ten OBSERVE-level tools with real handlers (storage, ports, processes, systemd units, logs, temperature, connectivity, manifests, pending updates, local knowledge search) behind a symbolic allow-list, secret redaction at every output boundary, JSON Schema contracts (ToolRequest, ToolResult, MaintenanceProposal, EvidenceBundle, PatchVerificationReport), a local TF-IDF knowledge index, evidence-bundle and proposal builders grounded only in valid tool results, and an adversarial test that a poisoned document can never produce a tool execution or leak a secret. Its test suite (`pytest tests`) passes in full. There is no inference engine, no transport for the escalation outbox and no HYDRA-UMC-SERVER integration yet - see the README ROADMAP. Evidence is simulator: the Simulation bench runs the real outbox and HTTP sender against a simulated receiver in CI; nothing here has run against real hardware or a real server."
 }
