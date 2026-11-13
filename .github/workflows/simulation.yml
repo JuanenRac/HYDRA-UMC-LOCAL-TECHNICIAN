@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 env:
-  COVERAGE_FLOOR: "93"
+  COVERAGE_FLOOR: "94"
 
 jobs:
   simulation:
