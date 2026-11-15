@@ -32,7 +32,7 @@ approvals = ["cryptography>=42"]
 # update.pending degrades honestly (available: false) when it is absent.
 # The shape and the checksum of an evidence bundle are defined by the shared SDK (escalation/evidence.py); without it a bundle is refused with the reason.
 # Pinned to a tag on purpose; raise the pin deliberately.
-sdk = ["hydra-umc-sdk @ git+https://github.com/JuanenRac/HYDRA-UMC-SDK.git@v0.5.9#subdirectory=clients/python"]
+sdk = ["hydra-umc-sdk @ git+https://github.com/JuanenRac/HYDRA-UMC-SDK.git@v0.6.5#subdirectory=clients/python"]
 update-check = ["hydra-umc-updater @ git+https://github.com/JuanenRac/HYDRA-UMC-UPDATER.git"]
 
 [project.urls]
