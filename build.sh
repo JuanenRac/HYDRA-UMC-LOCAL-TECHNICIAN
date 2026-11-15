@@ -72,7 +72,7 @@ echo
 
 echo "[3/5] Installing project (editable, with dev extras) into the venv..."
 "$VPY" -m pip install --upgrade pip >/dev/null
-"$VPY" -m pip install -e ".[dev]"
+"$VPY" -m pip install -e ".[dev,sdk]"
 echo "      Done."
 echo
 

@@ -8,12 +8,14 @@ real manifest file on disk for manifest.read, a real log file for
 logs.read, real dispatch_tool_request() calls, same real-not-mocked
 convention test_dispatch.py already established."""
 import json
+import sys
 import unittest
+from unittest import mock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from hydra_umc_local_technician.contracts import ContractValidationError, validate
-from hydra_umc_local_technician.escalation.evidence import EvidenceAssemblyError, ObservedResult, assemble_evidence_bundle
+from hydra_umc_local_technician.escalation.evidence import EvidenceAssemblyError, ObservedResult, _checksum, assemble_evidence_bundle
 from hydra_umc_local_technician.knowledge.trust import build_tool_request_from_model_output
 from hydra_umc_local_technician.orchestrator.allowlist import OrchestratorConfig
 from hydra_umc_local_technician.orchestrator.dispatch import dispatch_tool_request
@@ -111,6 +113,18 @@ class AssembleEvidenceBundleTests(unittest.TestCase):
             self.assertEqual(bundle["actionsAttempted"], ["restarted the process manually"])
             self.assertEqual(bundle["failedTests"], ["tests/unit/test_dispatch.py::SomeTest"])
             self.assertEqual(bundle["localValidationResult"], "ran the unit suite locally, one test failed")
+
+
+    def test_the_checksum_is_the_one_of_the_sdk(self):
+        from hydra_umc_sdk import evidence_bundle
+
+        content = {"impact": "x", "date": "1970-01-01T00:00:00Z", "checksum": "ignored"}
+        self.assertEqual(_checksum(content), evidence_bundle.bundle_checksum(content))
+
+    def test_without_the_sdk_a_bundle_is_refused_with_the_reason(self):
+        with mock.patch.dict(sys.modules, {"hydra_umc_sdk": None, "hydra_umc_sdk.evidence_bundle": None}):
+            with self.assertRaisesRegex(EvidenceAssemblyError, "sdk"):
+                _checksum({})
 
 
 if __name__ == "__main__":

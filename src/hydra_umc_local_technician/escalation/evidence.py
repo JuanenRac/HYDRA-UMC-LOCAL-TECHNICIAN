@@ -26,7 +26,6 @@ dispatch.py already produced and already validated.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -67,14 +66,18 @@ def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _sdk_evidence() -> Any:
+    """The evidence-bundle module of the shared SDK (extra `sdk`): the shape and the checksum of a bundle are defined there, once."""
+    try:
+        from hydra_umc_sdk import evidence_bundle
+    except ImportError as error:
+        raise EvidenceAssemblyError("the evidence bundle is checked by hydra-umc-sdk: install this package with the `sdk` extra") from error
+    return evidence_bundle
+
+
 def _checksum(payload: dict[str, Any]) -> str:
-    """A real, deterministic SHA-256 over the bundle's own real content
-    (never `checksum`/`date` themselves) - `sort_keys=True` so the digest
-    never depends on dict insertion order, same real property
-    HYDRA-UMC-OPS-AGENT's own change_proposal.py `_content_digest()`
-    relies on."""
-    canonical = json.dumps(payload, sort_keys=True, ensure_ascii=False)
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    """The checksum of a bundle, as the SDK defines it: SHA-256 of the canonical JSON of the bundle without its `checksum` field."""
+    return str(_sdk_evidence().bundle_checksum(payload))
 
 
 def verify_bundle(bundle: Any) -> list[str]:
@@ -85,8 +88,7 @@ def verify_bundle(bundle: Any) -> list[str]:
         validate("EvidenceBundle", bundle)
     except ContractValidationError as error:
         raise EvidenceAssemblyError(f"the bundle is not a valid EvidenceBundle: {error}") from error
-    content = {key: value for key, value in bundle.items() if key != "checksum"}
-    if _checksum(content) != bundle["checksum"]:
+    if _checksum(bundle) != bundle["checksum"]:
         raise EvidenceAssemblyError("the checksum of the bundle is not that of its content: it was changed after it was assembled")
     return list(bundle["reproductionSteps"])
 

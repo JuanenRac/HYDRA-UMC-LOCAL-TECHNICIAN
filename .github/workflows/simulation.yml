@@ -35,7 +35,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install the package with its test extra
-        run: python -m pip install ".[dev]"
+        run: python -m pip install ".[dev,sdk]"
       - name: Run the scenarios against the simulated receiver
         run: |
           PYTHONPATH=src python -m pytest tests/unit/test_transport_scenarios.py tests/unit/test_transport_and_snapshot.py \
@@ -55,7 +55,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install the package, its test extra and coverage
-        run: python -m pip install ".[dev]" coverage
+        run: python -m pip install ".[dev,sdk]" coverage
       - name: Run the tests under coverage and enforce the floor
         run: |
           PYTHONPATH=src python -m coverage run --source=src/hydra_umc_local_technician -m pytest tests -q
