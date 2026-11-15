@@ -75,7 +75,7 @@ echo.
 echo [3/5] Installing project (editable, with dev extras) into the venv...
 "%VPY%" -m pip install --upgrade pip >nul
 if errorlevel 1 goto :error
-"%VPY%" -m pip install -e ".[dev]"
+"%VPY%" -m pip install -e ".[dev,sdk]"
 if errorlevel 1 goto :error
 echo       Done.
 echo.
