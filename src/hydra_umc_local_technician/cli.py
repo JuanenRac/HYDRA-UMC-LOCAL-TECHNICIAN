@@ -141,7 +141,7 @@ _CONFIG_KEYS = {
 def _validate_config_shape(raw: object) -> None:
     """A --config file must have the documented shape: known keys, string lists
     where lists are expected, absolute paths, ports 1-65535. A typo or a bare
-    string ("systemdUnits": "hydra-umc-server" used to become a tuple of single
+    string ("systemdUnits": "hydra-umc-server" would become a tuple of single
     letters) is a one-line error, never a silently different allow-list."""
     if not isinstance(raw, dict):
         raise ValueError("the config must be a JSON object")

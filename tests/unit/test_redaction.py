@@ -96,9 +96,9 @@ class RedactSecretsTests(unittest.TestCase):
     def test_a_secret_nested_one_level_deeper_as_a_json_object_is_redacted(self):
         # (P1,
         # residual outside this project's own three original examples): the
-        # secret's own value used to be required to be an immediate
+        # the secret's own value is not required to be an immediate
         # quoted string/scalar - a real "password": {"value": "FAKE"}
-        # shape (a nested object) let FAKE slip through untouched.
+        # shape (a nested object) must not let FAKE slip through untouched.
         result = redact_secrets('{"password": {"value": "FAKE", "algo": "plain"}}')
         self.assertNotIn("FAKE", result)
         self.assertIn("[REDACTED]", result)
