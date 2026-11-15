@@ -4,6 +4,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+
+## [0.2.3]
+
 - **Comments describe what the code does, not what it used to do:** docstrings and notes in the source and the tests say the present behaviour and the reason for it. Comments only: no behaviour changes.
 - **The evidence bundle is checked by the shared SDK:** the checksum and the shape of a bundle come from `hydra_umc_sdk.evidence_bundle` instead of a copy kept here, so the technician that writes a bundle and the development node that reads it cannot compute them differently. The SDK is the new `sdk` extra; without it a bundle is refused with a message that says so.
 - **The SDK pin and the shared tools are up to date:** the SDK dependency names the newest release tag, and the shared tools are the canonical copies again.
@@ -13,6 +16,9 @@ All notable changes to this project are documented here.
 - **An open assistant, closed by default (`assistant` section, `assistant ask`):** the technician can send a verified evidence bundle (its checksum is checked first) or a text file to any OpenAI-compatible chat endpoint and print advice for a person. No model is fixed by the code: `url`, `model`, the key (`apiKeyEnv` or `apiKeyFile`, never the command line), the limits, the temperature, the language (one of the eight) and the system prompt (`systemPromptFile`) are settings of the configuration file, and enabling it without a `model` is an error. It asks only a loopback address unless `allowRemote` is set, plain http to another machine needs `allowPlainHttp`, an address with credentials is refused, a redirect is never followed, what it sends and what it gets back is redacted, the answer is stripped of control characters and cut to `maxResponseChars`, and its text is never parsed into a proposal, a step or an approval. 28 new tests (settings, address and key rules, the request, the answer, a real local endpoint including a redirect and a closed port, and the command). Not run against a real language model, and running one on the Hailo-10H stays open.
 
 - **The default allow-list is checked against the installer of the operating-system project and the server:** `tests/unit/test_default_config_against_os.py` (6 tests; skipped, saying why, when the other checkouts are not next to this one) and the manual workflow "Default allow-list against the installer", which ran them: the data folder and the log are inside the folder `install_server.sh` makes, every unit is one the installer writes, the port is the one of the registry of ports, only loopback and `/opt/hydra-umc/` are named, the route exists in the server and the log file is the one the server writes. Step 1 of the bench list on a real board is still to be done.
+
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
+
 ## [0.2.2] - The build test of the repository compiles only on CI or when allowed: for the stacks that compile (rust, go, android, flutter, firmware-c), tools/buildtest.py prints BUILDTEST=SKIPPED with exit status 2 on a plain PC, never a... (and 2 more changes)
 
 - **The build test of the repository compiles only on CI or when allowed:** for the stacks that compile (`rust`, `go`, `android`, `flutter`, `firmware-c`), `tools/build_test.py` prints `BUILD_TEST=SKIPPED` with exit status 2 on a plain PC, never a pass; `ALLOW_LOCAL_BUILD=1` allows it and a CI runner always may. The `python` and `node` stacks are not locked.
