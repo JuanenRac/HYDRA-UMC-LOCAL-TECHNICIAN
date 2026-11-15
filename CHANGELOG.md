@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Comments describe what the code does, not what it used to do:** docstrings and notes in the source and the tests say the present behaviour and the reason for it. Comments only: no behaviour changes.
 - **The evidence bundle is checked by the shared SDK:** the checksum and the shape of a bundle come from `hydra_umc_sdk.evidence_bundle` instead of a copy kept here, so the technician that writes a bundle and the development node that reads it cannot compute them differently. The SDK is the new `sdk` extra; without it a bundle is refused with a message that says so.
 - **The SDK pin and the shared tools are up to date:** the SDK dependency names the newest release tag, and the shared tools are the canonical copies again.
 - **More tests for the approvals, the outbox, the transport and the command flows, a simulated receiver and a coverage floor:** 65 new tests cover every refusal of the signed approvals and the trust store, the crash and clash cases of the escalation outbox, the real HTTP sender against a simulated receiver that refuses, redirects, hangs up, answers slowly and comes back, and the approval and runbook commands end to end. A `Simulation bench` workflow runs those scenarios and a coverage job fails when the statement coverage falls under its floor.

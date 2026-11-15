@@ -88,14 +88,13 @@ def _require_list(payload: dict[str, Any], name: str, *, min_items: int = 0) -> 
         raise ContractValidationError(f"{name} must be a list")
     if len(value) < min_items:
         raise ContractValidationError(f"{name} must have at least {min_items} item(s)")
-    # this used to only check the container's own type/length,
-    # never a single element inside it - every one of this contract's
-    # own list fields declares `"items": {"type": "string"}` in its
-    # normative contracts/*.schema.json (no minLength on the item
-    # itself, so an empty string is schema-valid and deliberately not
-    # rejected here either), but nothing on the Python side actually
-    # enforced that a list entry was ever a string at all. A number,
-    # null, or nested object anywhere in the list used to sail through
+    # Every element is checked, not only the container's own type/length:
+    # every one of this contract's own list fields declares
+    # `"items": {"type": "string"}` in its normative
+    # contracts/*.schema.json (no minLength on the item itself, so an
+    # empty string is schema-valid and deliberately not rejected here
+    # either), so a list entry has to be a string. A number, null, or
+    # nested object anywhere in the list would otherwise sail through
     # silently.
     for index, item in enumerate(value):
         if not isinstance(item, str):

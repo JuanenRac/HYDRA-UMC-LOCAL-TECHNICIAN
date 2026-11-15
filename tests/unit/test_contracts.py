@@ -53,10 +53,10 @@ class ContractFixtureTests(unittest.TestCase):
             validate("ToolRequest", payload)
         self.assertIn("reason", str(ctx.exception))
 
-    # regressions: the Python validator used to accept several
-    # values its own normative contracts/*.schema.json already declares
-    # invalid, because "type": "string"/format constraints on list items
-    # and the "date-time" format were never actually enforced here.
+    # regressions: the Python validator must reject the
+    # values its own normative contracts/*.schema.json declares
+    # invalid, which includes "type": "string"/format constraints on list items
+    # and the "date-time" format.
     def test_a_non_string_list_element_is_rejected(self):
         payload = _load("maintenance_proposal.valid.json")
         payload["steps"] = payload["steps"] + [42]

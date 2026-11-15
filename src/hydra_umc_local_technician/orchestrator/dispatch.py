@@ -615,7 +615,7 @@ def _names_the_program(arguments: list[str], pattern: str) -> bool:
     command line: `pattern` must be in argv[0] (the program), or, when argv[0] is an interpreter (python, node,
     a shell...), in the script or module it was given (the first argument that is not an option, or the one after
     `-m`). So `grep PATTERN`, `journalctl -u PATTERN`, `tail -f PATTERN.log` or an editor with the file open are
-    not the program, which a substring over the whole line used to take them for."""
+    not the program, which a substring over the whole line would take them for."""
     if not arguments:
         return False
     if pattern in arguments[0]:
