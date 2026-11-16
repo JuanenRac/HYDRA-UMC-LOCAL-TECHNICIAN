@@ -128,6 +128,18 @@ class ProcessListRedactionTests(unittest.TestCase):
         self.assertEqual([m["pid"] for m in matches], [404])
 
 
+class UrlPasswordRedactionTests(unittest.TestCase):
+    def test_a_password_with_an_at_sign_is_redacted_whole(self):
+        from hydra_umc_local_technician.knowledge.redaction import redact_secrets
+
+        out = redact_secrets("broker mqtt://admin:pa@ss@broker.local:1883/topic and https://u:plain@host/x")
+        self.assertNotIn("pa@ss", out)
+        self.assertNotIn("ss@broker", out)
+        self.assertNotIn("plain", out)
+        self.assertIn("broker.local:1883/topic", out)
+        self.assertIn("admin", out)
+
+
 class ManifestReadBoundsTests(unittest.TestCase):
     def _read(self, raw: bytes):
         with TemporaryDirectory() as tmp:
