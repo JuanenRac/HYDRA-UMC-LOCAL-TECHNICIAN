@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A password with an `@` inside a URL is redacted whole:** `scheme://user:pa@ss@host` used to keep everything after the first `@` of the password; the password now ends at the last `@` before the path.
 
 ## [0.2.3]
 
