@@ -540,6 +540,8 @@ def _handle_journal_read(config: OrchestratorConfig, arguments: dict[str, Any]) 
 # `name{labels} number`, bounded in count and in size; help and type lines, and anything else, are dropped.
 _METRICS_CLIENT_HEADER = "technician"
 _METRICS_MAX_BYTES = 1_000_000
+# The whole read of the answer, not each step of it: an endpoint that sends a byte now and then cannot keep the tool busy past this.
+_METRICS_DEADLINE_SECONDS = 5.0
 _METRICS_MAX_SAMPLES = 200
 _METRICS_SAMPLE = re.compile(r"^([a-zA-Z_:][a-zA-Z0-9_:]*)(\{[^}]*\})?\s+(-?[0-9.]+(?:[eE][+-]?[0-9]+)?|NaN|[+-]?Inf)(?:\s+-?[0-9]+)?$")
 
@@ -568,6 +570,23 @@ def parse_prometheus_samples(text: str, prefix: str | None = None) -> tuple[list
     return samples, truncated
 
 
+def _read_bounded(response: Any, max_bytes: int, deadline_s: float) -> tuple[bytes, bool]:
+    """Reads what the answer has, in pieces, until `max_bytes` or the end or `deadline_s` seconds in all; the flag says the time ran out first."""
+    end = time.monotonic() + deadline_s
+    chunks: list[bytes] = []
+    total = 0
+    reader = getattr(response, "read1", response.read)
+    while total < max_bytes:
+        if time.monotonic() >= end:
+            return b"".join(chunks), True
+        piece = reader(min(16384, max_bytes - total))
+        if not piece:
+            break
+        chunks.append(piece)
+        total += len(piece)
+    return b"".join(chunks), False
+
+
 def _handle_server_metrics(config: OrchestratorConfig, arguments: dict[str, Any]) -> tuple[dict[str, Any], str]:
     name = arguments.get("name")
     if not isinstance(name, str) or not name:
@@ -585,7 +604,8 @@ def _handle_server_metrics(config: OrchestratorConfig, arguments: dict[str, Any]
     try:
         with _NO_REDIRECT_OPENER.open(request, timeout=timeout_s) as response:  # noqa: S310 - scheme already restricted above
             status_code = response.getcode()
-            body = response.read(_METRICS_MAX_BYTES).decode("utf-8", errors="replace")
+            raw_body, ran_out = _read_bounded(response, _METRICS_MAX_BYTES, _METRICS_DEADLINE_SECONDS)
+            body = raw_body.decode("utf-8", errors="replace")
     except urllib.error.HTTPError as exc:
         output = {"name": name, "reachable": True, "status_code": exc.code, "reason": f"HTTP {exc.code}", "samples": []}
         return output, f"GET {url!r} -> HTTP {exc.code} (endpoint answered, with an error status)"
@@ -594,8 +614,9 @@ def _handle_server_metrics(config: OrchestratorConfig, arguments: dict[str, Any]
         output = {"name": name, "reachable": False, "status_code": None, "reason": str(reason), "samples": []}
         return output, f"GET {url!r} failed: {reason}"
     samples, truncated = parse_prometheus_samples(body, prefix)
-    output = {"name": name, "reachable": True, "status_code": status_code, "reason": None, "samples": samples, "truncated": truncated}
-    return output, f"GET {url!r} -> HTTP {status_code}, {len(samples)} numeric sample(s)" + (" (truncated)" if truncated else "")
+    truncated = truncated or ran_out
+    output = {"name": name, "reachable": True, "status_code": status_code, "reason": "deadline" if ran_out else None, "samples": samples, "truncated": truncated}
+    return output, f"GET {url!r} -> HTTP {status_code}, {len(samples)} numeric sample(s)" + (" (the time to read ran out)" if ran_out else " (truncated)" if truncated else "")
 
 
 # process.list's own real bound: never report more than this many real

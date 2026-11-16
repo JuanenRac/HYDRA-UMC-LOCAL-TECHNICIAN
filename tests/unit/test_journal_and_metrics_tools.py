@@ -177,6 +177,43 @@ class ServerMetrics(unittest.TestCase):
         self.assertEqual(result["status"], "ok")
         self.assertFalse(result["output"]["reachable"])
 
+    def test_an_endpoint_that_trickles_is_cut_at_the_deadline(self):
+        import time as _time
+        from hydra_umc_local_technician.orchestrator import dispatch as dispatch_module
+
+        class _Slow(BaseHTTPRequestHandler):
+            def do_GET(self):  # noqa: N802 - stdlib method name
+                self.send_response(200)
+                self.end_headers()
+                try:
+                    self.wfile.write(b"hydra_up 1\n")
+                    self.wfile.flush()
+                    for _ in range(40):
+                        _time.sleep(0.1)
+                        self.wfile.write(b"# keep going\n")
+                        self.wfile.flush()
+                except OSError:
+                    pass
+
+            def log_message(self, *args):
+                pass
+
+        server = HTTPServer(("127.0.0.1", 0), _Slow)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        self.addCleanup(lambda: (server.shutdown(), thread.join(timeout=10), server.server_close()))
+        config = OrchestratorConfig(server_metrics_enabled=True, metrics_targets={"server": f"http://127.0.0.1:{server.server_address[1]}/metrics"})
+        previous = dispatch_module._METRICS_DEADLINE_SECONDS
+        dispatch_module._METRICS_DEADLINE_SECONDS = 0.5
+        self.addCleanup(lambda: setattr(dispatch_module, "_METRICS_DEADLINE_SECONDS", previous))
+        started = _time.monotonic()
+        result = dispatch_tool_request(_request("server.metrics", {"name": "server"}), config)
+        self.assertLess(_time.monotonic() - started, 3.0)
+        self.assertTrue(result["output"]["reachable"])
+        self.assertTrue(result["output"]["truncated"])
+        self.assertEqual(result["output"]["reason"], "deadline")
+        self.assertEqual([s["metric"] for s in result["output"]["samples"]], ["hydra_up"])
+
 
 class ConfigFileSwitches(unittest.TestCase):
     def _call(self, tools_section, tool, *args):
