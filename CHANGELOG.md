@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **`server.metrics` reads the answer within a total time:** the answer is read in pieces and cut after 5 seconds in all, so an endpoint that sends a byte now and then cannot keep the tool busy; the result is then `reachable: true, truncated: true, reason: "deadline"` with the samples read so far. A test with a slow local endpoint covers it.
+
 - **A password with an `@` inside a URL is redacted whole:** `scheme://user:pa@ss@host` used to keep everything after the first `@` of the password; the password now ends at the last `@` before the path.
 
 ## [0.2.3]
