@@ -84,9 +84,11 @@ def read_node_token(settings: TransportSettings) -> str:
             raise TransportError("the node token file is not set: set transport.nodeTokenFile, or transport.requireNodeToken to false")
         return ""
     try:
-        value = Path(settings.node_token_file).read_text(encoding="utf-8").strip()
+        value = Path(settings.node_token_file).read_text(encoding="utf-8-sig").strip()
     except OSError as error:
         raise TransportError(f"cannot read the node token file: {error.strerror or 'error'}") from error
+    except UnicodeDecodeError:
+        raise TransportError("cannot read the node token file: it is not UTF-8 text") from None
     if len(value) < MIN_NODE_TOKEN_LENGTH:
         raise TransportError(f"the node token is missing or shorter than {MIN_NODE_TOKEN_LENGTH} characters")
     return value
