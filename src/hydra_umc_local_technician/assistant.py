@@ -96,9 +96,11 @@ def read_key(settings: AssistantSettings, environ: Mapping[str, str]) -> str:
     value = ""
     if settings.api_key_file:
         try:
-            value = Path(settings.api_key_file).read_text(encoding="utf-8").strip()
+            value = Path(settings.api_key_file).read_text(encoding="utf-8-sig").strip()
         except OSError as error:
             raise AssistantError(f"cannot read the assistant key file: {error.strerror or 'error'}") from error
+        except UnicodeDecodeError:
+            raise AssistantError("cannot read the assistant key file: it is not UTF-8 text") from None
     else:
         value = environ.get(settings.api_key_env, "").strip()
     if value and len(value) < MIN_KEY_LENGTH:

@@ -399,6 +399,6 @@ class _Handler(BaseHTTPRequestHandler):
 def read_api_token(token_file: str | None, environ: dict[str, str]) -> str | None:
     """The token comes from a file or the environment, never from the command line."""
     if token_file:
-        text = Path(token_file).read_text(encoding="utf-8").strip()
+        text = Path(token_file).read_text(encoding="utf-8-sig").strip()
         return text or None
     return environ.get("HYDRA_UMC_LOCAL_TECHNICIAN_TOKEN", "").strip() or None
