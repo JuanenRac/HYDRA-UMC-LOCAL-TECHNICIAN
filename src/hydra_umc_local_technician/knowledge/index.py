@@ -417,7 +417,7 @@ def ingest_source_directory(root: Path) -> IngestResult:
                 if stat.st_size > MAX_DOCUMENT_BYTES:
                     skipped.append(source)
                     continue
-                text = path.read_text(encoding="utf-8")
+                text = path.read_text(encoding="utf-8-sig")   # a byte-order mark would hide a heading or make a JSON file invalid
             except (OSError, UnicodeDecodeError):
                 # One file that is not valid UTF-8 (a Latin-1 export, a binary
                 # saved as .md) must not take the other 499 down with it.
